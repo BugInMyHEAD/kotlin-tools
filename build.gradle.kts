@@ -28,3 +28,20 @@ tasks.withType<Test> {
         "-XX:+EnableDynamicAgentLoading",
     )
 }
+
+kover {
+    reports {
+        verify {
+            rule {
+                minBound(100)
+            }
+        }
+        filters {
+            excludes {
+                classes(
+                    "com.buginmyhead.tools.kotlin.CollectionCoroutineExtKt",
+                )
+            }
+        }
+    }
+}
