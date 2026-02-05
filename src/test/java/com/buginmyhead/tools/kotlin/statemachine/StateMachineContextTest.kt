@@ -8,7 +8,7 @@ internal class StateMachineContextTest : FreeSpec({
     "pushEvent delegates to provided pushEvent" {
         var capturedEvent: Any? = null
         var capturedState: Any? = null
-        val pushEvent: (Any, Any) -> Unit = { e, s -> capturedEvent = e; capturedState = s }
+        val pushEvent: (Any, Any) -> Unit = { v, s -> capturedEvent = v; capturedState = s }
         val pollEffect: (Any) -> Any? = { null }
 
         val state = State("A")
@@ -33,7 +33,7 @@ internal class StateMachineContextTest : FreeSpec({
 
     "with creates new context with provided state and reuses delegates" {
         var pushed: Pair<Any, Any>? = null
-        val pushEvent: (Any, Any) -> Unit = { e, s -> pushed = Pair(e, s) }
+        val pushEvent: (Any, Any) -> Unit = { v, s -> pushed = Pair(v, s) }
         var polledState: Any? = null
         val pollEffect: (Any) -> Any? = { s -> polledState = s; 11 }
 

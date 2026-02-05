@@ -2,8 +2,8 @@ package com.buginmyhead.tools.kotlin.statemachine
 
 import java.util.Objects
 
-class StateMachineContext<T : TypeSafeBroker.Key<F>, F : Any>(
-    val state: T,
+class StateMachineContext<S : TypeSafeBroker.Key<F>, F : Any>(
+    val state: S,
     private val pushEvent: (event: Any, state: Any) -> Unit,
     private val pollEffect: (state: Any) -> Any?,
 ) {
@@ -13,7 +13,7 @@ class StateMachineContext<T : TypeSafeBroker.Key<F>, F : Any>(
     @Suppress("UNCHECKED_CAST")
     fun pollEffect(): F? = pollEffect(state) as F?
 
-    fun <U : TypeSafeBroker.Key<G>, G : Any> with(state: U) =
+    fun <T : TypeSafeBroker.Key<G>, G : Any> with(state: T) =
         StateMachineContext(state, pushEvent, pollEffect)
 
     override fun equals(other: Any?): Boolean =
