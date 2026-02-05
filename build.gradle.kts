@@ -15,6 +15,7 @@ kotlin {
 }
 dependencies {
     implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlin.reflect)
     implementation(libs.kotlin.coroutines)
     testImplementation(libs.kotlin.coroutines.test)
     testImplementation(libs.kotest.junit5)

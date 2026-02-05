@@ -120,6 +120,8 @@ internal class EffectBrokerTest : FreeSpec({
         pollKeyCaptured shouldBe pollKey
         pollGenericKeyCaptured shouldBe pollKeyGeneric
     }
-})
+}) {
 
-private data class State(val value: String) : EffectBroker.Key<Int>
+    private data class State(val value: String) : EffectBroker.Key<Int>
+
+}
