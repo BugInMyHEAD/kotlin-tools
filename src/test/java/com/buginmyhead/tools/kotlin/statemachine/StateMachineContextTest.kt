@@ -57,6 +57,12 @@ internal class StateMachineContextTest : FreeSpec({
         val state = State("A")
 
         val a = StateMachineContext(state, push, poll)
+
+        a shouldBe a
+        a.hashCode() shouldBe a.hashCode()
+        a shouldNotBe null
+        a shouldNotBe Any()
+
         val b = StateMachineContext(state, push, poll)
 
         a shouldBe b
