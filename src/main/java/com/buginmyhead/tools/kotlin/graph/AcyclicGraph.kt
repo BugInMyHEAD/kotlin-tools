@@ -10,6 +10,7 @@ interface AcyclicGraph<N, W> : Graph<N, W> {
 
     companion object {
 
+        @Throws(CyclicGraphException::class)
         fun <N, W> Graph<N, W>.toAcyclicGraph(): AcyclicGraph<N, W> {
             // Copies the graph as an AcyclicGraph.
             // All nodes have been visited without detecting a cycle.
