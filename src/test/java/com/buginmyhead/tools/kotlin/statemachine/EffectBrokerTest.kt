@@ -5,7 +5,7 @@ import io.kotest.matchers.shouldBe
 
 internal class EffectBrokerTest : FreeSpec({
     fun gc() {
-        Thread.sleep(100)
+        Thread.sleep(200)
         System.gc()
     }
 

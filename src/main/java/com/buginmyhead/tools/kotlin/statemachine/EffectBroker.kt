@@ -4,12 +4,6 @@ import com.buginmyhead.tools.kotlin.WeakIdentityHashMap
 import java.lang.ref.WeakReference
 import java.util.LinkedList
 
-fun EffectBroker(
-    synchronization: Boolean = false,
-): EffectBroker =
-    if (synchronization) SynchronizedEffectBroker(EffectBrokerOnWeakIdentityHashMap())
-    else EffectBrokerOnWeakIdentityHashMap()
-
 interface EffectBroker {
 
     operator fun set(key: Any, effect: Any)
@@ -24,9 +18,23 @@ interface EffectBroker {
      * Removes and returns the effect associated with the given [key],
      *  or `null` if no such effect exists.
      */
-    fun <F> poll(key: Key<F>): F?
+    @Suppress("UNCHECKED_CAST")
+    fun <F> poll(key: Key<F>): F? = poll(key as Any) as F?
 
     interface Key<F>
+
+    companion object {
+
+        @JvmName("create")
+        @JvmOverloads
+        @JvmStatic
+        operator fun invoke(
+            synchronization: Boolean = false,
+        ): EffectBroker =
+            if (synchronization) SynchronizedEffectBroker(EffectBrokerOnWeakIdentityHashMap())
+            else EffectBrokerOnWeakIdentityHashMap()
+
+    }
 
 }
 
@@ -74,9 +82,6 @@ internal class EffectBrokerOnLinkedList : EffectBroker {
         return result
     }
 
-    @Suppress("UNCHECKED_CAST")
-    override fun <F> poll(key: EffectBroker.Key<F>): F? = poll(key as Any) as F?
-
 }
 
 internal class EffectBrokerOnWeakIdentityHashMap : EffectBroker {
@@ -88,8 +93,5 @@ internal class EffectBrokerOnWeakIdentityHashMap : EffectBroker {
     }
 
     override fun poll(key: Any): Any? = keyToEffect.remove(key)
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <F> poll(key: EffectBroker.Key<F>): F? = poll(key as Any) as F?
 
 }
