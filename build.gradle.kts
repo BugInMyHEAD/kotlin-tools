@@ -40,6 +40,8 @@ kover {
             excludes {
                 classes(
                     "com.buginmyhead.tools.kotlin.CollectionCoroutineExtKt",
+                    "com.buginmyhead.tools.kotlin.WeakIdentityHashMap",
+                    "com.buginmyhead.tools.kotlin.WeakIdentityHashMap$*",
                 )
             }
         }
