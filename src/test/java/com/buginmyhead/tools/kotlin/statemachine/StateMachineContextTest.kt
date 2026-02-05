@@ -52,7 +52,7 @@ internal class StateMachineContextTest : FreeSpec({
     }
 
     "equals and hashCode consider state and delegates" {
-        val push = { e: Any, s: Any -> }
+        val push = { v: Any, s: Any -> }
         val poll = { s: Any -> 5 }
         val state = State("A")
 
