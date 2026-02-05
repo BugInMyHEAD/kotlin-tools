@@ -463,7 +463,6 @@ internal class GraphTest : FreeSpec({
         graph.addEdge("A" to "B", 5)
         graph.addEdge("A" to "C", 7)
         graph.addEdge("C" to "D", 11)
-
         val tree = graph.toTree()
 
         tree.nodes shouldBe setOf("A", "B", "C", "D")
