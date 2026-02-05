@@ -43,8 +43,6 @@ kover {
                     "com.buginmyhead.tools.kotlin.CollectionCoroutineExtKt",
                     "com.buginmyhead.tools.kotlin.WeakIdentityHashMap",
                     "com.buginmyhead.tools.kotlin.WeakIdentityHashMap$*",
-                    "com.buginmyhead.tools.kotlin.statemachine.EffectBroker",
-                    "com.buginmyhead.tools.kotlin.statemachine.EffectBroker\$DefaultImpls",
                     "com.buginmyhead.tools.kotlin.statemachine.TypeSafeBroker",
                     "com.buginmyhead.tools.kotlin.statemachine.TypeSafeBroker\$DefaultImpls",
                 )
