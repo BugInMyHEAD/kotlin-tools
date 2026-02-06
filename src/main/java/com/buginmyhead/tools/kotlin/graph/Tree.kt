@@ -27,6 +27,8 @@ interface Tree<N, W> : AcyclicGraph<N, W> {
             }
         }
 
+        val <N, W> Tree<N, W>.root: N get() = sourceNodes.first()
+
     }
 
 }
