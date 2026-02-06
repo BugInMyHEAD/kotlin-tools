@@ -22,7 +22,7 @@ internal class MemberPropertyBrowserTest : FreeSpec({
 
     "fieldPropertyValues collects all values of field properties" {
         root.fieldPropertyValues().map(Node::value) shouldContainAll listOf(7)
-        root.child.fieldPropertyValues() shouldBe emptyList()
+        root.child!!.fieldPropertyValues() shouldBe emptyList()
     }
 
     "collectionPropertyValues collects all values of member properties" {

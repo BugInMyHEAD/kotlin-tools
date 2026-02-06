@@ -2,6 +2,7 @@
 
 package com.buginmyhead.tools.kotlin
 
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.KVariance
@@ -12,13 +13,19 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.jvmErasure
 
-inline fun <reified T> T.fieldPropertyValues(): Collection<T> =
+inline fun <reified T : Any> T.fieldPropertyValues(): Collection<T> =
+    fieldPropertyValues(T::class)
+
+fun <T : Any> T.fieldPropertyValues(kClass: KClass<T>): Collection<T> =
     this::class.memberProperties
-        .filter { it.returnType.jvmErasure.isSubclassOf(T::class) }
+        .filter { it.returnType.jvmErasure.isSubclassOf(kClass) }
         .filterIsInstance<KProperty1<T, T?>>()
         .mapNotNull { it.get(this) }
 
-inline fun <reified T> T.collectionPropertyValues(): Collection<T> =
+inline fun <reified T : Any> T.collectionPropertyValues(): Collection<T> =
+    collectionPropertyValues(T::class)
+
+fun <T : Any> T.collectionPropertyValues(kClass: KClass<T>): Collection<T> =
     this::class.memberProperties
         .filter {
             it.returnType.isSubtypeOf(
@@ -26,7 +33,7 @@ inline fun <reified T> T.collectionPropertyValues(): Collection<T> =
                     arguments = listOf(
                         KTypeProjection(
                             KVariance.OUT,
-                            T::class.starProjectedType
+                            kClass.starProjectedType
                         ),
                     ),
                     nullable = false,
@@ -36,7 +43,10 @@ inline fun <reified T> T.collectionPropertyValues(): Collection<T> =
         .filterIsInstance<KProperty1<T, Collection<T>>>()
         .flatMap { it.get(this) }
 
-inline fun <reified T> T.mapPropertyValues(): Collection<T> =
+inline fun <reified T : Any> T.mapPropertyValues(): Collection<T> =
+    mapPropertyValues(T::class)
+
+fun <T : Any> T.mapPropertyValues(kClass: KClass<T>): Collection<T> =
     this::class.memberProperties
         .filter {
             it.returnType.isSubtypeOf(
@@ -48,7 +58,7 @@ inline fun <reified T> T.mapPropertyValues(): Collection<T> =
                         ),
                         KTypeProjection(
                             KVariance.OUT,
-                            T::class.starProjectedType
+                            kClass.starProjectedType
                         ),
                     ),
                     nullable = false,
