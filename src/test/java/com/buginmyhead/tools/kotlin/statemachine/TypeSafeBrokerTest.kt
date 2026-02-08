@@ -78,8 +78,6 @@ internal class TypeSafeBrokerTest : FreeSpec({
         broker[State("A")] = 5
         gc()
 
-        // broker as TypeSafeBrokerOnLinkedList
-        // println(broker.keyRefsAndEffects.first().first.get())
         broker.store shouldBe emptyMap()
     }
 }) {
