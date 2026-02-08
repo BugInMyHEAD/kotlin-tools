@@ -10,8 +10,8 @@ import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
 import com.buginmyhead.tools.kotlin.statemachine.StateMachine.Companion.invoke
 
 /**
- * @param S The type of the root state, extending [T].
- * @param T The base type for all states, extending [TypeSafeBroker.Key].
+ * @param S The type of the root state.
+ * @param T The type for the root and all nested states.
  */
 abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
     initialState: S
@@ -74,7 +74,7 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
 
         /**
          * The default implementation uses reflection to find
-         *  all first-depth properties of type [S].
+         *  all first-depth properties of type [T].
          */
         inline operator fun <S : T, reified T : TypeSafeBroker.Key<*>> invoke(
             initialState: S,
