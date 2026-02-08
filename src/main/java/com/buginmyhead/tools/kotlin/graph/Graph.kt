@@ -59,14 +59,22 @@ interface Graph<N, W> : Serializable {
 
         fun Graph<*, *>.isEmpty(): Boolean = nodes.isEmpty()
 
+        /**
+         * @return itself if it is immutable,
+         *  otherwise a new immutable [Graph] copying contents of the receiver.
+         */
         fun <N, W> Graph<N, W>.toGraph(): Graph<N, W> =
-            toGraph({ node -> node }, { _, _, weight, _, _ -> weight })
+            this as? ImmutableGraph<N, W>
+                ?: toGraph({ node -> node }, { _, _, weight, _, _ -> weight })
 
+        /**
+         * @return A new immutable [Graph] transforming contents of the receiver.
+         */
         fun <N, W, M, V> Graph<N, W>.toGraph(
             nodeTransform: (N) -> M,
             weightTransform: (from: N, to: N, weight: W, tFrom: M, tTo: M) -> V
         ): Graph<M, V> =
-            toMutableGraph(nodeTransform, weightTransform)
+            ImmutableGraph(toMutableGraph(nodeTransform, weightTransform))
 
         fun <N> Graph<N, *>.bfs(
             direction: Direction,

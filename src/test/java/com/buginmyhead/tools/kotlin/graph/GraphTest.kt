@@ -12,6 +12,7 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 
 internal class GraphTest : FreeSpec({
     "empty graph on creation" {
@@ -171,7 +172,7 @@ internal class GraphTest : FreeSpec({
         graphA.hashCode() shouldNotBe graphB.hashCode()
     }
 
-    "toGraph copies the graph" {
+    "toGraph copies the graph if it is mutable" {
         val original = MutableGraph<String, Int>()
         original.addEdge("A" to "B", 5)
         original.addEdge("B" to "C", 7)
@@ -183,6 +184,15 @@ internal class GraphTest : FreeSpec({
         copied.outs shouldBe original.outs
         copied.sinkNodes shouldBe original.sinkNodes
         copied.sourceNodes shouldBe original.sourceNodes
+    }
+
+    "toGraph does not copy the graph if it is immutable" {
+        val original = MutableGraph<String, Int>()
+        original.addEdge("A" to "B", 5)
+        original.addEdge("B" to "C", 7)
+        val immutable = original.toGraph()
+
+        immutable.toGraph() shouldBeSameInstanceAs immutable
     }
 
     "toMutableGraph copies the graph" {
