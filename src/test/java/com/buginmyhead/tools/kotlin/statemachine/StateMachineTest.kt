@@ -92,6 +92,19 @@ internal class StateMachineTest : FreeSpec({
         machine.pollEffect(a) shouldBe null
     }
 
+    "obtainContext creates context with current state and delegates" {
+        val b = State()
+        val a = State(child = b)
+        val machine = StateMachine(a) { states, event ->
+            pushEffect(states.first(), event as Int)
+            states.last()
+        }
+        val context = machine.obtainContext(machine.state)
+
+        context.pushEvent(5)
+        context.pollEffect() shouldBe 5
+        context.pollEffect() shouldBe null
+    }
 }) {
 
     class State(

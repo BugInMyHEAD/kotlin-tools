@@ -8,6 +8,7 @@ import com.buginmyhead.tools.kotlin.graph.Tree.Companion.ancestorsFrom
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.root
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
 import com.buginmyhead.tools.kotlin.statemachine.StateMachine.Companion.invoke
+import java.util.Objects
 
 /**
  * @param S The type of the root state.
@@ -25,7 +26,7 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
         set(value) {
             stateTree =
                 MutableGraph
-                    .from(setOf(value), ::browseStates)
+                    .from(setOf(value), ::nestedStatesAt)
                     .toTree()
         }
 
@@ -42,17 +43,17 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
     protected abstract fun onEvent(states: List<T>, event: Any): S
 
     /**
-     * Browses first-depth nested states of the [root] state.
+     * Browses first-depth nested states of the [state] state.
      *
-     * @param root The root state to browse nested states from.
-     * @return An iterable of first-depth nested states found within the [root] state.
+     * @param state The root state to browse nested states from.
+     * @return An iterable of first-depth nested states found within the [state] state.
      * @see state
      * @see stateTree
      * @see fieldPropertyValues
      * @see collectionPropertyValues
      * @see invoke
      */
-    abstract fun browseStates(root: T): Iterable<T>
+    abstract fun nestedStatesAt(state: T): Iterable<T>
 
     fun pushEvent(sender: T, event: Any) {
         state = onEvent(stateTree.ancestorsFrom(sender).toList(), event)
@@ -62,7 +63,40 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
         stateToEffect[receiver] = effect
     }
 
-    fun <T : TypeSafeBroker.Key<F>, F : Any> pollEffect(state: T): F? = stateToEffect.poll(state)
+    fun <T : TypeSafeBroker.Key<F>, F : Any> pollEffect(receiver: T): F? = stateToEffect.poll(receiver)
+
+    fun <U : TypeSafeBroker.Key<F>, F : Any> obtainContext(state: U) = Context(
+        state,
+        pushEvent = { state, event -> pushEvent(state as T, event) },
+        pollEffect = { state -> pollEffect(state as TypeSafeBroker.Key<*>) },
+    )
+
+    class Context<S : TypeSafeBroker.Key<F>, F : Any>(
+        val state: S,
+        private val pushEvent: (state: Any, event: Any) -> Unit,
+        private val pollEffect: (state: Any) -> Any?,
+    ) {
+
+        fun pushEvent(event: Any): Unit = pushEvent(state, event)
+
+        @Suppress("UNCHECKED_CAST")
+        fun pollEffect(): F? = pollEffect(state) as F?
+
+        fun <T : TypeSafeBroker.Key<G>, G : Any> with(state: T) =
+            Context(state, pushEvent, pollEffect)
+
+        override fun equals(other: Any?): Boolean =
+            this === other
+                    || (
+                    other is Context<*, *>
+                            && state == other.state
+                            && pushEvent == other.pushEvent
+                            && pollEffect == other.pollEffect
+                    )
+
+        override fun hashCode(): Int = Objects.hash(state, pushEvent, pollEffect)
+
+    }
 
     interface EffectSender {
 
@@ -78,7 +112,7 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
          */
         inline operator fun <S : T, reified T : TypeSafeBroker.Key<*>> invoke(
             initialState: S,
-            crossinline browseStates: (root: T) -> Iterable<T> =
+            crossinline nestedStatesAt: (state: T) -> Iterable<T> =
                 { it.fieldPropertyValues() + it.collectionPropertyValues() },
             crossinline onEvent: EffectSender.(states: List<T>, event: Any) -> S,
         ) = object : StateMachine<S, T>(initialState) {
@@ -92,8 +126,8 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
                     thisStateMachine.pushEffect(receiver, effect)
             }
 
-            override fun browseStates(root: T): Iterable<T> =
-                browseStates(root)
+            override fun nestedStatesAt(state: T): Iterable<T> =
+                nestedStatesAt(state)
 
             override fun onEvent(states: List<T>, event: Any): S =
                 effectSender.onEvent(states, event)
