@@ -8,8 +8,18 @@ import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 
 internal class TreeTest : FreeSpec({
+
+    "toTree returns the same instance if the graph is Tree" {
+        val graph = MutableGraph<String, Unit>()
+        graph.addNode("A")
+        val tree = graph.toTree()
+
+        tree.toTree() shouldBeSameInstanceAs tree
+    }
+
     "toTree copies the graph that is a tree" {
         val graph = MutableGraph<String, Int>()
         graph.addEdge("A" to "B", 5)

@@ -320,6 +320,12 @@ internal class GraphTest : FreeSpec({
         graph.sinkNodes shouldBe setOf("E")
     }
 
+    "toAcyclicGraph returns the same instance if the graph is AcyclicGraph" {
+        val acyclicGraph = MutableGraph<String, Int>().toAcyclicGraph()
+
+        acyclicGraph.toAcyclicGraph() shouldBeSameInstanceAs acyclicGraph
+    }
+
     "toAcyclicGraph copies the graph that is acyclic graph" {
         val graph = MutableGraph<String, Int>()
         graph.addEdge("A" to "B", 5)

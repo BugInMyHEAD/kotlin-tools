@@ -6,21 +6,21 @@ import com.buginmyhead.tools.kotlin.graph.Graph.Companion.toGraph
 /**
  * Represents a directed acyclic graph structure.
  */
-interface AcyclicGraph<N, W> : Graph<N, W> {
+interface AcyclicGraph<N, W> : ImmutableGraph<N, W> {
 
     companion object {
 
         @Throws(CyclicGraphException::class)
-        fun <N, W> Graph<N, W>.toAcyclicGraph(): AcyclicGraph<N, W> {
-            // Copies the graph as an AcyclicGraph.
-            // All nodes have been visited without detecting a cycle.
-            return object : AcyclicGraph<N, W>, Graph<N, W> by toGraph() {
-                init {
-                    // May throw CyclicGraphException
-                    topologicalSort(Graph.Direction.Forward).forEach { }
+        fun <N, W> Graph<N, W>.toAcyclicGraph(): AcyclicGraph<N, W> =
+            this as? AcyclicGraph<N, W>
+                // Copies the graph as an AcyclicGraph.
+                // All nodes have been visited without detecting a cycle.
+                ?: object : AcyclicGraph<N, W>, Graph<N, W> by toGraph() {
+                    init {
+                        // May throw CyclicGraphException
+                        topologicalSort(Graph.Direction.Forward).forEach { }
+                    }
                 }
-            }
-        }
 
         // CyclicGraphException should not be thrown
         //  because it should be thrown on AcyclicGraph creation.

@@ -2,6 +2,15 @@ package com.buginmyhead.tools.kotlin.graph
 
 /**
  * It is a simple wrapper over a [Graph] to mark it as immutable.
- * Making immutability is in charge of the [original]'s implementation.
+ * Actual immutability can be achieved by encapsulating access to the mutable delegate.
  */
-class ImmutableGraph<N, W>(original: Graph<N, W>) : Graph<N, W> by original
+interface ImmutableGraph<N, W> : Graph<N, W> {
+
+    companion object {
+
+        operator fun <N, W> invoke(original: Graph<N, W>): Graph<N, W> =
+            object : ImmutableGraph<N, W>, Graph<N, W> by original {}
+
+    }
+
+}

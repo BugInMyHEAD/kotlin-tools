@@ -14,20 +14,18 @@ interface Tree<N, W> : AcyclicGraph<N, W> {
 
     companion object {
 
-        @Throws(
-            CyclicGraphException::class,
-            NotATreeException::class,
-        )
+        @Throws(NotATreeException::class)
         fun <N, W> Graph<N, W>.toTree(): Tree<N, W> = try {
-            // Copies the graph as a Tree.
-            object : Tree<N, W>, AcyclicGraph<N, W> by toAcyclicGraph() {
-                init {
-                    if (sourceNodes.size != 1)
-                        throw NotATreeException("Multiple root node candidates found.")
-                    if (ins.values.any { it.size > 1 })
-                        throw NotATreeException("A node with multiple parents found.")
+            this as? Tree<N, W>
+                // Copies the graph as a Tree.
+                ?: object : Tree<N, W>, AcyclicGraph<N, W> by toAcyclicGraph() {
+                    init {
+                        if (sourceNodes.size != 1)
+                            throw NotATreeException("Multiple root node candidates found.")
+                        if (ins.values.any { it.size > 1 })
+                            throw NotATreeException("A node with multiple parents found.")
+                    }
                 }
-            }
         } catch (cause: CyclicGraphException) {
             throw NotATreeException(cause)
         }
