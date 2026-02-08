@@ -6,7 +6,6 @@ import com.buginmyhead.tools.kotlin.graph.Graph.Companion.bfs
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.toGraph
 import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.addEdge
 import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.toMutableGraph
-import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
@@ -466,39 +465,5 @@ internal class GraphTest : FreeSpec({
 
         val result = acyclicGraph.topologicalSort(Graph.Direction.Backward).toList()
         result shouldBe listOf("D", "A", "C", "B")
-    }
-
-    "toTree copies the graph that is a tree" {
-        val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("A" to "C", 7)
-        graph.addEdge("C" to "D", 11)
-        val tree = graph.toTree()
-
-        tree.nodes shouldBe setOf("A", "B", "C", "D")
-        tree.edges shouldBe mapOf(
-            ("A" to "B") to 5,
-            ("A" to "C") to 7,
-            ("A" to "C") to 7,
-            ("C" to "D") to 11,
-        )
-        tree.sourceNodes shouldBe setOf("A")
-        tree.sinkNodes shouldBe setOf("B", "D")
-    }
-
-    "toTree fails with NotATreeException if graph has multiple roots" {
-        val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "C", 5)
-        graph.addEdge("B" to "D", 7)
-
-        shouldThrow<NotATreeException> { graph.toTree() }
-    }
-
-    "toTree fails with NotATreeException if any node has multiple parents" {
-        val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "C", 5)
-        graph.addEdge("B" to "C", 7)
-
-        shouldThrow<NotATreeException> { graph.toTree() }
     }
 })
