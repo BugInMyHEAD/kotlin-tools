@@ -86,11 +86,12 @@ class MutableGraph<N, W> : Graph<N, W> {
 
     override fun equals(other: Any?): Boolean =
         this === other
-                ||
-                (other is Graph<*, *>
+                || (
+                other is Graph<*, *>
                         && this.edges == other.edges
                         && this.sourceNodes == other.sourceNodes
-                        && this.sinkNodes == other.sinkNodes)
+                        && this.sinkNodes == other.sinkNodes
+                )
 
     override fun hashCode(): Int = Objects.hash(
         edges,
