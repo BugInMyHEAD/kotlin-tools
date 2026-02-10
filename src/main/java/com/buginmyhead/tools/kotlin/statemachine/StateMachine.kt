@@ -59,20 +59,20 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
         state = onEvent(stateTree.ancestorsFrom(sender).toList(), event)
     }
 
-    protected fun <T : TypeSafeBroker.Key<F>, F : Any> pushEffect(receiver: T, effect: F) {
+    protected fun <T : TypeSafeBroker.Key<G>, G : Any> pushEffect(receiver: T, effect: G) {
         stateToEffect[receiver] = effect
     }
 
-    fun <T : TypeSafeBroker.Key<F>, F : Any> pollEffect(receiver: T): F? = stateToEffect.poll(receiver)
+    fun <T : TypeSafeBroker.Key<G>, G : Any> pollEffect(receiver: T): G? = stateToEffect.poll(receiver)
 
-    fun <U : TypeSafeBroker.Key<F>, F : Any> obtainContext(state: U) = Context(
+    fun <U : TypeSafeBroker.Key<H>, H : Any> obtainContext(state: U) = Context(
         state,
         pushEvent = { state, event -> pushEvent(state as T, event) },
         pollEffect = { state -> pollEffect(state as TypeSafeBroker.Key<*>) },
     )
 
-    class Context<S : TypeSafeBroker.Key<F>, F : Any>(
-        val state: S,
+    class Context<T : TypeSafeBroker.Key<G>, G : Any>(
+        val state: T,
         private val pushEvent: (state: Any, event: Any) -> Unit,
         private val pollEffect: (state: Any) -> Any?,
     ) {
@@ -80,9 +80,9 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
         fun pushEvent(event: Any): Unit = pushEvent(state, event)
 
         @Suppress("UNCHECKED_CAST")
-        fun pollEffect(): F? = pollEffect(state) as F?
+        fun pollEffect(): G? = pollEffect(state) as G?
 
-        fun <T : TypeSafeBroker.Key<G>, G : Any> with(state: T) =
+        fun <U : TypeSafeBroker.Key<H>, H : Any> with(state: U) =
             Context(state, pushEvent, pollEffect)
 
         override fun equals(other: Any?): Boolean =
@@ -100,7 +100,7 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
 
     interface EffectSender {
 
-        fun <T : TypeSafeBroker.Key<F>, F : Any> pushEffect(receiver: T, effect: F)
+        fun <T : TypeSafeBroker.Key<G>, G : Any> pushEffect(receiver: T, effect: G)
 
     }
 
@@ -122,7 +122,7 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
             private val thisStateMachine = this
 
             val effectSender: EffectSender = object : EffectSender {
-                override fun <T : TypeSafeBroker.Key<F>, F : Any> pushEffect(receiver: T, effect: F) =
+                override fun <T : TypeSafeBroker.Key<G>, G : Any> pushEffect(receiver: T, effect: G) =
                     thisStateMachine.pushEffect(receiver, effect)
             }
 
