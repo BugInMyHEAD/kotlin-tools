@@ -1,7 +1,5 @@
 package com.buginmyhead.tools.kotlin.statemachine
 
-import com.buginmyhead.tools.kotlin.collectionPropertyValues
-import com.buginmyhead.tools.kotlin.fieldPropertyValues
 import com.buginmyhead.tools.kotlin.graph.MutableGraph
 import com.buginmyhead.tools.kotlin.graph.Tree
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.ancestorsFrom

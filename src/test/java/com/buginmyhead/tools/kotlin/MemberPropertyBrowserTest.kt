@@ -1,5 +1,8 @@
 package com.buginmyhead.tools.kotlin
 
+import com.buginmyhead.tools.kotlin.statemachine.collectionPropertyValues
+import com.buginmyhead.tools.kotlin.statemachine.fieldPropertyValues
+import com.buginmyhead.tools.kotlin.statemachine.mapPropertyValues
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe

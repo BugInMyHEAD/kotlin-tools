@@ -1,6 +1,6 @@
 @file:JvmName("MemberPropertyBrowser")
 
-package com.buginmyhead.tools.kotlin
+package com.buginmyhead.tools.kotlin.statemachine
 
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
