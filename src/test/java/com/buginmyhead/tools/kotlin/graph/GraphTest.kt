@@ -10,7 +10,6 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 
 internal class GraphTest : FreeSpec({
@@ -373,10 +372,6 @@ internal class GraphTest : FreeSpec({
         graph.addEdge("C" to "A", 11)
 
         shouldThrow<CyclicGraphException> { graph.toAcyclicGraph() }
-    }
-
-    "CyclicGraphException is an IllegalStateException" {
-        CyclicGraphException().shouldBeInstanceOf<IllegalStateException>()
     }
 
     "bfs forward on empty graph produces no nodes" {

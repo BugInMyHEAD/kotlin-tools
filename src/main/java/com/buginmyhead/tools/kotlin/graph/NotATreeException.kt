@@ -1,6 +1,6 @@
 package com.buginmyhead.tools.kotlin.graph
 
-class NotATreeException : IllegalStateException {
+class NotATreeException : IllegalArgumentException {
 
     constructor(message: String) : super(message)
 
