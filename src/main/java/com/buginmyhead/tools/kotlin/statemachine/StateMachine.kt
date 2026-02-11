@@ -21,7 +21,7 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
     var state: S
         @Suppress("UNCHECKED_CAST")
         get() = stateTree.root as S
-        set(value) {
+        private set(value) {
             stateTree =
                 MutableGraph
                     .from(setOf(value), ::nestedStatesAt)
