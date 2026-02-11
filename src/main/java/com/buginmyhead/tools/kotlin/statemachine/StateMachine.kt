@@ -63,6 +63,7 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
 
     fun <T : TypeSafeBroker.Key<G>, G : Any> pollEffect(receiver: T): G? = stateToEffect.poll(receiver)
 
+    @Suppress("UNCHECKED_CAST")
     fun <U : TypeSafeBroker.Key<H>, H : Any> obtainContext(state: U) = Context(
         state,
         pushEvent = { state, event -> pushEvent(state as T, event) },
