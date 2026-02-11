@@ -120,7 +120,7 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
              */
             private val thisStateMachine = this
 
-            val effectSender: EffectSender = object : EffectSender {
+            private val effectSender: EffectSender = object : EffectSender {
                 override fun <T : TypeSafeBroker.Key<G>, G : Any> pushEffect(receiver: T, effect: G) =
                     thisStateMachine.pushEffect(receiver, effect)
             }
