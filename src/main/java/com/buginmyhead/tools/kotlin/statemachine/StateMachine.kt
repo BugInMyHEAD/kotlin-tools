@@ -36,7 +36,7 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
 
     /**
      * @param states The list of states from the sender to the root state. It guarantees that
-     *  the first element is the sender state and the last element is the root state.
+     *  the first element is the sender state and the last element is the root state, [state].
      */
     protected abstract fun onEvent(states: List<T>, event: Any): S
 
