@@ -7,7 +7,7 @@ internal class StateMachineTest : FreeSpec({
     "pushEvent updates state" {
         val a = State()
         val b = State()
-        val machine = StateMachine(a) { _, _ ->
+        val machine = StateMachine(a) { states, root, event ->
             b
         }
 
@@ -22,9 +22,9 @@ internal class StateMachineTest : FreeSpec({
         val c = State()
         val b = State(child = c)
         val a = State(child = b)
-        val machine = StateMachine(a) { states, event ->
+        val machine = StateMachine(a) { states, root, event ->
             statesCaptured = states
-            states.last()
+            root
         }
 
         machine.pushEvent(c, Any())
@@ -38,9 +38,9 @@ internal class StateMachineTest : FreeSpec({
         val c = State()
         val b = State(children = setOf(c))
         val a = State(children = listOf(b))
-        val machine = StateMachine(a) { states, event ->
+        val machine = StateMachine(a) { states, root, event ->
             statesCaptured = states
-            states.last()
+            root
         }
 
         machine.pushEvent(c, Any())
@@ -54,9 +54,9 @@ internal class StateMachineTest : FreeSpec({
         val c = State()
         val b = State(children = listOf(c))
         val a = State(child = b)
-        val machine = StateMachine(a) { states, _ ->
+        val machine = StateMachine(a) { states, root, event ->
             statesCaptured = states
-            states.last()
+            root
         }
 
         machine.pushEvent(c, "event")
@@ -72,11 +72,11 @@ internal class StateMachineTest : FreeSpec({
     "pushEffect stores effect retrievable by pollEffect and is removed after polling" {
         val b = State()
         val a = State(child = b)
-        val machine = StateMachine(a) { states, event ->
+        val machine = StateMachine(a) { states, root, event ->
             states.forEach { state ->
                 pushEffect(state, event as Int)
             }
-            states.last()
+            root
         }
 
         machine.pushEvent(b, 5)
@@ -95,9 +95,9 @@ internal class StateMachineTest : FreeSpec({
     "obtainContext creates context with current state and delegates" {
         val b = State()
         val a = State(child = b)
-        val machine = StateMachine(a) { states, event ->
+        val machine = StateMachine(a) { states, root, event ->
             pushEffect(states.first(), event as Int)
-            states.last()
+            root
         }
         val context = machine.obtainContext(machine.state)
 

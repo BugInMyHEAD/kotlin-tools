@@ -114,7 +114,7 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
             initialState: S,
             crossinline nestedStatesAt: (state: T) -> Iterable<T> =
                 { it.fieldPropertyValues() + it.collectionPropertyValues() },
-            crossinline onEvent: EffectSender.(states: List<T>, event: Any) -> S,
+            crossinline onEvent: EffectSender.(states: List<T>, root: S, event: Any) -> S,
         ) = object : StateMachine<S, T>(initialState) {
             /**
              * Kotlin does not have a syntactic way to reference this `object` in a nested class.
@@ -130,7 +130,7 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
                 nestedStatesAt(state)
 
             override fun onEvent(states: List<T>, event: Any): S =
-                effectSender.onEvent(states, event)
+                effectSender.onEvent(states, state, event)
         }
 
     }
