@@ -51,7 +51,7 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
      * @see collectionPropertyValues
      * @see invoke
      */
-    abstract fun nestedStatesAt(state: T): Iterable<T>
+    protected abstract fun nestedStatesAt(state: T): Iterable<T>
 
     fun pushEvent(sender: T, event: Any) {
         state = onEvent(stateTree.ancestorsFrom(sender).toList(), event)
