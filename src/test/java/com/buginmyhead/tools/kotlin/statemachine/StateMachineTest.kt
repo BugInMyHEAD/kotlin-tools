@@ -8,7 +8,7 @@ internal class StateMachineTest : FreeSpec({
         val a = State()
         val b = State()
         val machine = StateMachine(a) { states, root, event ->
-            b
+            Transition(b)
         }
 
         machine.state shouldBe a
@@ -24,7 +24,7 @@ internal class StateMachineTest : FreeSpec({
         val a = State(child = b)
         val machine = StateMachine(a) { states, root, event ->
             statesCaptured = states
-            root
+            Transition(root)
         }
 
         machine.pushEvent(c, Any())
@@ -40,7 +40,7 @@ internal class StateMachineTest : FreeSpec({
         val a = State(children = listOf(b))
         val machine = StateMachine(a) { states, root, event ->
             statesCaptured = states
-            root
+            Transition(root)
         }
 
         machine.pushEvent(c, Any())
@@ -56,7 +56,7 @@ internal class StateMachineTest : FreeSpec({
         val a = State(child = b)
         val machine = StateMachine(a) { states, root, event ->
             statesCaptured = states
-            root
+            Transition(root)
         }
 
         machine.pushEvent(c, "event")
@@ -73,10 +73,11 @@ internal class StateMachineTest : FreeSpec({
         val b = State()
         val a = State(child = b)
         val machine = StateMachine(a) { states, root, event ->
+            val stateToEffect = TypeSafeBroker()
             states.forEach { state ->
-                pushEffect(state, event as Int)
+                stateToEffect[state] = event as Int
             }
-            root
+            Transition(root, stateToEffect)
         }
 
         machine.pushEvent(b, 5)
@@ -96,8 +97,9 @@ internal class StateMachineTest : FreeSpec({
         val b = State()
         val a = State(child = b)
         val machine = StateMachine(a) { states, root, event ->
-            pushEffect(states.first(), event as Int)
-            root
+            val stateToEffect = TypeSafeBroker()
+            stateToEffect[states.first()] = event as Int
+            Transition(root, stateToEffect)
         }
         val context = machine.obtainContext(machine.state)
 

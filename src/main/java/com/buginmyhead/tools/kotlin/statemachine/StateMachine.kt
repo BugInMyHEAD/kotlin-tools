@@ -5,17 +5,28 @@ import com.buginmyhead.tools.kotlin.graph.Tree
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.ancestorsFrom
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.root
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
-import com.buginmyhead.tools.kotlin.statemachine.StateMachine.Companion.invoke
 import java.util.Objects
 
 /**
  * @param S The type of the root state.
  * @param T The type for the root and all nested states.
+ * @param nestedStatesAt How to browse first-depth nested states of the [state].
+ *  This is repetitively executed to build the [stateTree].
+ *  You can consider using such as [fieldPropertyValues] and/or [collectionPropertyValues].
+ * @param transitionFunction A pure function to determine the next state and effects
+ *  when an event is pushed.
+ *
+ * @see Companion.invoke
  */
-abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
-    initialState: S
+class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
+    initialState: S,
+    val nestedStatesAt: (state: T) -> Iterable<T>,
+    val transitionFunction: TransitionFunction<S, T>
 ) {
 
+    /**
+     * To find the path of states from the sender to the root state when an event is pushed.
+     */
     private lateinit var stateTree: Tree<T, Unit>
 
     var state: S
@@ -24,7 +35,7 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
         private set(value) {
             stateTree =
                 MutableGraph
-                    .from(setOf(value), ::nestedStatesAt)
+                    .from(setOf(value), nestedStatesAt)
                     .toTree()
         }
 
@@ -32,36 +43,17 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
         state = initialState
     }
 
-    private val stateToEffect = TypeSafeBroker()
-
-    /**
-     * @param states The list of states from the sender to the root state. It guarantees that
-     *  the first element is the sender state and the last element is the root state, [state].
-     */
-    protected abstract fun onEvent(states: List<T>, event: Any): S
-
-    /**
-     * Browses first-depth nested states of the [state] state.
-     *
-     * @param state The root state to browse nested states from.
-     * @return An iterable of first-depth nested states found within the [state] state.
-     * @see state
-     * @see stateTree
-     * @see fieldPropertyValues
-     * @see collectionPropertyValues
-     * @see invoke
-     */
-    protected abstract fun nestedStatesAt(state: T): Iterable<T>
+    private var stateToEffect = TypeSafeBroker()
 
     fun pushEvent(sender: T, event: Any) {
-        state = onEvent(stateTree.ancestorsFrom(sender).toList(), event)
+        val transition =
+            transitionFunction.onEvent(stateTree.ancestorsFrom(sender).toList(), state, event)
+        state = transition.state
+        stateToEffect = transition.stateToEffect
     }
 
-    protected fun <T : TypeSafeBroker.Key<G>, G : Any> pushEffect(receiver: T, effect: G) {
-        stateToEffect[receiver] = effect
-    }
-
-    fun <T : TypeSafeBroker.Key<G>, G : Any> pollEffect(receiver: T): G? = stateToEffect.poll(receiver)
+    fun <T : TypeSafeBroker.Key<G>, G : Any> pollEffect(receiver: T): G? =
+        stateToEffect.poll(receiver)
 
     @Suppress("UNCHECKED_CAST")
     fun <U : TypeSafeBroker.Key<H>, H : Any> obtainContext(state: U) = Context(
@@ -97,40 +89,20 @@ abstract class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
 
     }
 
-    interface EffectSender {
-
-        fun <T : TypeSafeBroker.Key<G>, G : Any> pushEffect(receiver: T, effect: G)
-
-    }
-
     companion object {
 
         /**
-         * The default implementation uses reflection to find
-         *  all first-depth properties of type [T].
+         * @param nestedStatesAt The default argument uses
+         *  [fieldPropertyValues] and [collectionPropertyValues] to find nested states recursively.
+         *
+         * @see [StateMachine.nestedStatesAt]
          */
         inline operator fun <S : T, reified T : TypeSafeBroker.Key<*>> invoke(
             initialState: S,
-            crossinline nestedStatesAt: (state: T) -> Iterable<T> =
+            noinline nestedStatesAt: (state: T) -> Iterable<T> =
                 { it.fieldPropertyValues() + it.collectionPropertyValues() },
-            crossinline onEvent: EffectSender.(states: List<T>, root: S, event: Any) -> S,
-        ) = object : StateMachine<S, T>(initialState) {
-            /**
-             * Kotlin does not have a syntactic way to reference this `object` in a nested class.
-             */
-            private val thisStateMachine = this
-
-            private val effectSender: EffectSender = object : EffectSender {
-                override fun <T : TypeSafeBroker.Key<G>, G : Any> pushEffect(receiver: T, effect: G) =
-                    thisStateMachine.pushEffect(receiver, effect)
-            }
-
-            override fun nestedStatesAt(state: T): Iterable<T> =
-                nestedStatesAt(state)
-
-            override fun onEvent(states: List<T>, event: Any): S =
-                effectSender.onEvent(states, state, event)
-        }
+            transitionFunction: TransitionFunction<S, T>,
+        ) = StateMachine(initialState, nestedStatesAt, transitionFunction)
 
     }
 
