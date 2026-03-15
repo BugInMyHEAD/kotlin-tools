@@ -20,8 +20,8 @@ import java.util.Objects
  */
 class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
     initialState: S,
+    val transitionFunction: TransitionFunction<S, T>,
     val nestedStatesAt: (state: T) -> Iterable<T>,
-    val transitionFunction: TransitionFunction<S, T>
 ) {
 
     /**
@@ -99,10 +99,14 @@ class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
          */
         inline operator fun <S : T, reified T : TypeSafeBroker.Key<*>> invoke(
             initialState: S,
+            transitionFunction: TransitionFunction<S, T>,
             noinline nestedStatesAt: (state: T) -> Iterable<T> =
                 { it.fieldPropertyValues() + it.collectionPropertyValues() },
-            transitionFunction: TransitionFunction<S, T>,
-        ) = StateMachine(initialState, nestedStatesAt, transitionFunction)
+        ) = StateMachine(
+            initialState,
+            transitionFunction,
+            nestedStatesAt,
+        )
 
     }
 

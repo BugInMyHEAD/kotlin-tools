@@ -11,6 +11,7 @@ java {
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+        freeCompilerArgs.add("-Xjvm-default=all")
     }
 }
 dependencies {
@@ -44,7 +45,6 @@ kover {
                     "com.buginmyhead.tools.kotlin.WeakIdentityHashMap",
                     "com.buginmyhead.tools.kotlin.WeakIdentityHashMap$*",
                     "com.buginmyhead.tools.kotlin.statemachine.TypeSafeBroker",
-                    "com.buginmyhead.tools.kotlin.statemachine.TypeSafeBroker\$DefaultImpls",
                 )
             }
         }

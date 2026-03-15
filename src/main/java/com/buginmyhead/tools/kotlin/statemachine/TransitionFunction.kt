@@ -10,4 +10,23 @@ fun interface TransitionFunction<S : T, T : TypeSafeBroker.Key<*>> {
      */
     fun onEvent(states: List<T>, root: S, event: Any): Transition<S>
 
+    fun interface WithScope<S : T, T : TypeSafeBroker.Key<*>> : TransitionFunction<S, T> {
+
+        fun Scope.onEvent(states: List<T>, root: S, event: Any): S
+
+        override fun onEvent(states: List<T>, root: S, event: Any): Transition<S> {
+            val scope = object : Scope {
+                override val stateToEffect = TypeSafeBroker()
+            }
+            return Transition(scope.onEvent(states, root, event), scope.stateToEffect)
+        }
+
+    }
+
+    interface Scope {
+
+        val stateToEffect: TypeSafeBroker
+
+    }
+
 }

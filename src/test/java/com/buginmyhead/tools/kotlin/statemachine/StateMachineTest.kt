@@ -7,9 +7,10 @@ internal class StateMachineTest : FreeSpec({
     "pushEvent updates state" {
         val a = State()
         val b = State()
-        val machine = StateMachine(a) { states, root, event ->
-            Transition(b)
+        val transitionFunction = TransitionFunction.WithScope { states, root, event ->
+            b
         }
+        val machine = StateMachine(a, transitionFunction)
 
         machine.state shouldBe a
         machine.pushEvent(a, "event")
@@ -22,10 +23,11 @@ internal class StateMachineTest : FreeSpec({
         val c = State()
         val b = State(child = c)
         val a = State(child = b)
-        val machine = StateMachine(a) { states, root, event ->
+        val transitionFunction = TransitionFunction.WithScope { states, root, event ->
             statesCaptured = states
-            Transition(root)
+            root
         }
+        val machine = StateMachine(a, transitionFunction)
 
         machine.pushEvent(c, Any())
 
@@ -38,10 +40,11 @@ internal class StateMachineTest : FreeSpec({
         val c = State()
         val b = State(children = setOf(c))
         val a = State(children = listOf(b))
-        val machine = StateMachine(a) { states, root, event ->
+        val transitionFunction = TransitionFunction.WithScope { states, root, event ->
             statesCaptured = states
-            Transition(root)
+            root
         }
+        val machine = StateMachine(a, transitionFunction)
 
         machine.pushEvent(c, Any())
 
@@ -54,10 +57,11 @@ internal class StateMachineTest : FreeSpec({
         val c = State()
         val b = State(children = listOf(c))
         val a = State(child = b)
-        val machine = StateMachine(a) { states, root, event ->
+        val transitionFunction = TransitionFunction.WithScope { states, root, event ->
             statesCaptured = states
-            Transition(root)
+            root
         }
+        val machine = StateMachine(a, transitionFunction)
 
         machine.pushEvent(c, "event")
         statesCaptured shouldBe listOf(c, b, a)
@@ -72,13 +76,13 @@ internal class StateMachineTest : FreeSpec({
     "pushEffect stores effect retrievable by pollEffect and is removed after polling" {
         val b = State()
         val a = State(child = b)
-        val machine = StateMachine(a) { states, root, event ->
-            val stateToEffect = TypeSafeBroker()
-            states.forEach { state ->
-                stateToEffect[state] = event as Int
-            }
-            Transition(root, stateToEffect)
+        val transitionFunction = TransitionFunction.WithScope { states, root, event ->
+             states.forEach { state ->
+                 stateToEffect[state] = event as Int
+             }
+             root
         }
+        val machine = StateMachine(a, transitionFunction)
 
         machine.pushEvent(b, 5)
         machine.pollEffect(b) shouldBe 5
@@ -96,11 +100,11 @@ internal class StateMachineTest : FreeSpec({
     "obtainContext creates context with current state and delegates" {
         val b = State()
         val a = State(child = b)
-        val machine = StateMachine(a) { states, root, event ->
-            val stateToEffect = TypeSafeBroker()
-            stateToEffect[states.first()] = event as Int
-            Transition(root, stateToEffect)
+        val transitionFunction = TransitionFunction.WithScope { states, root, event ->
+             stateToEffect[states.first()] = event as Int
+             root
         }
+        val machine = StateMachine(a, transitionFunction)
         val context = machine.obtainContext(machine.state)
 
         context.pushEvent(5)
