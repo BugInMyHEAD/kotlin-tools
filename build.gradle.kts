@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     alias(libs.plugins.java.library)
@@ -11,7 +13,7 @@ java {
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
-        freeCompilerArgs.add("-Xjvm-default=all")
+        jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
     }
 }
 dependencies {
