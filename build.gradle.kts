@@ -23,6 +23,7 @@ dependencies {
     testImplementation(libs.kotlin.coroutines.test)
     testImplementation(libs.kotest.junit5)
     testImplementation(libs.kotest.assertions)
+    testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 tasks.withType<Test> {
@@ -46,7 +47,6 @@ kover {
                     "com.buginmyhead.tools.kotlin.CollectionCoroutineExtKt",
                     "com.buginmyhead.tools.kotlin.WeakIdentityHashMap",
                     "com.buginmyhead.tools.kotlin.WeakIdentityHashMap$*",
-                    "com.buginmyhead.tools.kotlin.statemachine.TypeSafeBroker",
                 )
             }
         }
