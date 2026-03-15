@@ -10,11 +10,11 @@ import java.util.Objects
 /**
  * @param S The type of the root state.
  * @param T The type for the root and all nested states.
+ * @param transitionFunction A pure function to determine the next state and effects
+ *  when an event is pushed.
  * @param nestedStatesAt How to browse first-depth nested states of the [state].
  *  This is repetitively executed to build the [stateTree].
  *  You can consider using such as [fieldPropertyValues] and/or [collectionPropertyValues].
- * @param transitionFunction A pure function to determine the next state and effects
- *  when an event is pushed.
  *
  * @see Companion.invoke
  */
