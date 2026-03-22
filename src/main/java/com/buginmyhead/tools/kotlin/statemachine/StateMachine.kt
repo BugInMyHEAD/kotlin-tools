@@ -20,8 +20,8 @@ import java.util.Objects
  */
 class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
     initialState: S,
-    val transitionFunction: TransitionFunction<S, T>,
-    val nestedStatesAt: (state: T) -> Iterable<T>,
+    private val transitionFunction: TransitionFunction<S, T>,
+    private val nestedStatesAt: (state: T) -> Iterable<T>,
 ) {
 
     /**
