@@ -2,13 +2,12 @@ package com.buginmyhead.tools.kotlin.graph
 
 import com.buginmyhead.tools.kotlin.graph.AcyclicGraph.Companion.toAcyclicGraph
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.bfs
-import com.buginmyhead.tools.kotlin.graph.Graph.Direction
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.leaves
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.root
 
 /**
- * [Direction.Forward] means from [root] to [leaves].
- * [Direction.Backward] means from [leaves] to [root].
+ * [Graph.Direction.Forward] means from [root] to [leaves].
+ * [Graph.Direction.Backward] means from [leaves] to [root].
  */
 interface Tree<N, W> : AcyclicGraph<N, W> {
 
