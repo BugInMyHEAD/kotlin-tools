@@ -167,4 +167,41 @@ internal class TreeTest : FreeSpec({
         subtreeOfD.sourceNodes shouldBe setOf("D")
         subtreeOfD.sinkNodes shouldBe setOf("D")
     }
+
+    "subtreeOf on a subtree returns the correct nested subtree" {
+        val graph = MutableGraph<String, Int>()
+        graph.addEdge("A" to "B", 5)
+        graph.addEdge("A" to "C", 7)
+        graph.addEdge("C" to "D", 11)
+        graph.addEdge("C" to "E", 13)
+        graph.addEdge("E" to "F", 17)
+        val tree = graph.toTree()
+
+        val subtreeOfC = tree.subtreeOf("C")
+        val nestedSubtreeOfE = subtreeOfC.subtreeOf("E")
+        nestedSubtreeOfE.nodes shouldBe setOf("E", "F")
+        nestedSubtreeOfE.edges shouldBe mapOf(
+            ("E" to "F") to 17,
+        )
+        nestedSubtreeOfE.root shouldBe "E"
+        nestedSubtreeOfE.leaves shouldBe setOf("F")
+
+        val deepSubtreeOfF = nestedSubtreeOfE.subtreeOf("F")
+        deepSubtreeOfF.nodes shouldBe setOf("F")
+        deepSubtreeOfF.edges shouldBe emptyMap()
+        deepSubtreeOfF.root shouldBe "F"
+        deepSubtreeOfF.leaves shouldBe setOf("F")
+    }
+
+    "subtreeOf on a subtree throws for node outside the subtree" {
+        val graph = MutableGraph<String, Int>()
+        graph.addEdge("A" to "B", 5)
+        graph.addEdge("A" to "C", 7)
+        graph.addEdge("C" to "D", 11)
+        val tree = graph.toTree()
+
+        val subtreeOfC = tree.subtreeOf("C")
+        shouldThrow<IllegalArgumentException> { subtreeOfC.subtreeOf("B") }
+        shouldThrow<IllegalArgumentException> { subtreeOfC.subtreeOf("A") }
+    }
 })

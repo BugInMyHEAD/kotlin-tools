@@ -16,14 +16,13 @@ interface Tree<N, W> : AcyclicGraph<N, W> {
         @Throws(NotATreeException::class)
         fun <N, W> Graph<N, W>.toTree(): Tree<N, W> = try {
             this as? Tree<N, W>
-                // Copies the graph as a Tree.
-                ?: object : Tree<N, W>, AcyclicGraph<N, W> by toAcyclicGraph() {
-                    init {
-                        if (sourceNodes.size != 1)
-                            throw NotATreeException("Multiple root node candidates found.")
-                        if (ins.values.any { it.size > 1 })
-                            throw NotATreeException("A node with multiple parents found.")
-                    }
+                ?: run {
+                    val acyclic = toAcyclicGraph()
+                    if (acyclic.sourceNodes.size != 1)
+                        throw NotATreeException("Multiple root node candidates found.")
+                    if (acyclic.ins.values.any { it.size > 1 })
+                        throw NotATreeException("A node with multiple parents found.")
+                    IndexedTree(acyclic)
                 }
         } catch (cause: CyclicGraphException) {
             throw NotATreeException(cause)
@@ -40,58 +39,166 @@ interface Tree<N, W> : AcyclicGraph<N, W> {
             bfs(Graph.Direction.Backward, setOf(node))
 
         /**
-         * @return A subtree rooted at [node], copying contents of the receiver lazily.
+         * @return A subtree rooted at [node] in O(1) by narrowing the pre-order index range.
          * @throws IllegalArgumentException if [node] does not exist in the receiver.
          */
         @Throws(IllegalArgumentException::class)
         fun <N, W> Tree<N, W>.subtreeOf(node: N): Tree<N, W> {
+            if (this is IndexedTree<N, W>) {
+                require(containsNode(node)) {
+                    "The specified root node does not exist in the original tree."
+                }
+                return subtreeAt(node)
+            }
             require(node in nodes) {
                 "The specified root node does not exist in the original tree."
             }
-            return LazySubtree(this, node)
+            return IndexedTree(this).subtreeAt(node)
         }
 
     }
 
 }
 
-private class LazySubtree<N, W>(
-    original: Tree<N, W>,
-    root: N
+/**
+ * An indexed tree backed by a DFS pre-order traversal where all descendants of any node
+ * occupy a contiguous index range. A subtree is represented as a narrowed range over this
+ * index, making [subtreeAt] an O(1) operation regardless of nesting depth.
+ */
+private class IndexedTree<N, W> private constructor(
+    private val index: TreeIndex<N, W>,
+    private val rangeStart: Int,
+    private val rangeEnd: Int,
 ) : Tree<N, W> {
 
-    private val subtree: Tree<N, W> by lazy { Subtree(original, root) }
+    constructor(acyclicGraph: AcyclicGraph<N, W>) : this(
+        TreeIndex(acyclicGraph),
+        0,
+        acyclicGraph.nodes.size,
+    )
 
-    override val nodes: Set<N> get() = subtree.nodes
-    override val edges: Map<Pair<N, N>, W> get() = subtree.edges
-    override val outs: Map<N, Set<N>> get() = subtree.outs
-    override val ins: Map<N, Set<N>> get() = subtree.ins
-    override val sinkNodes: Set<N> get() = subtree.sinkNodes
-    override val sourceNodes: Set<N> get() = subtree.sourceNodes
+    /** O(1) containment check using the index, without materializing [nodes]. */
+    fun containsNode(node: N): Boolean {
+        val idx = index.nodeToIndex[node] ?: return false
+        return idx in rangeStart until rangeEnd
+    }
+
+    /** Creates a subtree rooted at [node] in O(1) by narrowing the index range. */
+    fun subtreeAt(node: N): IndexedTree<N, W> {
+        val idx = index.nodeToIndex.getValue(node)
+        return IndexedTree(index, idx, index.subtreeEnd[idx])
+    }
+
+    override val nodes: Set<N> by lazy {
+        LinkedHashSet<N>(rangeEnd - rangeStart).also { set ->
+            for (i in rangeStart until rangeEnd) set.add(index.preOrder[i])
+        }
+    }
+
+    override val edges: Map<Pair<N, N>, W> by lazy {
+        buildMap {
+            for (i in rangeStart until rangeEnd) {
+                val from = index.preOrder[i]
+                for (to in index.allOuts[from].orEmpty()) {
+                    put(from to to, index.allEdges.getValue(from to to))
+                }
+            }
+        }
+    }
+
+    override val outs: Map<N, Set<N>> by lazy {
+        buildMap {
+            for (i in rangeStart until rangeEnd) {
+                val node = index.preOrder[i]
+                put(node, index.allOuts[node].orEmpty())
+            }
+        }
+    }
+
+    override val ins: Map<N, Set<N>> by lazy {
+        buildMap {
+            for (i in rangeStart until rangeEnd) {
+                val node = index.preOrder[i]
+                put(node, if (i == rangeStart) emptySet() else index.allIns[node].orEmpty())
+            }
+        }
+    }
+
+    override val sinkNodes: Set<N> by lazy {
+        buildSet {
+            for (i in rangeStart until rangeEnd) {
+                val node = index.preOrder[i]
+                if (node in index.allSinkNodes) add(node)
+            }
+        }
+    }
+
+    override val sourceNodes: Set<N> by lazy {
+        setOf(index.preOrder[rangeStart])
+    }
 
 }
 
-private class Subtree<N, W>(
-    original: Tree<N, W>,
-    root: N
-) : Tree<N, W> {
+/**
+ * Pre-computed index structure for efficient subtree operations.
+ *
+ * Stores a DFS pre-order traversal where all descendants of any node
+ * form a contiguous range \[nodeToIndex\[node\], subtreeEnd\[nodeToIndex\[node\]]).
+ */
+private class TreeIndex<N, W>(
+    acyclicGraph: AcyclicGraph<N, W>,
+) {
 
-    override val nodes: Set<N> =
-        original.bfs(Graph.Direction.Forward, setOf(root)).toSet()
+    val preOrder: List<N>
+    val nodeToIndex: Map<N, Int>
+    val subtreeEnd: IntArray
 
-    override val edges: Map<Pair<N, N>, W> =
-        original.edges.filter { (arrow, weight) -> arrow.first in nodes }
+    val allEdges: Map<Pair<N, N>, W> = acyclicGraph.edges
+    val allOuts: Map<N, Set<N>> = acyclicGraph.outs
+    val allIns: Map<N, Set<N>> = acyclicGraph.ins
+    val allSinkNodes: Set<N> = acyclicGraph.sinkNodes
 
-    override val outs: Map<N, Set<N>> =
-        original.outs.filter { (node, neighbors) -> node in nodes }
+    init {
+        val root = acyclicGraph.sourceNodes.single()
+        val size = acyclicGraph.nodes.size
+        val order = ArrayList<N>(size)
 
-    override val ins: Map<N, Set<N>> =
-        original.ins.filter { (node, neighbors) -> node in nodes } + (root to emptySet())
+        // Iterative DFS pre-order traversal.
+        val stack = ArrayDeque<N>(size)
+        stack.addLast(root)
+        while (stack.isNotEmpty()) {
+            val node = stack.removeLast()
+            order.add(node)
+            val children = acyclicGraph.outs[node].orEmpty().toList()
+            for (i in children.indices.reversed()) {
+                stack.addLast(children[i])
+            }
+        }
 
-    override val sinkNodes: Set<N> =
-        original.sinkNodes.filter { it in nodes }.toSet()
+        preOrder = order
+        nodeToIndex = HashMap<N, Int>(size).also { map ->
+            for (i in order.indices) map[order[i]] = i
+        }
 
-    override val sourceNodes: Set<N> =
-        setOf(root)
+        // Compute exclusive end index for each node's subtree.
+        // In reverse pre-order: for leaves, end = index + 1;
+        // for internal nodes, end = max subtreeEnd among children.
+        val end = IntArray(size)
+        for (i in size - 1 downTo 0) {
+            val node = order[i]
+            val children = acyclicGraph.outs[node].orEmpty()
+            if (children.isEmpty()) {
+                end[i] = i + 1
+            } else {
+                var maxEnd = i + 1
+                for (child in children) {
+                    val childEnd = end[nodeToIndex.getValue(child)]
+                    if (childEnd > maxEnd) maxEnd = childEnd
+                }
+                end[i] = maxEnd
+            }
+        }
+        subtreeEnd = end
+    }
 
 }
