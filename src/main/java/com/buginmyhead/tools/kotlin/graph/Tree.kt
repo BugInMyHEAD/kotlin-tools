@@ -142,8 +142,8 @@ private class IndexedTree<N, W> private constructor(
 /**
  * Pre-computed index structure for efficient subtree operations.
  *
- * Stores a DFS pre-order traversal where all descendants of any node
- * form a contiguous range \[nodeToIndex\[node\], subtreeEnd\[nodeToIndex\[node\]]).
+ * Stores a DFS pre-order traversal where all descendants of any node form
+ *  a contiguous range &#91;nodeToIndex&#91;node&#93;, subtreeEnd&#91;nodeToIndex&#91;node&#93;).
  */
 private class TreeIndex<N, W>(
     acyclicGraph: AcyclicGraph<N, W>,
