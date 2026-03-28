@@ -161,44 +161,42 @@ private class TreeIndex<N, W>(
     init {
         val root = acyclicGraph.sourceNodes.single()
         val size = acyclicGraph.nodes.size
-        val order = ArrayList<N>(size)
+        val preOrder = ArrayList<N>(size)
 
         // Iterative DFS pre-order traversal.
         val stack = ArrayDeque<N>(size)
         stack.addLast(root)
         while (stack.isNotEmpty()) {
             val node = stack.removeLast()
-            order.add(node)
+            preOrder.add(node)
             val children = acyclicGraph.outs[node].orEmpty().toList()
             for (i in children.indices.reversed()) {
                 stack.addLast(children[i])
             }
         }
 
-        preOrder = order
-        nodeToIndex = HashMap<N, Int>(size).also { map ->
-            for (i in order.indices) map[order[i]] = i
-        }
+        this.preOrder = preOrder
+        this.nodeToIndex = preOrder.withIndex().associate { (i, v) -> v to i }
 
         // Compute exclusive end index for each node's subtree.
         // In reverse pre-order: for leaves, end = index + 1;
         // for internal nodes, end = max subtreeEnd among children.
-        val end = IntArray(size)
+        val subtreeEnd = IntArray(size)
         for (i in size - 1 downTo 0) {
-            val node = order[i]
+            val node = preOrder[i]
             val children = acyclicGraph.outs[node].orEmpty()
             if (children.isEmpty()) {
-                end[i] = i + 1
+                subtreeEnd[i] = i + 1
             } else {
                 var maxEnd = i + 1
                 for (child in children) {
-                    val childEnd = end[nodeToIndex.getValue(child)]
+                    val childEnd = subtreeEnd[this.nodeToIndex.getValue(child)]
                     if (childEnd > maxEnd) maxEnd = childEnd
                 }
-                end[i] = maxEnd
+                subtreeEnd[i] = maxEnd
             }
         }
-        subtreeEnd = end
+        this.subtreeEnd = subtreeEnd
     }
 
 }
