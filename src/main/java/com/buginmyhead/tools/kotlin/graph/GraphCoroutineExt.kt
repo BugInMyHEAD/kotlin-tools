@@ -19,9 +19,9 @@ suspend fun <N> AcyclicGraph<N, *>.parallelTopologicalSort(
     // If not, this [AcyclicGraph] is invalid.
     if (sourceNodes.isEmpty() || sinkNodes.isEmpty()) throw CyclicGraphException()
 
-    val channel = Channel<Command<N>>(capacity = Channel.UNLIMITED)
+    val commandChannel = Channel<Command<N>>(capacity = Channel.UNLIMITED)
     direction.getStartingNodes(this@parallelTopologicalSort)
-        .forEach { node -> channel.send(Start(node)) }
+        .forEach { node -> commandChannel.send(Visit(node)) }
 
     val nodeToInDegree = nodes.associateWith { node ->
         direction.getPreviousNodes(node, this@parallelTopologicalSort).size
@@ -30,17 +30,17 @@ suspend fun <N> AcyclicGraph<N, *>.parallelTopologicalSort(
     var remainingNodeCount = nodes.size
 
     while (remainingNodeCount > 0) {
-        when (val command = channel.receive()) {
-            is Start<N> -> launch {
+        when (val command = commandChannel.receive()) {
+            is Visit<N> -> launch {
                 onVisit(command.node)
-                channel.send(Finish(command.node))
+                commandChannel.send(EnqueueChildren(command.node))
             }
-            is Finish<N> -> {
+            is EnqueueChildren<N> -> {
                 for (next in direction.getNextNodes(command.node, this@parallelTopologicalSort)) {
                     val inDegree = nodeToInDegree.getValue(next) - 1
                     if (inDegree < 0) throw CyclicGraphException()
                     nodeToInDegree[next] = inDegree
-                    if (inDegree == 0) channel.send(Start(next))
+                    if (inDegree == 0) commandChannel.send(Visit(next))
                 }
                 --remainingNodeCount
             }
@@ -59,5 +59,5 @@ fun <N> AcyclicGraph<N, *>.parallelTopologicalFlow(
 }
 
 private sealed interface Command<N>
-private data class Start<N>(val node: N) : Command<N>
-private data class Finish<N>(val node: N) : Command<N>
+private data class Visit<N>(val node: N) : Command<N>
+private data class EnqueueChildren<N>(val node: N) : Command<N>
