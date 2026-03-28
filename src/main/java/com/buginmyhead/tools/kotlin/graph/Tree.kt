@@ -175,9 +175,8 @@ private class TreeIndex<N, W>(
 
         nodeToIndex = preOrder.withIndex().associate { (i, v) -> v to i }
 
-        // Compute exclusive end index for each node's subtree.
-        // In reverse pre-order: for leaves, end = index + 1;
-        // for internal nodes, end = max subtreeEnd among children.
+        // Computes exclusive end index for each node's subtree using reverse pre-order traversal,
+        //  a kind of dynamic programming to visit all children before their parent.
         subtreeEnd = IntArray(size)
         for (i in size - 1 downTo 0) {
             val node = preOrder[i]
