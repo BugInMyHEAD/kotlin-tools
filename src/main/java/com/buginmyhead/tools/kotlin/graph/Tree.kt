@@ -185,16 +185,10 @@ private class TreeIndex<N, W>(
         for (i in size - 1 downTo 0) {
             val node = preOrder[i]
             val children = acyclicGraph.outs[node].orEmpty()
-            if (children.isEmpty()) {
-                subtreeEnd[i] = i + 1
-            } else {
-                var maxEnd = i + 1
-                for (child in children) {
-                    val childEnd = subtreeEnd[this.nodeToIndex.getValue(child)]
-                    if (childEnd > maxEnd) maxEnd = childEnd
+            subtreeEnd[i] =
+                children.fold(i + 1) { maxEnd, child ->
+                    maxOf(maxEnd, subtreeEnd[nodeToIndex.getValue(child)])
                 }
-                subtreeEnd[i] = maxEnd
-            }
         }
         this.subtreeEnd = subtreeEnd
     }
