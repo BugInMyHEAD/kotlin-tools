@@ -161,18 +161,16 @@ private class TreeIndex<N, W>(
     init {
         val root = acyclicGraph.sourceNodes.single()
         val size = acyclicGraph.nodes.size
-        preOrder = ArrayList(size)
 
-        // Iterative DFS pre-order traversal.
         val stack = ArrayDeque<N>(size)
         stack.addLast(root)
+
+        // Iterative DFS pre-order traversal
+        preOrder = ArrayList(size)
         while (stack.isNotEmpty()) {
             val node = stack.removeLast()
             preOrder.add(node)
-            val children = acyclicGraph.outs[node].orEmpty().toList()
-            for (i in children.indices.reversed()) {
-                stack.addLast(children[i])
-            }
+            stack.addAll(acyclicGraph.outs[node].orEmpty())
         }
 
         nodeToIndex = preOrder.withIndex().associate { (i, v) -> v to i }
