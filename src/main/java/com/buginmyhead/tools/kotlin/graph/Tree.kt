@@ -161,7 +161,7 @@ private class TreeIndex<N, W>(
     init {
         val root = acyclicGraph.sourceNodes.single()
         val size = acyclicGraph.nodes.size
-        val preOrder = ArrayList<N>(size)
+        preOrder = ArrayList(size)
 
         // Iterative DFS pre-order traversal.
         val stack = ArrayDeque<N>(size)
@@ -175,13 +175,12 @@ private class TreeIndex<N, W>(
             }
         }
 
-        this.preOrder = preOrder
-        this.nodeToIndex = preOrder.withIndex().associate { (i, v) -> v to i }
+        nodeToIndex = preOrder.withIndex().associate { (i, v) -> v to i }
 
         // Compute exclusive end index for each node's subtree.
         // In reverse pre-order: for leaves, end = index + 1;
         // for internal nodes, end = max subtreeEnd among children.
-        val subtreeEnd = IntArray(size)
+        subtreeEnd = IntArray(size)
         for (i in size - 1 downTo 0) {
             val node = preOrder[i]
             val children = acyclicGraph.outs[node].orEmpty()
@@ -190,7 +189,6 @@ private class TreeIndex<N, W>(
                     maxOf(maxEnd, subtreeEnd[nodeToIndex.getValue(child)])
                 }
         }
-        this.subtreeEnd = subtreeEnd
     }
 
 }
