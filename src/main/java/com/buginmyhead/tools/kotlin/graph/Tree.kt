@@ -79,29 +79,34 @@ private class IndexedTree<N, W> private constructor(
     }
 
     /** Sub-view that serves as both [nodes] (via keys) and [outs] (as map). */
-    private val nodesAndOuts: NavigableListMap<N, Set<N>> =
+    private val _outs: NavigableListMap<N, Set<N>> =
         index.preOrderedMap.subView(rangeStart, rangeEnd)
 
+    override val outs: Map<N, Set<N>> get() = _outs
+
     /** View backed by the pre-order index range. No copy. */
-    override val nodes: Set<N> = nodesAndOuts.keys
+    override val nodes: Set<N> = _outs.keys
 
     /** View backed by the cumulative edge count range. No copy. */
     override val edges: Map<Pair<N, N>, W> =
         index.edgesMap.subView(index.edgeCumCount[rangeStart], index.edgeCumCount[rangeEnd])
 
-    /** View backed by the node key sub-view. No copy. */
-    override val outs: Map<N, Set<N>> = nodesAndOuts
-
     /** View with the subtree root's ins overridden to emptySet(). No copy. */
     override val ins: Map<N, Set<N>> = run {
         val root = index.preOrderedMap.keyAt(rangeStart)
-        nodesAndOuts.withValues { if (it == root) emptySet() else index.allIns[it].orEmpty() }
+        _outs.withValues { if (it == root) emptySet() else index.allIns[it].orEmpty() }
     }
 
     /** View backed by binary-searched sink range. No copy. */
     override val sinkNodes: Set<N> = run {
-        val fromSinkIdx = index.sinkGlobalIndices.binarySearch(rangeStart).let { if (it < 0) it.inv() else it }
-        val toSinkIdx = index.sinkGlobalIndices.binarySearch(rangeEnd).let { if (it < 0) it.inv() else it }
+        val fromSinkIdx =
+            index.sinkGlobalIndices
+                .binarySearch(rangeStart)
+                .let { if (it < 0) it.inv() else it }
+        val toSinkIdx =
+            index.sinkGlobalIndices
+                .binarySearch(rangeEnd)
+                .let { if (it < 0) it.inv() else it }
         index.sinkMap.subView(fromSinkIdx, toSinkIdx).keys
     }
 
