@@ -74,38 +74,39 @@ private class IndexedTree<N, W> private constructor(
 
     /** Creates a subtree rooted at [node] in O(1) by narrowing the index range. */
     fun subtreeAt(node: N): IndexedTree<N, W> {
-        val idx = index.preOrderedSet.globalIndexOf(node)
+        val idx = index.preOrderedMap.globalIndexOf(node)
         return IndexedTree(index, idx, index.subtreeEnd[idx])
     }
 
-    private val nodesView: ListOrderedSet<N> = index.preOrderedSet.subView(rangeStart, rangeEnd)
+    /** Sub-view that serves as both [nodes] (via keys) and [outs] (as map). */
+    private val nodesAndOuts: ListOrderedMap<N, Set<N>> =
+        index.preOrderedMap.subView(rangeStart, rangeEnd)
 
     /** View backed by the pre-order index range. No copy. */
-    override val nodes: Set<N> = nodesView
+    override val nodes: Set<N> = nodesAndOuts.keys
 
     /** View backed by the cumulative edge count range. No copy. */
-    override val edges: Map<Pair<N, N>, W> = index.edgesMap.subMapView(
-        index.edgesKeySet.subView(index.edgeCumCount[rangeStart], index.edgeCumCount[rangeEnd])
-    )
+    override val edges: Map<Pair<N, N>, W> =
+        index.edgesMap.subView(index.edgeCumCount[rangeStart], index.edgeCumCount[rangeEnd])
 
     /** View backed by the node key sub-view. No copy. */
-    override val outs: Map<N, Set<N>> = index.outsMap.subMapView(nodesView)
+    override val outs: Map<N, Set<N>> = nodesAndOuts
 
     /** View with the subtree root's ins overridden to emptySet(). No copy. */
     override val ins: Map<N, Set<N>> = run {
-        val root = index.preOrderedSet[rangeStart]
-        ListOrderedMap(nodesView) { if (it == root) emptySet() else index.allIns[it].orEmpty() }
+        val root = index.preOrderedMap.keyAt(rangeStart)
+        nodesAndOuts.withValues { if (it == root) emptySet() else index.allIns[it].orEmpty() }
     }
 
     /** View backed by binary-searched sink range. No copy. */
     override val sinkNodes: Set<N> = run {
         val fromSinkIdx = index.sinkGlobalIndices.binarySearch(rangeStart).let { if (it < 0) it.inv() else it }
         val toSinkIdx = index.sinkGlobalIndices.binarySearch(rangeEnd).let { if (it < 0) it.inv() else it }
-        index.sinkOrderedSet.subView(fromSinkIdx, toSinkIdx)
+        index.sinkMap.subView(fromSinkIdx, toSinkIdx).keys
     }
 
-    /** View as a singleton sub-view of the pre-order set. No copy. */
-    override val sourceNodes: Set<N> = index.preOrderedSet.subView(rangeStart, rangeStart + 1)
+    /** View as a singleton sub-view of the pre-order map. No copy. */
+    override val sourceNodes: Set<N> = index.preOrderedMap.subView(rangeStart, rangeStart + 1).keys
 
 }
 
@@ -122,22 +123,19 @@ private class TreeIndex<N, W>(
     acyclicGraph: AcyclicGraph<N, W>,
 ) {
 
-    val preOrderedSet: ListOrderedSet<N>
+    /** Keys = nodes in pre-order, values = out-neighbors. Serves as both node set and outs map. */
+    val preOrderedMap: ListOrderedMap<N, Set<N>>
     val subtreeEnd: IntArray
-
-    // For outs sub-views
-    val outsMap: ListOrderedMap<N, Set<N>>
 
     // For ins value function (root override happens per-subtree in IndexedTree)
     val allIns: Map<N, Set<N>> = acyclicGraph.ins
 
     // For edges sub-views: edge keys ordered by from-node pre-order
-    val edgesKeySet: ListOrderedSet<Pair<N, N>>
     val edgesMap: ListOrderedMap<Pair<N, N>, W>
     val edgeCumCount: IntArray
 
     // For sinkNodes sub-views: sinks in pre-order with their global indices
-    val sinkOrderedSet: ListOrderedSet<N>
+    val sinkMap: ListOrderedMap<N, Unit>
     val sinkGlobalIndices: IntArray
 
     init {
@@ -155,49 +153,46 @@ private class TreeIndex<N, W>(
             stack.addAll(acyclicGraph.outs[node].orEmpty())
         }
 
-        preOrderedSet = ListOrderedSet(order)
+        // Pre-ordered map: keys = nodes in pre-order, values = outs
+        preOrderedMap = ListOrderedMap(order) { acyclicGraph.outs[it].orEmpty() }
 
         // Computes exclusive end index for each node's subtree using reverse pre-order traversal,
         //  a kind of dynamic programming to visit all children before their parent.
         subtreeEnd = IntArray(size)
         for (i in size - 1 downTo 0) {
-            val node = preOrderedSet[i]
+            val node = preOrderedMap.keyAt(i)
             val children = acyclicGraph.outs[node].orEmpty()
             subtreeEnd[i] =
                 children.fold(i + 1) { maxEnd, child ->
-                    maxOf(maxEnd, subtreeEnd[preOrderedSet.globalIndexOf(child)])
+                    maxOf(maxEnd, subtreeEnd[preOrderedMap.globalIndexOf(child)])
                 }
         }
-
-        // Outs map keyed by pre-order nodes
-        outsMap = ListOrderedMap(preOrderedSet) { acyclicGraph.outs[it].orEmpty() }
 
         // Edges ordered by from-node pre-order with cumulative count for O(1) range lookup
         val edgeKeyList = ArrayList<Pair<N, N>>()
         val cumCount = IntArray(size + 1)
         for (i in 0 until size) {
             cumCount[i] = edgeKeyList.size
-            val node = preOrderedSet[i]
+            val node = preOrderedMap.keyAt(i)
             for (child in acyclicGraph.outs[node].orEmpty()) {
                 edgeKeyList.add(node to child)
             }
         }
         cumCount[size] = edgeKeyList.size
-        edgesKeySet = ListOrderedSet(edgeKeyList)
-        edgesMap = ListOrderedMap(edgesKeySet) { acyclicGraph.edges.getValue(it) }
+        edgesMap = ListOrderedMap(edgeKeyList) { acyclicGraph.edges.getValue(it) }
         edgeCumCount = cumCount
 
         // Sink nodes in pre-order with their global indices for binary search
         val sinkList = ArrayList<N>()
         val sinkIndices = ArrayList<Int>()
         for (i in 0 until size) {
-            val node = preOrderedSet[i]
+            val node = preOrderedMap.keyAt(i)
             if (node in acyclicGraph.sinkNodes) {
                 sinkList.add(node)
                 sinkIndices.add(i)
             }
         }
-        sinkOrderedSet = ListOrderedSet(sinkList)
+        sinkMap = ListOrderedMap.ofKeys(sinkList)
         sinkGlobalIndices = sinkIndices.toIntArray()
     }
 
