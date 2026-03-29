@@ -78,35 +78,34 @@ private class IndexedTree<N, W> private constructor(
         return IndexedTree(index, idx, index.subtreeEnd[idx])
     }
 
+    private val nodesView: ListOrderedSet<N> = index.preOrderedSet.subView(rangeStart, rangeEnd)
+
     /** View backed by the pre-order index range. No copy. */
-    override val nodes: Set<N> = index.preOrderedSet.subView(rangeStart, rangeEnd)
+    override val nodes: Set<N> = nodesView
 
-    override val edges: Map<Pair<N, N>, W> by lazy {
-        buildMap {
-            for (from in nodes) {
-                for (to in index.allOuts[from].orEmpty()) {
-                    put(from to to, index.allEdges.getValue(from to to))
-                }
-            }
-        }
-    }
+    /** View backed by the cumulative edge count range. No copy. */
+    override val edges: Map<Pair<N, N>, W> = index.edgesMap.subMapView(
+        index.edgesKeySet.subView(index.edgeCumCount[rangeStart], index.edgeCumCount[rangeEnd])
+    )
 
-    override val outs: Map<N, Set<N>> by lazy {
-        nodes.associateWith { index.allOuts[it].orEmpty() }
-    }
+    /** View backed by the node key sub-view. No copy. */
+    override val outs: Map<N, Set<N>> = index.outsMap.subMapView(nodesView)
 
-    override val ins: Map<N, Set<N>> by lazy {
+    /** View with the subtree root's ins overridden to emptySet(). No copy. */
+    override val ins: Map<N, Set<N>> = run {
         val root = index.preOrderedSet[rangeStart]
-        nodes.associateWith { if (it == root) emptySet() else index.allIns[it].orEmpty() }
+        ListOrderedMap(nodesView) { if (it == root) emptySet() else index.allIns[it].orEmpty() }
     }
 
-    override val sinkNodes: Set<N> by lazy {
-        nodes.filterTo(linkedSetOf()) { it in index.allSinkNodes }
+    /** View backed by binary-searched sink range. No copy. */
+    override val sinkNodes: Set<N> = run {
+        val fromSinkIdx = index.sinkGlobalIndices.binarySearch(rangeStart).let { if (it < 0) it.inv() else it }
+        val toSinkIdx = index.sinkGlobalIndices.binarySearch(rangeEnd).let { if (it < 0) it.inv() else it }
+        index.sinkOrderedSet.subView(fromSinkIdx, toSinkIdx)
     }
 
-    override val sourceNodes: Set<N> by lazy {
-        setOf(index.preOrderedSet[rangeStart])
-    }
+    /** View as a singleton sub-view of the pre-order set. No copy. */
+    override val sourceNodes: Set<N> = index.preOrderedSet.subView(rangeStart, rangeStart + 1)
 
 }
 
@@ -115,6 +114,9 @@ private class IndexedTree<N, W> private constructor(
  *
  * Stores a DFS pre-order traversal where all descendants of any node form
  *  a contiguous range &#91;nodeToIndex&#91;node&#93;, subtreeEnd&#91;nodeToIndex&#91;node&#93;).
+ *
+ * All [Map] and [Set] properties in [IndexedTree] are O(1) views over this index,
+ *  except [IndexedTree.sinkNodes] which uses O(log s) binary search.
  */
 private class TreeIndex<N, W>(
     acyclicGraph: AcyclicGraph<N, W>,
@@ -123,10 +125,20 @@ private class TreeIndex<N, W>(
     val preOrderedSet: ListOrderedSet<N>
     val subtreeEnd: IntArray
 
-    val allEdges: Map<Pair<N, N>, W> = acyclicGraph.edges
-    val allOuts: Map<N, Set<N>> = acyclicGraph.outs
+    // For outs sub-views
+    val outsMap: ListOrderedMap<N, Set<N>>
+
+    // For ins value function (root override happens per-subtree in IndexedTree)
     val allIns: Map<N, Set<N>> = acyclicGraph.ins
-    val allSinkNodes: Set<N> = acyclicGraph.sinkNodes
+
+    // For edges sub-views: edge keys ordered by from-node pre-order
+    val edgesKeySet: ListOrderedSet<Pair<N, N>>
+    val edgesMap: ListOrderedMap<Pair<N, N>, W>
+    val edgeCumCount: IntArray
+
+    // For sinkNodes sub-views: sinks in pre-order with their global indices
+    val sinkOrderedSet: ListOrderedSet<N>
+    val sinkGlobalIndices: IntArray
 
     init {
         val root = acyclicGraph.sourceNodes.single()
@@ -156,6 +168,37 @@ private class TreeIndex<N, W>(
                     maxOf(maxEnd, subtreeEnd[preOrderedSet.globalIndexOf(child)])
                 }
         }
+
+        // Outs map keyed by pre-order nodes
+        outsMap = ListOrderedMap(preOrderedSet) { acyclicGraph.outs[it].orEmpty() }
+
+        // Edges ordered by from-node pre-order with cumulative count for O(1) range lookup
+        val edgeKeyList = ArrayList<Pair<N, N>>()
+        val cumCount = IntArray(size + 1)
+        for (i in 0 until size) {
+            cumCount[i] = edgeKeyList.size
+            val node = preOrderedSet[i]
+            for (child in acyclicGraph.outs[node].orEmpty()) {
+                edgeKeyList.add(node to child)
+            }
+        }
+        cumCount[size] = edgeKeyList.size
+        edgesKeySet = ListOrderedSet(edgeKeyList)
+        edgesMap = ListOrderedMap(edgesKeySet) { acyclicGraph.edges.getValue(it) }
+        edgeCumCount = cumCount
+
+        // Sink nodes in pre-order with their global indices for binary search
+        val sinkList = ArrayList<N>()
+        val sinkIndices = ArrayList<Int>()
+        for (i in 0 until size) {
+            val node = preOrderedSet[i]
+            if (node in acyclicGraph.sinkNodes) {
+                sinkList.add(node)
+                sinkIndices.add(i)
+            }
+        }
+        sinkOrderedSet = ListOrderedSet(sinkList)
+        sinkGlobalIndices = sinkIndices.toIntArray()
     }
 
 }
