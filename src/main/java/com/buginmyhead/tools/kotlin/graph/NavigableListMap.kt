@@ -14,7 +14,7 @@ import java.util.SortedSet
  *
  * The [keys] property returns a [NavigableSet] view over the key range.
  */
-internal class ListOrderedMap<K, V> private constructor(
+internal class NavigableListMap<K, V> private constructor(
     private val list: List<K>,
     private val indexMap: Map<K, Int>,
     private val fromIndex: Int,
@@ -23,7 +23,7 @@ internal class ListOrderedMap<K, V> private constructor(
 ) : NavigableMap<K, V> {
 
     /**
-     * Creates a [ListOrderedMap] from the given key list and value function.
+     * Creates a [NavigableListMap] from the given key list and value function.
      * Keys must be unique; duplicates result in undefined behavior.
      */
     constructor(elements: List<K>, getValue: (K) -> V) : this(
@@ -39,8 +39,8 @@ internal class ListOrderedMap<K, V> private constructor(
     companion object {
 
         /** Creates a key-only map (values are [Unit]). */
-        fun <K> ofKeys(elements: List<K>): ListOrderedMap<K, Unit> =
-            ListOrderedMap(elements) { }
+        fun <K> ofKeys(elements: List<K>): NavigableListMap<K, Unit> =
+            NavigableListMap(elements) { }
 
     }
 
@@ -64,12 +64,12 @@ internal class ListOrderedMap<K, V> private constructor(
     // --- Sub-view creation ---
 
     /** Creates a sub-view for the given global index range \[from, to). O(1) operation. */
-    fun subView(from: Int, to: Int): ListOrderedMap<K, V> =
-        ListOrderedMap(list, indexMap, from, to, getValue)
+    fun subView(from: Int, to: Int): NavigableListMap<K, V> =
+        NavigableListMap(list, indexMap, from, to, getValue)
 
     /** Creates a map sharing the same key range but with a different value function. O(1) operation. */
-    fun <V2> withValues(newGetValue: (K) -> V2): ListOrderedMap<K, V2> =
-        ListOrderedMap(list, indexMap, fromIndex, toIndex, newGetValue)
+    fun <V2> withValues(newGetValue: (K) -> V2): NavigableListMap<K, V2> =
+        NavigableListMap(list, indexMap, fromIndex, toIndex, newGetValue)
 
     // --- Helpers ---
 
@@ -254,9 +254,9 @@ internal class ListOrderedMap<K, V> private constructor(
 
     inner class KeySet : AbstractSet<K>(), NavigableSet<K> {
 
-        override val size: Int get() = this@ListOrderedMap.size
+        override val size: Int get() = this@NavigableListMap.size
 
-        override fun contains(element: K): Boolean = this@ListOrderedMap.containsKey(element)
+        override fun contains(element: K): Boolean = this@NavigableListMap.containsKey(element)
 
         override fun iterator(): MutableIterator<K> = object : MutableIterator<K> {
             private var cursor = fromIndex
@@ -279,21 +279,21 @@ internal class ListOrderedMap<K, V> private constructor(
 
         // --- SortedSet (delegates to map) ---
 
-        override fun comparator(): Comparator<in K> = this@ListOrderedMap.comparator()
+        override fun comparator(): Comparator<in K> = this@NavigableListMap.comparator()
 
-        override fun first(): K = this@ListOrderedMap.firstKey()
+        override fun first(): K = this@NavigableListMap.firstKey()
 
-        override fun last(): K = this@ListOrderedMap.lastKey()
+        override fun last(): K = this@NavigableListMap.lastKey()
 
         // --- NavigableSet (delegates to map) ---
 
-        override fun lower(e: K): K? = this@ListOrderedMap.lowerKey(e)
+        override fun lower(e: K): K? = this@NavigableListMap.lowerKey(e)
 
-        override fun floor(e: K): K? = this@ListOrderedMap.floorKey(e)
+        override fun floor(e: K): K? = this@NavigableListMap.floorKey(e)
 
-        override fun ceiling(e: K): K? = this@ListOrderedMap.ceilingKey(e)
+        override fun ceiling(e: K): K? = this@NavigableListMap.ceilingKey(e)
 
-        override fun higher(e: K): K? = this@ListOrderedMap.higherKey(e)
+        override fun higher(e: K): K? = this@NavigableListMap.higherKey(e)
 
         override fun pollFirst(): K = throw UnsupportedOperationException()
         override fun pollLast(): K = throw UnsupportedOperationException()
@@ -315,13 +315,13 @@ internal class ListOrderedMap<K, V> private constructor(
             fromElement: K, fromInclusive: Boolean,
             toElement: K, toInclusive: Boolean,
         ): NavigableSet<K> =
-            this@ListOrderedMap.subMap(fromElement, fromInclusive, toElement, toInclusive).navigableKeySet()
+            this@NavigableListMap.subMap(fromElement, fromInclusive, toElement, toInclusive).navigableKeySet()
 
         override fun headSet(toElement: K, inclusive: Boolean): NavigableSet<K> =
-            this@ListOrderedMap.headMap(toElement, inclusive).navigableKeySet()
+            this@NavigableListMap.headMap(toElement, inclusive).navigableKeySet()
 
         override fun tailSet(fromElement: K, inclusive: Boolean): NavigableSet<K> =
-            this@ListOrderedMap.tailMap(fromElement, inclusive).navigableKeySet()
+            this@NavigableListMap.tailMap(fromElement, inclusive).navigableKeySet()
 
         override fun subSet(fromElement: K, toElement: K): SortedSet<K> =
             subSet(fromElement, true, toElement, false)

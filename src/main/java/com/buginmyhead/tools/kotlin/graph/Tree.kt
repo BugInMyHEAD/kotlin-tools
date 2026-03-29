@@ -79,7 +79,7 @@ private class IndexedTree<N, W> private constructor(
     }
 
     /** Sub-view that serves as both [nodes] (via keys) and [outs] (as map). */
-    private val nodesAndOuts: ListOrderedMap<N, Set<N>> =
+    private val nodesAndOuts: NavigableListMap<N, Set<N>> =
         index.preOrderedMap.subView(rangeStart, rangeEnd)
 
     /** View backed by the pre-order index range. No copy. */
@@ -124,18 +124,18 @@ private class TreeIndex<N, W>(
 ) {
 
     /** Keys = nodes in pre-order, values = out-neighbors. Serves as both node set and outs map. */
-    val preOrderedMap: ListOrderedMap<N, Set<N>>
+    val preOrderedMap: NavigableListMap<N, Set<N>>
     val subtreeEnd: IntArray
 
     // For ins value function (root override happens per-subtree in IndexedTree)
     val allIns: Map<N, Set<N>> = acyclicGraph.ins
 
     // For edges sub-views: edge keys ordered by from-node pre-order
-    val edgesMap: ListOrderedMap<Pair<N, N>, W>
+    val edgesMap: NavigableListMap<Pair<N, N>, W>
     val edgeCumCount: IntArray
 
     // For sinkNodes sub-views: sinks in pre-order with their global indices
-    val sinkMap: ListOrderedMap<N, Unit>
+    val sinkMap: NavigableListMap<N, Unit>
     val sinkGlobalIndices: IntArray
 
     init {
@@ -154,7 +154,7 @@ private class TreeIndex<N, W>(
         }
 
         // Pre-ordered map: keys = nodes in pre-order, values = outs
-        preOrderedMap = ListOrderedMap(order) { acyclicGraph.outs[it].orEmpty() }
+        preOrderedMap = NavigableListMap(order) { acyclicGraph.outs[it].orEmpty() }
 
         // Computes exclusive end index for each node's subtree using reverse pre-order traversal,
         //  a kind of dynamic programming to visit all children before their parent.
@@ -179,7 +179,7 @@ private class TreeIndex<N, W>(
             }
         }
         cumCount[size] = edgeKeyList.size
-        edgesMap = ListOrderedMap(edgeKeyList) { acyclicGraph.edges.getValue(it) }
+        edgesMap = NavigableListMap(edgeKeyList) { acyclicGraph.edges.getValue(it) }
         edgeCumCount = cumCount
 
         // Sink nodes in pre-order with their global indices for binary search
@@ -192,7 +192,7 @@ private class TreeIndex<N, W>(
                 sinkIndices.add(i)
             }
         }
-        sinkMap = ListOrderedMap.ofKeys(sinkList)
+        sinkMap = NavigableListMap.ofKeys(sinkList)
         sinkGlobalIndices = sinkIndices.toIntArray()
     }
 

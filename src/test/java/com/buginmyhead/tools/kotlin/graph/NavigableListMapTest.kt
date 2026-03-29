@@ -5,10 +5,10 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import java.util.NavigableMap
 
-internal class ListOrderedMapTest : FreeSpec({
+internal class NavigableListMapTest : FreeSpec({
 
     // Full map: keys [A, B, C, D, E], values = key.length * 5
-    fun fullMap() = ListOrderedMap(listOf("A", "B", "C", "D", "E")) { it.length * 5 }
+    fun fullMap() = NavigableListMap(listOf("A", "B", "C", "D", "E")) { it.length * 5 }
 
     // Sub-view: keys [B, C, D]
     fun subMap() = fullMap().subView(1, 4)
@@ -98,20 +98,20 @@ internal class ListOrderedMapTest : FreeSpec({
     }
 
     "withValues creates a map with different value function" {
-        val original = ListOrderedMap(listOf("X", "Y")) { it.length }
+        val original = NavigableListMap(listOf("X", "Y")) { it.length }
         val replaced = original.withValues { it.hashCode() }
         replaced.keys shouldBe setOf("X", "Y")
         replaced["X"] shouldBe "X".hashCode()
     }
 
     "ofKeys creates a key-only map" {
-        val keyOnly = ListOrderedMap.ofKeys(listOf("P", "Q"))
+        val keyOnly = NavigableListMap.ofKeys(listOf("P", "Q"))
         keyOnly.keys shouldBe setOf("P", "Q")
         keyOnly["P"] shouldBe Unit
     }
 
     "equals works with other Map implementations" {
-        val map = ListOrderedMap(listOf("X", "Y")) { it.length * 7 }
+        val map = NavigableListMap(listOf("X", "Y")) { it.length * 7 }
         map shouldBe mapOf("X" to 7, "Y" to 7)
         (map == map) shouldBe true
         (map.equals("not a map")) shouldBe false
@@ -120,13 +120,13 @@ internal class ListOrderedMapTest : FreeSpec({
     }
 
     "hashCode is consistent with equals" {
-        val map1 = ListOrderedMap(listOf("A", "B")) { 5 }
+        val map1 = NavigableListMap(listOf("A", "B")) { 5 }
         val map2 = mapOf("A" to 5, "B" to 5)
         map1.hashCode() shouldBe map2.hashCode()
     }
 
     "toString formats as map" {
-        ListOrderedMap(listOf("A")) { 5 }.toString() shouldBe "{A=5}"
+        NavigableListMap(listOf("A")) { 5 }.toString() shouldBe "{A=5}"
     }
 
     // --- KeySet (NavigableSet) tests ---
