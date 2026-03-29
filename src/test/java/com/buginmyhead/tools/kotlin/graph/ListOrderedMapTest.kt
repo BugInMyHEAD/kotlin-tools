@@ -3,6 +3,7 @@ package com.buginmyhead.tools.kotlin.graph
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
+import java.util.NavigableMap
 
 internal class ListOrderedMapTest : FreeSpec({
 
@@ -298,5 +299,143 @@ internal class ListOrderedMapTest : FreeSpec({
 
     "keys clear throws UnsupportedOperationException" {
         shouldThrow<UnsupportedOperationException> { fullKeys().clear() }
+    }
+
+    // --- NavigableMap tests ---
+
+    "comparator orders by insertion order" {
+        val cmp = fullMap().comparator()
+        (cmp.compare("A", "C") < 0) shouldBe true
+        (cmp.compare("D", "B") > 0) shouldBe true
+        cmp.compare("C", "C") shouldBe 0
+    }
+
+    "comparator throws ClassCastException for unknown key" {
+        shouldThrow<ClassCastException> { fullMap().comparator().compare("A", "Z") }
+    }
+
+    "firstKey returns the first key" {
+        fullMap().firstKey() shouldBe "A"
+        subMap().firstKey() shouldBe "B"
+    }
+
+    "firstKey throws NoSuchElementException for empty map" {
+        shouldThrow<NoSuchElementException> { fullMap().subView(0, 0).firstKey() }
+    }
+
+    "lastKey returns the last key" {
+        fullMap().lastKey() shouldBe "E"
+        subMap().lastKey() shouldBe "D"
+    }
+
+    "lastKey throws NoSuchElementException for empty map" {
+        shouldThrow<NoSuchElementException> { fullMap().subView(0, 0).lastKey() }
+    }
+
+    "lowerEntry returns entry with greatest key strictly less" {
+        subMap().lowerEntry("C")?.let { it.key to it.value } shouldBe ("B" to 5)
+        subMap().lowerEntry("B") shouldBe null
+    }
+
+    "floorEntry returns entry with greatest key less than or equal" {
+        subMap().floorEntry("C")?.let { it.key to it.value } shouldBe ("C" to 5)
+        subMap().floorEntry("A") shouldBe null
+    }
+
+    "ceilingEntry returns entry with least key greater than or equal" {
+        subMap().ceilingEntry("C")?.let { it.key to it.value } shouldBe ("C" to 5)
+        subMap().ceilingEntry("E") shouldBe null
+    }
+
+    "higherEntry returns entry with least key strictly greater" {
+        subMap().higherEntry("C")?.let { it.key to it.value } shouldBe ("D" to 5)
+        subMap().higherEntry("D") shouldBe null
+    }
+
+    "firstEntry returns first entry or null for empty map" {
+        fullMap().firstEntry()?.let { it.key to it.value } shouldBe ("A" to 5)
+        fullMap().subView(0, 0).firstEntry() shouldBe null
+    }
+
+    "lastEntry returns last entry or null for empty map" {
+        fullMap().lastEntry()?.let { it.key to it.value } shouldBe ("E" to 5)
+        fullMap().subView(0, 0).lastEntry() shouldBe null
+    }
+
+    "navigableKeySet returns the same keys view" {
+        fullMap().navigableKeySet() shouldBe fullMap().keys
+    }
+
+    "subMap with inclusivity flags" {
+        subMap().subMap("B", true, "D", true).keys shouldBe setOf("B", "C", "D")
+        subMap().subMap("B", false, "D", false).keys shouldBe setOf("C")
+    }
+
+    "headMap with inclusivity flag" {
+        subMap().headMap("C", true).keys shouldBe setOf("B", "C")
+        subMap().headMap("C", false).keys shouldBe setOf("B")
+    }
+
+    "tailMap with inclusivity flag" {
+        subMap().tailMap("C", true).keys shouldBe setOf("C", "D")
+        subMap().tailMap("C", false).keys shouldBe setOf("D")
+    }
+
+    "SortedMap subMap overload" {
+        subMap().subMap("B", "D").keys shouldBe setOf("B", "C")
+    }
+
+    "SortedMap headMap overload" {
+        subMap().headMap("D").keys shouldBe setOf("B", "C")
+    }
+
+    "SortedMap tailMap overload" {
+        subMap().tailMap("C").keys shouldBe setOf("C", "D")
+    }
+
+    "entry setValue throws UnsupportedOperationException" {
+        shouldThrow<UnsupportedOperationException> {
+            (fullMap().firstEntry() as MutableMap.MutableEntry).setValue(7)
+        }
+    }
+
+    "put throws UnsupportedOperationException" {
+        shouldThrow<UnsupportedOperationException> {
+            (fullMap() as NavigableMap<String, Int>).put("Z", 7)
+        }
+    }
+
+    "remove throws UnsupportedOperationException" {
+        shouldThrow<UnsupportedOperationException> {
+            (fullMap() as NavigableMap<String, Int>).remove("A")
+        }
+    }
+
+    "putAll throws UnsupportedOperationException" {
+        shouldThrow<UnsupportedOperationException> {
+            (fullMap() as NavigableMap<String, Int>).putAll(mapOf("Z" to 7))
+        }
+    }
+
+    "clear throws UnsupportedOperationException" {
+        shouldThrow<UnsupportedOperationException> {
+            (fullMap() as NavigableMap<String, Int>).clear()
+        }
+    }
+
+    "pollFirstEntry throws UnsupportedOperationException" {
+        shouldThrow<UnsupportedOperationException> { fullMap().pollFirstEntry() }
+    }
+
+    "pollLastEntry throws UnsupportedOperationException" {
+        shouldThrow<UnsupportedOperationException> { fullMap().pollLastEntry() }
+    }
+
+    "descendingMap throws UnsupportedOperationException" {
+        shouldThrow<UnsupportedOperationException> { fullMap().descendingMap() }
+    }
+
+    "descendingKeySet throws UnsupportedOperationException" {
+        shouldThrow<UnsupportedOperationException> { fullMap().descendingKeySet() }
     }
 })

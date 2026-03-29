@@ -1,10 +1,12 @@
 package com.buginmyhead.tools.kotlin.graph
 
+import java.util.NavigableMap
 import java.util.NavigableSet
+import java.util.SortedMap
 import java.util.SortedSet
 
 /**
- * An unmodifiable [Map] backed by a list and an index map, where key ordering
+ * An unmodifiable [NavigableMap] backed by a list and an index map, where key ordering
  * is defined by the original insertion order.
  *
  * Supports O(1) [get], [containsKey], [keyAt], and [globalIndexOf].
@@ -18,7 +20,7 @@ internal class ListOrderedMap<K, V> private constructor(
     private val fromIndex: Int,
     private val toIndex: Int,
     private val getValue: (K) -> V,
-) : Map<K, V> {
+) : NavigableMap<K, V> {
 
     /**
      * Creates a [ListOrderedMap] from the given key list and value function.
@@ -69,6 +71,13 @@ internal class ListOrderedMap<K, V> private constructor(
     fun <V2> withValues(newGetValue: (K) -> V2): ListOrderedMap<K, V2> =
         ListOrderedMap(list, indexMap, fromIndex, toIndex, newGetValue)
 
+    // --- Helpers ---
+
+    private fun checkedGlobalIndex(key: K): Int =
+        indexMap[key] ?: throw ClassCastException("Key is not in the backing collection.")
+
+    private fun entryOf(key: K): MutableMap.MutableEntry<K, V> = Entry(key, getValue(key))
+
     // --- Map implementation ---
 
     override val size: Int get() = toIndex - fromIndex
@@ -90,13 +99,122 @@ internal class ListOrderedMap<K, V> private constructor(
 
     override val keys: NavigableSet<K> = KeySet()
 
-    override val values: Collection<V>
-        get() = (fromIndex until toIndex).map { getValue(list[it]) }
+    override val values: MutableCollection<V>
+        get() = (fromIndex until toIndex).mapTo(mutableListOf()) { getValue(list[it]) }
 
-    override val entries: Set<Map.Entry<K, V>>
+    override val entries: MutableSet<MutableMap.MutableEntry<K, V>>
         get() = (fromIndex until toIndex).mapTo(linkedSetOf()) { i ->
             Entry(list[i], getValue(list[i]))
         }
+
+    // --- Unmodifiable mutators ---
+
+    override fun put(key: K, value: V): V? = throw UnsupportedOperationException()
+    override fun remove(key: K): V? = throw UnsupportedOperationException()
+    override fun putAll(from: Map<out K, V>) = throw UnsupportedOperationException()
+    override fun clear() = throw UnsupportedOperationException()
+
+    // --- SortedMap ---
+
+    override fun comparator(): Comparator<in K> =
+        Comparator.comparingInt<K> { checkedGlobalIndex(it) }
+
+    override fun firstKey(): K {
+        if (isEmpty()) throw NoSuchElementException()
+        return list[fromIndex]
+    }
+
+    override fun lastKey(): K {
+        if (isEmpty()) throw NoSuchElementException()
+        return list[toIndex - 1]
+    }
+
+    override fun subMap(fromKey: K, toKey: K): SortedMap<K, V> =
+        subMap(fromKey, true, toKey, false)
+
+    override fun headMap(toKey: K): SortedMap<K, V> =
+        headMap(toKey, false)
+
+    override fun tailMap(fromKey: K): SortedMap<K, V> =
+        tailMap(fromKey, true)
+
+    // --- NavigableMap key navigation ---
+
+    override fun lowerKey(key: K): K? {
+        val g = checkedGlobalIndex(key)
+        val idx = minOf(g, toIndex) - 1
+        return if (idx >= fromIndex) list[idx] else null
+    }
+
+    override fun floorKey(key: K): K? {
+        val g = checkedGlobalIndex(key)
+        val idx = minOf(g, toIndex - 1)
+        return if (idx >= fromIndex) list[idx] else null
+    }
+
+    override fun ceilingKey(key: K): K? {
+        val g = checkedGlobalIndex(key)
+        val idx = maxOf(g, fromIndex)
+        return if (idx < toIndex) list[idx] else null
+    }
+
+    override fun higherKey(key: K): K? {
+        val g = checkedGlobalIndex(key)
+        val idx = maxOf(g + 1, fromIndex)
+        return if (idx < toIndex) list[idx] else null
+    }
+
+    // --- NavigableMap entry navigation ---
+
+    override fun lowerEntry(key: K): Map.Entry<K, V>? = lowerKey(key)?.let(::entryOf)
+
+    override fun floorEntry(key: K): Map.Entry<K, V>? = floorKey(key)?.let(::entryOf)
+
+    override fun ceilingEntry(key: K): Map.Entry<K, V>? = ceilingKey(key)?.let(::entryOf)
+
+    override fun higherEntry(key: K): Map.Entry<K, V>? = higherKey(key)?.let(::entryOf)
+
+    override fun firstEntry(): Map.Entry<K, V>? =
+        if (isEmpty()) null else entryOf(list[fromIndex])
+
+    override fun lastEntry(): Map.Entry<K, V>? =
+        if (isEmpty()) null else entryOf(list[toIndex - 1])
+
+    override fun pollFirstEntry(): Map.Entry<K, V> = throw UnsupportedOperationException()
+
+    override fun pollLastEntry(): Map.Entry<K, V> = throw UnsupportedOperationException()
+
+    // --- NavigableMap sub-map views ---
+
+    override fun subMap(fromKey: K, fromInclusive: Boolean, toKey: K, toInclusive: Boolean): NavigableMap<K, V> {
+        val fromGlobal = checkedGlobalIndex(fromKey)
+        val toGlobal = checkedGlobalIndex(toKey)
+        val start = maxOf(if (fromInclusive) fromGlobal else fromGlobal + 1, fromIndex)
+        val end = minOf(if (toInclusive) toGlobal + 1 else toGlobal, toIndex)
+        return subView(start, maxOf(start, end))
+    }
+
+    override fun headMap(toKey: K, inclusive: Boolean): NavigableMap<K, V> {
+        val toGlobal = checkedGlobalIndex(toKey)
+        val end = minOf(if (inclusive) toGlobal + 1 else toGlobal, toIndex)
+        return subView(fromIndex, maxOf(fromIndex, end))
+    }
+
+    override fun tailMap(fromKey: K, inclusive: Boolean): NavigableMap<K, V> {
+        val fromGlobal = checkedGlobalIndex(fromKey)
+        val start = maxOf(if (inclusive) fromGlobal else fromGlobal + 1, fromIndex)
+        return subView(start, toIndex)
+    }
+
+    // --- Descending views ---
+
+    override fun descendingMap(): NavigableMap<K, V> = throw UnsupportedOperationException()
+
+    override fun navigableKeySet(): NavigableSet<K> = keys
+
+    override fun descendingKeySet(): NavigableSet<K> = throw UnsupportedOperationException()
+
+    // --- Object overrides ---
 
     override fun equals(other: Any?): Boolean {
         if (other === this) return true
@@ -120,7 +238,9 @@ internal class ListOrderedMap<K, V> private constructor(
             "$key=${getValue(key)}"
         }
 
-    private class Entry<K, V>(override val key: K, override val value: V) : Map.Entry<K, V> {
+    private class Entry<K, V>(override val key: K, override val value: V) : MutableMap.MutableEntry<K, V> {
+        override fun setValue(newValue: V): V = throw UnsupportedOperationException()
+
         override fun equals(other: Any?): Boolean =
             other is Map.Entry<*, *> && key == other.key && value == other.value
 
@@ -157,49 +277,23 @@ internal class ListOrderedMap<K, V> private constructor(
         override fun retainAll(elements: Collection<K>): Boolean = throw UnsupportedOperationException()
         override fun clear(): Unit = throw UnsupportedOperationException()
 
-        // --- SortedSet ---
+        // --- SortedSet (delegates to map) ---
 
-        private fun checkedGlobalIndex(e: K): Int =
-            indexMap[e] ?: throw ClassCastException("Element is not in the backing collection.")
+        override fun comparator(): Comparator<in K> = this@ListOrderedMap.comparator()
 
-        override fun comparator(): Comparator<in K> =
-            Comparator.comparingInt<K> { checkedGlobalIndex(it) }
+        override fun first(): K = this@ListOrderedMap.firstKey()
 
-        override fun first(): K {
-            if (isEmpty()) throw NoSuchElementException()
-            return list[fromIndex]
-        }
+        override fun last(): K = this@ListOrderedMap.lastKey()
 
-        override fun last(): K {
-            if (isEmpty()) throw NoSuchElementException()
-            return list[toIndex - 1]
-        }
+        // --- NavigableSet (delegates to map) ---
 
-        // --- NavigableSet ---
+        override fun lower(e: K): K? = this@ListOrderedMap.lowerKey(e)
 
-        override fun lower(e: K): K? {
-            val g = checkedGlobalIndex(e)
-            val idx = minOf(g, toIndex) - 1
-            return if (idx >= fromIndex) list[idx] else null
-        }
+        override fun floor(e: K): K? = this@ListOrderedMap.floorKey(e)
 
-        override fun floor(e: K): K? {
-            val g = checkedGlobalIndex(e)
-            val idx = minOf(g, toIndex - 1)
-            return if (idx >= fromIndex) list[idx] else null
-        }
+        override fun ceiling(e: K): K? = this@ListOrderedMap.ceilingKey(e)
 
-        override fun ceiling(e: K): K? {
-            val g = checkedGlobalIndex(e)
-            val idx = maxOf(g, fromIndex)
-            return if (idx < toIndex) list[idx] else null
-        }
-
-        override fun higher(e: K): K? {
-            val g = checkedGlobalIndex(e)
-            val idx = maxOf(g + 1, fromIndex)
-            return if (idx < toIndex) list[idx] else null
-        }
+        override fun higher(e: K): K? = this@ListOrderedMap.higherKey(e)
 
         override fun pollFirst(): K = throw UnsupportedOperationException()
         override fun pollLast(): K = throw UnsupportedOperationException()
@@ -220,25 +314,14 @@ internal class ListOrderedMap<K, V> private constructor(
         override fun subSet(
             fromElement: K, fromInclusive: Boolean,
             toElement: K, toInclusive: Boolean,
-        ): NavigableSet<K> {
-            val fromGlobal = checkedGlobalIndex(fromElement)
-            val toGlobal = checkedGlobalIndex(toElement)
-            val start = maxOf(if (fromInclusive) fromGlobal else fromGlobal + 1, fromIndex)
-            val end = minOf(if (toInclusive) toGlobal + 1 else toGlobal, toIndex)
-            return this@ListOrderedMap.subView(start, maxOf(start, end)).keys
-        }
+        ): NavigableSet<K> =
+            this@ListOrderedMap.subMap(fromElement, fromInclusive, toElement, toInclusive).navigableKeySet()
 
-        override fun headSet(toElement: K, inclusive: Boolean): NavigableSet<K> {
-            val toGlobal = checkedGlobalIndex(toElement)
-            val end = minOf(if (inclusive) toGlobal + 1 else toGlobal, toIndex)
-            return this@ListOrderedMap.subView(fromIndex, maxOf(fromIndex, end)).keys
-        }
+        override fun headSet(toElement: K, inclusive: Boolean): NavigableSet<K> =
+            this@ListOrderedMap.headMap(toElement, inclusive).navigableKeySet()
 
-        override fun tailSet(fromElement: K, inclusive: Boolean): NavigableSet<K> {
-            val fromGlobal = checkedGlobalIndex(fromElement)
-            val start = maxOf(if (inclusive) fromGlobal else fromGlobal + 1, fromIndex)
-            return this@ListOrderedMap.subView(start, toIndex).keys
-        }
+        override fun tailSet(fromElement: K, inclusive: Boolean): NavigableSet<K> =
+            this@ListOrderedMap.tailMap(fromElement, inclusive).navigableKeySet()
 
         override fun subSet(fromElement: K, toElement: K): SortedSet<K> =
             subSet(fromElement, true, toElement, false)
