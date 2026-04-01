@@ -182,8 +182,8 @@ internal class NavigableListMapTest : FreeSpec({
         cmp.compare("C", "C") shouldBe 0
     }
 
-    "keys comparator throws ClassCastException for unknown element" {
-        shouldThrow<ClassCastException> { fullKeys().comparator().compare("A", "Z") }
+    "keys comparator throws NoSuchElementException for unknown element" {
+        shouldThrow<NoSuchElementException> { fullKeys().comparator().compare("A", "Z") }
     }
 
     "keys lower" {
@@ -194,8 +194,8 @@ internal class NavigableListMapTest : FreeSpec({
         subKeys().lower("A") shouldBe null
     }
 
-    "keys lower throws ClassCastException for unknown element" {
-        shouldThrow<ClassCastException> { fullKeys().lower("Z") }
+    "keys lower throws NoSuchElementException for unknown element" {
+        shouldThrow<NoSuchElementException> { fullKeys().lower("Z") }
     }
 
     "keys floor" {
@@ -310,8 +310,8 @@ internal class NavigableListMapTest : FreeSpec({
         cmp.compare("C", "C") shouldBe 0
     }
 
-    "comparator throws ClassCastException for unknown key" {
-        shouldThrow<ClassCastException> { fullMap().comparator().compare("A", "Z") }
+    "comparator throws NoSuchElementException for unknown key" {
+        shouldThrow<NoSuchElementException> { fullMap().comparator().compare("A", "Z") }
     }
 
     "firstKey returns the first key" {

@@ -67,9 +67,6 @@ internal class NavigableListMap<K, V> private constructor(
 
     // --- Helpers ---
 
-    private fun checkedGlobalIndex(key: K): Int =
-        keyToIndex[key] ?: throw ClassCastException("Key is not in the backing collection.")
-
     private fun entryAt(idx: Int): MutableMap.MutableEntry<K, V> =
         list[idx].let { (k, v) -> Entry(k, v) }
 
@@ -112,7 +109,7 @@ internal class NavigableListMap<K, V> private constructor(
     // --- SortedMap ---
 
     override fun comparator(): Comparator<in K> =
-        compareBy(::checkedGlobalIndex)
+        compareBy(keyToIndex::getValue)
 
     override fun firstKey(): K {
         if (isEmpty()) throw NoSuchElementException()
@@ -136,25 +133,25 @@ internal class NavigableListMap<K, V> private constructor(
     // --- NavigableMap key navigation ---
 
     override fun lowerKey(key: K): K? {
-        val g = checkedGlobalIndex(key)
+        val g = keyToIndex.getValue(key)
         val idx = minOf(g - 1, window.last)
         return if (idx in window) list[idx].first else null
     }
 
     override fun floorKey(key: K): K? {
-        val g = checkedGlobalIndex(key)
+        val g = keyToIndex.getValue(key)
         val idx = minOf(g, window.last)
         return if (idx in window) list[idx].first else null
     }
 
     override fun ceilingKey(key: K): K? {
-        val g = checkedGlobalIndex(key)
+        val g = keyToIndex.getValue(key)
         val idx = maxOf(g, window.first)
         return if (idx in window) list[idx].first else null
     }
 
     override fun higherKey(key: K): K? {
-        val g = checkedGlobalIndex(key)
+        val g = keyToIndex.getValue(key)
         val idx = maxOf(g + 1, window.first)
         return if (idx in window) list[idx].first else null
     }
@@ -182,21 +179,21 @@ internal class NavigableListMap<K, V> private constructor(
     // --- NavigableMap sub-map views ---
 
     override fun subMap(fromKey: K, fromInclusive: Boolean, toKey: K, toInclusive: Boolean): NavigableMap<K, V> {
-        val fromGlobal = checkedGlobalIndex(fromKey)
-        val toGlobal = checkedGlobalIndex(toKey)
+        val fromGlobal = keyToIndex.getValue(fromKey)
+        val toGlobal = keyToIndex.getValue(toKey)
         val start = maxOf(if (fromInclusive) fromGlobal else fromGlobal + 1, window.first)
         val endInclusive = minOf(if (toInclusive) toGlobal else toGlobal - 1, window.last)
         return subView(start..endInclusive)
     }
 
     override fun headMap(toKey: K, inclusive: Boolean): NavigableMap<K, V> {
-        val toGlobal = checkedGlobalIndex(toKey)
+        val toGlobal = keyToIndex.getValue(toKey)
         val endInclusive = minOf(if (inclusive) toGlobal else toGlobal - 1, window.last)
         return subView(window.first..endInclusive)
     }
 
     override fun tailMap(fromKey: K, inclusive: Boolean): NavigableMap<K, V> {
-        val fromGlobal = checkedGlobalIndex(fromKey)
+        val fromGlobal = keyToIndex.getValue(fromKey)
         val start = maxOf(if (inclusive) fromGlobal else fromGlobal + 1, window.first)
         return subView(start..window.last)
     }
