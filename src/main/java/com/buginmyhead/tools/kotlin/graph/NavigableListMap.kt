@@ -228,10 +228,7 @@ internal class NavigableListMap<K, V> private constructor(
         keys.sumOf { key -> (key?.hashCode() ?: 0) xor (getValue(key)?.hashCode() ?: 0) }
 
     override fun toString(): String =
-        (fromIndex until toIndex).joinToString(", ", "{", "}") { i ->
-            val key = list[i]
-            "$key=${getValue(key)}"
-        }
+        keys.joinToString(", ", "{", "}") { key -> "$key=${getValue(key)}" }
 
     private class Entry<K, V>(override val key: K, override val value: V) : MutableMap.MutableEntry<K, V> {
         override fun setValue(newValue: V): V = throw UnsupportedOperationException()
