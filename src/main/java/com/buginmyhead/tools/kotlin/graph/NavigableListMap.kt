@@ -216,21 +216,16 @@ internal class NavigableListMap<K, V> private constructor(
 
     // --- Object overrides ---
 
-    override fun equals(other: Any?): Boolean {
-        if (other === this) return true
-        if (other !is Map<*, *>) return false
-        if (other.size != size) return false
-        return (fromIndex until toIndex).all { i ->
-            val key = list[i]
-            other[key] == getValue(key)
-        }
-    }
+    override fun equals(other: Any?): Boolean =
+        other === this
+                || (
+                other is Map<*, *>
+                        && size == other.size
+                        && keys.all { key -> other[key] == getValue(key) }
+                )
 
-    override fun hashCode(): Int = (fromIndex until toIndex).sumOf { i ->
-        val key = list[i]
-        val value = getValue(key)
-        (key?.hashCode() ?: 0) xor (value?.hashCode() ?: 0)
-    }
+    override fun hashCode(): Int =
+        keys.sumOf { key -> (key?.hashCode() ?: 0) xor (getValue(key)?.hashCode() ?: 0) }
 
     override fun toString(): String =
         (fromIndex until toIndex).joinToString(", ", "{", "}") { i ->
