@@ -230,7 +230,11 @@ internal class NavigableListMap<K, V> private constructor(
     override fun toString(): String =
         keys.joinToString(", ", "{", "}") { key -> "$key=${getValue(key)}" }
 
-    private class Entry<K, V>(override val key: K, override val value: V) : MutableMap.MutableEntry<K, V> {
+    private data class Entry<K, V>(
+        override val key: K,
+        override val value: V
+    ) : MutableMap.MutableEntry<K, V> {
+
         override fun setValue(newValue: V): V = throw UnsupportedOperationException()
 
         override fun equals(other: Any?): Boolean =
@@ -240,6 +244,7 @@ internal class NavigableListMap<K, V> private constructor(
             (key?.hashCode() ?: 0) xor (value?.hashCode() ?: 0)
 
         override fun toString(): String = "$key=$value"
+
     }
 
     // --- NavigableSet keys ---
