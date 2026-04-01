@@ -1,4 +1,9 @@
-# Main source code
+# When to stop making changes and ask in prompt
+
+After you try twice to resolve stale IDE errors, but it still doesn't work, ask in prompt.
+They are likely caused by content difference between memory and disk.
+
+# Main source code convention
 
 Consider using functional programming style.
 
