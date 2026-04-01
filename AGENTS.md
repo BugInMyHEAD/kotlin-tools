@@ -17,6 +17,9 @@ class MyClass {
 }
 ```
 
+When you write a `class` or an `object`,
+put an empty line after the opening brace and before the closing brace.
+
 # Unit test
 
 ## Framework and style
