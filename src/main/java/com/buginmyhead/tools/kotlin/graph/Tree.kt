@@ -80,7 +80,7 @@ private class IndexedTree<N, W> private constructor(
 
     /** Sub-view that serves as both [nodes] (via keys) and [outs] (as map). */
     private val _outs: NavigableListMap<N, Set<N>> =
-        index.preOrderedMap.subView(rangeStart until rangeEnd)
+        index.preOrderedMap.subView(rangeStart ..< rangeEnd)
 
     override val outs: Map<N, Set<N>> get() = _outs
 
@@ -89,7 +89,7 @@ private class IndexedTree<N, W> private constructor(
 
     /** View backed by the cumulative edge count range. No copy. */
     override val edges: Map<Pair<N, N>, W> =
-        index.edgesMap.subView(index.edgeCumCount[rangeStart] until index.edgeCumCount[rangeEnd])
+        index.edgesMap.subView(index.edgeCumCount[rangeStart] ..< index.edgeCumCount[rangeEnd])
 
     /** View with the subtree root's ins overridden to emptySet(). No copy. */
     override val ins: Map<N, Set<N>> = run {
@@ -107,7 +107,7 @@ private class IndexedTree<N, W> private constructor(
             index.sinkGlobalIndices
                 .binarySearch(rangeEnd)
                 .let { if (it < 0) it.inv() else it }
-        index.sinkMap.subView(fromSinkIdx until toSinkIdx).keys
+        index.sinkMap.subView(fromSinkIdx ..< toSinkIdx).keys
     }
 
     /** View as a singleton sub-view of the pre-order map. No copy. */
@@ -176,7 +176,7 @@ private class TreeIndex<N, W>(
         // Edges ordered by from-node pre-order with cumulative count for O(1) range lookup
         val edgeKeyList = ArrayList<Pair<N, N>>()
         val cumCount = IntArray(size + 1)
-        for (i in 0 until size) {
+        for (i in 0 ..< size) {
             cumCount[i] = edgeKeyList.size
             val node = preOrderedMap.keyAt(i)
             for (child in acyclicGraph.outs[node].orEmpty()) {
@@ -190,7 +190,7 @@ private class TreeIndex<N, W>(
         // Sink nodes in pre-order with their global indices for binary search
         val sinkList = ArrayList<N>()
         val sinkIndices = ArrayList<Int>()
-        for (i in 0 until size) {
+        for (i in 0 ..< size) {
             val node = preOrderedMap.keyAt(i)
             if (node in acyclicGraph.sinkNodes) {
                 sinkList.add(node)
