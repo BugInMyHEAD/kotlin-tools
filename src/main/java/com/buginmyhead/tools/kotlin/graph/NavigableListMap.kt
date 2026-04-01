@@ -16,7 +16,7 @@ import java.util.SortedSet
  */
 internal class NavigableListMap<K, V> private constructor(
     private val list: List<Pair<K, V>>,
-    private val indexMap: Map<K, Int>,
+    private val keyToIndex: Map<K, Int>,
     private val fromIndex: Int,
     private val toIndex: Int,
 ) : NavigableMap<K, V> {
@@ -57,22 +57,22 @@ internal class NavigableListMap<K, V> private constructor(
      * Returns the global index of [key] in the backing list, or -1 if not present
      * in the backing list (regardless of this view's range).
      */
-    fun globalIndexOf(key: K): Int = indexMap[key] ?: -1
+    fun globalIndexOf(key: K): Int = keyToIndex[key] ?: -1
 
     // --- Sub-view creation ---
 
     /** Creates a sub-view for the given global index range \[from, to). O(1) operation. */
     fun subView(from: Int, to: Int): NavigableListMap<K, V> =
-        NavigableListMap(list, indexMap, from, to)
+        NavigableListMap(list, keyToIndex, from, to)
 
     /** Creates a map sharing the same key range but with a different value function. */
     fun <V2> withValues(newGetValue: (K) -> V2): NavigableListMap<K, V2> =
-        NavigableListMap(list.map { (k, _) -> k to newGetValue(k) }, indexMap, fromIndex, toIndex)
+        NavigableListMap(list.map { (k, _) -> k to newGetValue(k) }, keyToIndex, fromIndex, toIndex)
 
     // --- Helpers ---
 
     private fun checkedGlobalIndex(key: K): Int =
-        indexMap[key] ?: throw ClassCastException("Key is not in the backing collection.")
+        keyToIndex[key] ?: throw ClassCastException("Key is not in the backing collection.")
 
     private fun entryAt(idx: Int): MutableMap.MutableEntry<K, V> =
         list[idx].let { (k, v) -> Entry(k, v) }
@@ -84,7 +84,7 @@ internal class NavigableListMap<K, V> private constructor(
     override fun isEmpty(): Boolean = fromIndex >= toIndex
 
     override fun containsKey(key: K): Boolean {
-        val idx = indexMap[key] ?: return false
+        val idx = keyToIndex[key] ?: return false
         return idx in fromIndex until toIndex
     }
 
@@ -92,7 +92,7 @@ internal class NavigableListMap<K, V> private constructor(
         (fromIndex until toIndex).any { list[it].second == value }
 
     override fun get(key: K): V? {
-        val idx = indexMap[key] ?: return null
+        val idx = keyToIndex[key] ?: return null
         return if (idx in fromIndex until toIndex) list[idx].second else null
     }
 
@@ -165,13 +165,13 @@ internal class NavigableListMap<K, V> private constructor(
 
     // --- NavigableMap entry navigation ---
 
-    override fun lowerEntry(key: K): Map.Entry<K, V>? = lowerKey(key)?.let { entryAt(indexMap[it]!!) }
+    override fun lowerEntry(key: K): Map.Entry<K, V>? = lowerKey(key)?.let { entryAt(keyToIndex[it]!!) }
 
-    override fun floorEntry(key: K): Map.Entry<K, V>? = floorKey(key)?.let { entryAt(indexMap[it]!!) }
+    override fun floorEntry(key: K): Map.Entry<K, V>? = floorKey(key)?.let { entryAt(keyToIndex[it]!!) }
 
-    override fun ceilingEntry(key: K): Map.Entry<K, V>? = ceilingKey(key)?.let { entryAt(indexMap[it]!!) }
+    override fun ceilingEntry(key: K): Map.Entry<K, V>? = ceilingKey(key)?.let { entryAt(keyToIndex[it]!!) }
 
-    override fun higherEntry(key: K): Map.Entry<K, V>? = higherKey(key)?.let { entryAt(indexMap[it]!!) }
+    override fun higherEntry(key: K): Map.Entry<K, V>? = higherKey(key)?.let { entryAt(keyToIndex[it]!!) }
 
     override fun firstEntry(): Map.Entry<K, V>? =
         if (isEmpty()) null else entryAt(fromIndex)
