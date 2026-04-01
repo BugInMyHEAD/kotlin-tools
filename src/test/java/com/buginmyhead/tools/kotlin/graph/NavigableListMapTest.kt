@@ -8,7 +8,7 @@ import java.util.NavigableMap
 internal class NavigableListMapTest : FreeSpec({
 
     // Full map: keys [A, B, C, D, E], values = key.length * 5
-    fun fullMap() = NavigableListMap(listOf("A", "B", "C", "D", "E")) { it.length * 5 }
+    fun fullMap() = NavigableListMap(listOf("A", "B", "C", "D", "E").map { it to it.length * 5 })
 
     // Sub-view: keys [B, C, D]
     fun subMap() = fullMap().subView(1, 4)
@@ -98,7 +98,7 @@ internal class NavigableListMapTest : FreeSpec({
     }
 
     "withValues creates a map with different value function" {
-        val original = NavigableListMap(listOf("X", "Y")) { it.length }
+        val original = NavigableListMap(listOf("X", "Y").map { it to it.length })
         val replaced = original.withValues { it.hashCode() }
         replaced.keys shouldBe setOf("X", "Y")
         replaced["X"] shouldBe "X".hashCode()
@@ -111,7 +111,7 @@ internal class NavigableListMapTest : FreeSpec({
     }
 
     "equals works with other Map implementations" {
-        val map = NavigableListMap(listOf("X", "Y")) { it.length * 7 }
+        val map = NavigableListMap(listOf("X", "Y").map { it to it.length * 7 })
         map shouldBe mapOf("X" to 7, "Y" to 7)
         (map == map) shouldBe true
         (map.equals("not a map")) shouldBe false
@@ -120,13 +120,13 @@ internal class NavigableListMapTest : FreeSpec({
     }
 
     "hashCode is consistent with equals" {
-        val map1 = NavigableListMap(listOf("A", "B")) { 5 }
+        val map1 = NavigableListMap(listOf("A" to 5, "B" to 5))
         val map2 = mapOf("A" to 5, "B" to 5)
         map1.hashCode() shouldBe map2.hashCode()
     }
 
     "toString formats as map" {
-        NavigableListMap(listOf("A")) { 5 }.toString() shouldBe "{A=5}"
+        NavigableListMap(listOf("A" to 5)).toString() shouldBe "{A=5}"
     }
 
     // --- KeySet (NavigableSet) tests ---

@@ -159,7 +159,7 @@ private class TreeIndex<N, W>(
         }
 
         // Pre-ordered map: keys = nodes in pre-order, values = outs
-        preOrderedMap = NavigableListMap(order) { acyclicGraph.outs[it].orEmpty() }
+        preOrderedMap = NavigableListMap(order.map { it to acyclicGraph.outs[it].orEmpty() })
 
         // Computes exclusive end index for each node's subtree using reverse pre-order traversal,
         //  a kind of dynamic programming to visit all children before their parent.
@@ -184,7 +184,7 @@ private class TreeIndex<N, W>(
             }
         }
         cumCount[size] = edgeKeyList.size
-        edgesMap = NavigableListMap(edgeKeyList) { acyclicGraph.edges.getValue(it) }
+        edgesMap = NavigableListMap(edgeKeyList.map { it to acyclicGraph.edges.getValue(it) })
         edgeCumCount = cumCount
 
         // Sink nodes in pre-order with their global indices for binary search
