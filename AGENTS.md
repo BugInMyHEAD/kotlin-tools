@@ -2,6 +2,21 @@
 
 Consider using functional programming style.
 
+When you write `equals` method, use the following style:
+```kotlin
+class MyClass {
+
+    override fun equals(other: Any?): Boolean =
+        this === other
+                || (
+                other is MyClass
+                        && property == other.property
+                        && anotherProperty == other.anotherProperty
+                )
+
+}
+```
+
 # Unit test
 
 ## Framework and style
