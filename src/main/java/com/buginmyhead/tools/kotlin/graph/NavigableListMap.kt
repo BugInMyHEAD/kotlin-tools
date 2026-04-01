@@ -112,7 +112,7 @@ internal class NavigableListMap<K, V> private constructor(
     // --- SortedMap ---
 
     override fun comparator(): Comparator<in K> =
-        Comparator.comparingInt<K> { checkedGlobalIndex(it) }
+        compareBy(::checkedGlobalIndex)
 
     override fun firstKey(): K {
         if (isEmpty()) throw NoSuchElementException()
