@@ -11,7 +11,7 @@ internal class NavigableListMapTest : FreeSpec({
     fun fullMap() = NavigableListMap(listOf("A", "B", "C", "D", "E").map { it to it.length * 5 })
 
     // Sub-view: keys [B, C, D]
-    fun subMap() = fullMap().subView(1, 4)
+    fun subMap() = fullMap().subView(1..3)
 
     // --- Map tests ---
 
@@ -22,7 +22,7 @@ internal class NavigableListMapTest : FreeSpec({
 
     "isEmpty returns true for empty map" {
         fullMap().isEmpty() shouldBe false
-        fullMap().subView(0, 0).isEmpty() shouldBe true
+        fullMap().subView(IntRange.EMPTY).isEmpty() shouldBe true
     }
 
     "containsKey checks key membership in the current view" {
@@ -137,7 +137,7 @@ internal class NavigableListMapTest : FreeSpec({
     "keys size and isEmpty" {
         fullKeys().size shouldBe 5
         fullKeys().isEmpty() shouldBe false
-        fullMap().subView(0, 0).keys.isEmpty() shouldBe true
+        fullMap().subView(IntRange.EMPTY).keys.isEmpty() shouldBe true
     }
 
     "keys contains checks membership in the current view" {
@@ -153,7 +153,7 @@ internal class NavigableListMapTest : FreeSpec({
     }
 
     "keys iterator next throws NoSuchElementException when exhausted" {
-        shouldThrow<NoSuchElementException> { fullMap().subView(0, 0).keys.iterator().next() }
+        shouldThrow<NoSuchElementException> { fullMap().subView(IntRange.EMPTY).keys.iterator().next() }
     }
 
     "keys iterator remove throws UnsupportedOperationException" {
@@ -168,11 +168,11 @@ internal class NavigableListMapTest : FreeSpec({
     }
 
     "keys first throws NoSuchElementException for empty set" {
-        shouldThrow<NoSuchElementException> { fullMap().subView(0, 0).keys.first() }
+        shouldThrow<NoSuchElementException> { fullMap().subView(IntRange.EMPTY).keys.first() }
     }
 
     "keys last throws NoSuchElementException for empty set" {
-        shouldThrow<NoSuchElementException> { fullMap().subView(0, 0).keys.last() }
+        shouldThrow<NoSuchElementException> { fullMap().subView(IntRange.EMPTY).keys.last() }
     }
 
     "keys comparator orders by insertion order" {
@@ -254,11 +254,11 @@ internal class NavigableListMapTest : FreeSpec({
 
     "keys descendingIterator" {
         subKeys().descendingIterator().asSequence().toList() shouldBe listOf("D", "C", "B")
-        fullMap().subView(0, 0).keys.descendingIterator().hasNext() shouldBe false
+        fullMap().subView(IntRange.EMPTY).keys.descendingIterator().hasNext() shouldBe false
     }
 
     "keys descendingIterator next throws NoSuchElementException when exhausted" {
-        shouldThrow<NoSuchElementException> { fullMap().subView(0, 0).keys.descendingIterator().next() }
+        shouldThrow<NoSuchElementException> { fullMap().subView(IntRange.EMPTY).keys.descendingIterator().next() }
     }
 
     "keys descendingIterator remove throws UnsupportedOperationException" {
@@ -320,7 +320,7 @@ internal class NavigableListMapTest : FreeSpec({
     }
 
     "firstKey throws NoSuchElementException for empty map" {
-        shouldThrow<NoSuchElementException> { fullMap().subView(0, 0).firstKey() }
+        shouldThrow<NoSuchElementException> { fullMap().subView(IntRange.EMPTY).firstKey() }
     }
 
     "lastKey returns the last key" {
@@ -329,7 +329,7 @@ internal class NavigableListMapTest : FreeSpec({
     }
 
     "lastKey throws NoSuchElementException for empty map" {
-        shouldThrow<NoSuchElementException> { fullMap().subView(0, 0).lastKey() }
+        shouldThrow<NoSuchElementException> { fullMap().subView(IntRange.EMPTY).lastKey() }
     }
 
     "lowerEntry returns entry with greatest key strictly less" {
@@ -354,12 +354,12 @@ internal class NavigableListMapTest : FreeSpec({
 
     "firstEntry returns first entry or null for empty map" {
         fullMap().firstEntry()?.let { it.key to it.value } shouldBe ("A" to 5)
-        fullMap().subView(0, 0).firstEntry() shouldBe null
+        fullMap().subView(IntRange.EMPTY).firstEntry() shouldBe null
     }
 
     "lastEntry returns last entry or null for empty map" {
         fullMap().lastEntry()?.let { it.key to it.value } shouldBe ("E" to 5)
-        fullMap().subView(0, 0).lastEntry() shouldBe null
+        fullMap().subView(IntRange.EMPTY).lastEntry() shouldBe null
     }
 
     "navigableKeySet returns the same keys view" {

@@ -80,7 +80,7 @@ private class IndexedTree<N, W> private constructor(
 
     /** Sub-view that serves as both [nodes] (via keys) and [outs] (as map). */
     private val _outs: NavigableListMap<N, Set<N>> =
-        index.preOrderedMap.subView(rangeStart, rangeEnd)
+        index.preOrderedMap.subView(rangeStart until rangeEnd)
 
     override val outs: Map<N, Set<N>> get() = _outs
 
@@ -89,7 +89,7 @@ private class IndexedTree<N, W> private constructor(
 
     /** View backed by the cumulative edge count range. No copy. */
     override val edges: Map<Pair<N, N>, W> =
-        index.edgesMap.subView(index.edgeCumCount[rangeStart], index.edgeCumCount[rangeEnd])
+        index.edgesMap.subView(index.edgeCumCount[rangeStart] until index.edgeCumCount[rangeEnd])
 
     /** View with the subtree root's ins overridden to emptySet(). No copy. */
     override val ins: Map<N, Set<N>> = run {
@@ -107,11 +107,11 @@ private class IndexedTree<N, W> private constructor(
             index.sinkGlobalIndices
                 .binarySearch(rangeEnd)
                 .let { if (it < 0) it.inv() else it }
-        index.sinkMap.subView(fromSinkIdx, toSinkIdx).keys
+        index.sinkMap.subView(fromSinkIdx until toSinkIdx).keys
     }
 
     /** View as a singleton sub-view of the pre-order map. No copy. */
-    override val sourceNodes: Set<N> = index.preOrderedMap.subView(rangeStart, rangeStart + 1).keys
+    override val sourceNodes: Set<N> = index.preOrderedMap.subView(rangeStart..rangeStart).keys
 
 }
 
