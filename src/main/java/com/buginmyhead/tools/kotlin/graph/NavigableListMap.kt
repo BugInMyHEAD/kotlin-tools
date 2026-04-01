@@ -51,7 +51,7 @@ internal class NavigableListMap<K, V> private constructor(
      * @throws IndexOutOfBoundsException if [offset] is out of range.
      */
     fun keyAt(offset: Int): K {
-        if (offset < 0 || offset >= size) throw IndexOutOfBoundsException("offset=$offset, size=$size")
+        if (offset !in 0 ..< size) throw IndexOutOfBoundsException("offset=$offset, size=$size")
         return list[fromIndex + offset]
     }
 
