@@ -26,9 +26,7 @@ internal class NavigableListMap<K, V> private constructor(
      */
     constructor(elements: List<Pair<K, V>>) : this(
         elements,
-        HashMap<K, Int>(elements.size).also { map ->
-            for (i in elements.indices) map[elements[i].first] = i
-        },
+        elements.withIndex().associate { it.value.first to it.index },
         elements.indices,
     )
 
