@@ -47,19 +47,6 @@ internal class NavigableListMapTest : FreeSpec({
         subMap()["B"] shouldBe 5
     }
 
-    "keyAt returns the key at offset" {
-        fullMap().keyAt(0) shouldBe "A"
-        fullMap().keyAt(4) shouldBe "E"
-        subMap().keyAt(0) shouldBe "B"
-        subMap().keyAt(2) shouldBe "D"
-    }
-
-    "keyAt throws IndexOutOfBoundsException for invalid offset" {
-        shouldThrow<IndexOutOfBoundsException> { fullMap().keyAt(-1) }
-        shouldThrow<IndexOutOfBoundsException> { fullMap().keyAt(5) }
-        shouldThrow<IndexOutOfBoundsException> { subMap().keyAt(3) }
-    }
-
     "globalIndexOf returns the global index in the backing list" {
         fullMap().globalIndexOf("A") shouldBe 0
         fullMap().globalIndexOf("E") shouldBe 4

@@ -93,7 +93,7 @@ private class IndexedTree<N, W> private constructor(
 
     /** View with the subtree root's ins overridden to emptySet(). No copy. */
     override val ins: Map<N, Set<N>> = run {
-        val root = index.preOrderedMap.keyAt(rangeStart)
+        val root = _outs.firstKey()
         _outs.withValues { if (it == root) emptySet() else index.allIns[it].orEmpty() }
     }
 
@@ -164,24 +164,28 @@ private class TreeIndex<N, W>(
         // Computes exclusive end index for each node's subtree using reverse pre-order traversal,
         //  a kind of dynamic programming to visit all children before their parent.
         subtreeEnd = IntArray(size)
+        var reverseNode: N? = preOrderedMap.lastKey()
         for (i in size - 1 downTo 0) {
-            val node = preOrderedMap.keyAt(i)
+            val node = reverseNode!!
             val children = acyclicGraph.outs[node].orEmpty()
             subtreeEnd[i] =
                 children.fold(i + 1) { maxEnd, child ->
                     maxOf(maxEnd, subtreeEnd[preOrderedMap.globalIndexOf(child)])
                 }
+            reverseNode = preOrderedMap.lowerKey(node)
         }
 
         // Edges ordered by from-node pre-order with cumulative count for O(1) range lookup
         val edgeKeyList = ArrayList<Pair<N, N>>()
         val cumCount = IntArray(size + 1)
+        var forwardNode: N? = preOrderedMap.firstKey()
         for (i in 0 ..< size) {
             cumCount[i] = edgeKeyList.size
-            val node = preOrderedMap.keyAt(i)
+            val node = forwardNode!!
             for (child in acyclicGraph.outs[node].orEmpty()) {
                 edgeKeyList.add(node to child)
             }
+            forwardNode = preOrderedMap.higherKey(node)
         }
         cumCount[size] = edgeKeyList.size
         edgesMap = NavigableListMap(edgeKeyList.map { it to acyclicGraph.edges.getValue(it) })
@@ -190,12 +194,14 @@ private class TreeIndex<N, W>(
         // Sink nodes in pre-order with their global indices for binary search
         val sinkList = ArrayList<N>()
         val sinkIndices = ArrayList<Int>()
+        var sinkTraverseNode: N? = preOrderedMap.firstKey()
         for (i in 0 ..< size) {
-            val node = preOrderedMap.keyAt(i)
+            val node = sinkTraverseNode!!
             if (node in acyclicGraph.sinkNodes) {
                 sinkList.add(node)
                 sinkIndices.add(i)
             }
+            sinkTraverseNode = preOrderedMap.higherKey(node)
         }
         sinkMap = NavigableListMap(sinkList.map { it to Unit })
         sinkGlobalIndices = sinkIndices.toIntArray()

@@ -35,15 +35,6 @@ internal class NavigableListMap<K, V> private constructor(
     // --- Key access ---
 
     /**
-     * Returns the key at the given position within this view (0-based offset).
-     * @throws IndexOutOfBoundsException if [offset] is out of range.
-     */
-    fun keyAt(offset: Int): K {
-        if (offset !in 0 ..< size) throw IndexOutOfBoundsException("offset=$offset, size=$size")
-        return list[window.first + offset].first
-    }
-
-    /**
      * Returns the global index of [key] in the backing list, or -1 if not present
      * in the backing list (regardless of this view's range).
      */
