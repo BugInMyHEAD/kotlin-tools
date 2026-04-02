@@ -3,7 +3,6 @@ package com.buginmyhead.tools.kotlin.graph
 import java.util.NavigableMap
 import java.util.NavigableSet
 import java.util.SortedMap
-import java.util.SortedSet
 
 /**
  * An unmodifiable [NavigableMap] backed by a list and an index map, where key ordering
@@ -83,7 +82,7 @@ internal class NavigableListMap<K, V> private constructor(
         return if (idx in window) list[idx].second else null
     }
 
-    override val keys: NavigableSet<K> = KeySet()
+    override val keys = NavigableListSet(list.map { (k, v) -> k }, keyToIndex, window)
 
     override val values: MutableCollection<V>
         get() = window.mapTo(mutableListOf()) { list[it].second }
@@ -238,90 +237,6 @@ internal class NavigableListMap<K, V> private constructor(
             (key?.hashCode() ?: 0) xor (value?.hashCode() ?: 0)
 
         override fun toString(): String = "$key=$value"
-
-    }
-
-    // --- NavigableSet keys ---
-
-    inner class KeySet : AbstractSet<K>(), NavigableSet<K> {
-
-        override val size: Int get() = this@NavigableListMap.size
-
-        override fun contains(element: K): Boolean = this@NavigableListMap.containsKey(element)
-
-        override fun iterator(): MutableIterator<K> = object : MutableIterator<K> {
-            private var cursor = window.first
-            override fun hasNext(): Boolean = cursor <= window.last
-            override fun next(): K {
-                if (!hasNext()) throw NoSuchElementException()
-                return list[cursor++].first
-            }
-
-            override fun remove(): Unit = throw UnsupportedOperationException()
-        }
-
-        // Unmodifiable
-        override fun add(element: K): Boolean = throw UnsupportedOperationException()
-        override fun remove(element: K): Boolean = throw UnsupportedOperationException()
-        override fun addAll(elements: Collection<K>): Boolean = throw UnsupportedOperationException()
-        override fun removeAll(elements: Collection<K>): Boolean = throw UnsupportedOperationException()
-        override fun retainAll(elements: Collection<K>): Boolean = throw UnsupportedOperationException()
-        override fun clear(): Unit = throw UnsupportedOperationException()
-
-        // --- SortedSet (delegates to map) ---
-
-        override fun comparator(): Comparator<in K> = this@NavigableListMap.comparator()
-
-        override fun first(): K = this@NavigableListMap.firstKey()
-
-        override fun last(): K = this@NavigableListMap.lastKey()
-
-        // --- NavigableSet (delegates to map) ---
-
-        override fun lower(e: K): K? = this@NavigableListMap.lowerKey(e)
-
-        override fun floor(e: K): K? = this@NavigableListMap.floorKey(e)
-
-        override fun ceiling(e: K): K? = this@NavigableListMap.ceilingKey(e)
-
-        override fun higher(e: K): K? = this@NavigableListMap.higherKey(e)
-
-        override fun pollFirst(): K = throw UnsupportedOperationException()
-        override fun pollLast(): K = throw UnsupportedOperationException()
-
-        override fun descendingIterator(): MutableIterator<K> = object : MutableIterator<K> {
-            private var cursor = window.last
-            override fun hasNext(): Boolean = cursor >= window.first
-            override fun next(): K {
-                if (!hasNext()) throw NoSuchElementException()
-                return list[cursor--].first
-            }
-
-            override fun remove(): Unit = throw UnsupportedOperationException()
-        }
-
-        override fun descendingSet(): NavigableSet<K> = throw UnsupportedOperationException()
-
-        override fun subSet(
-            fromElement: K, fromInclusive: Boolean,
-            toElement: K, toInclusive: Boolean,
-        ): NavigableSet<K> =
-            this@NavigableListMap.subMap(fromElement, fromInclusive, toElement, toInclusive).navigableKeySet()
-
-        override fun headSet(toElement: K, inclusive: Boolean): NavigableSet<K> =
-            this@NavigableListMap.headMap(toElement, inclusive).navigableKeySet()
-
-        override fun tailSet(fromElement: K, inclusive: Boolean): NavigableSet<K> =
-            this@NavigableListMap.tailMap(fromElement, inclusive).navigableKeySet()
-
-        override fun subSet(fromElement: K, toElement: K): SortedSet<K> =
-            subSet(fromElement, true, toElement, false)
-
-        override fun headSet(toElement: K): SortedSet<K> =
-            headSet(toElement, false)
-
-        override fun tailSet(fromElement: K): SortedSet<K> =
-            tailSet(fromElement, true)
 
     }
 
