@@ -107,7 +107,7 @@ private class IndexedTree<N, W> private constructor(
             index.sinkGlobalIndices
                 .binarySearch(rangeEnd)
                 .let { if (it < 0) it.inv() else it }
-        index.sinkMap.subView(fromSinkIdx ..< toSinkIdx)
+        index.sinkMap.subView(fromSinkIdx ..< toSinkIdx).keys
     }
 
     /** View as a singleton sub-view of the pre-order map. No copy. */
@@ -140,7 +140,7 @@ private class TreeIndex<N, W>(
     val edgeCumCount: IntArray
 
     // For sinkNodes sub-views: sinks in pre-order with their global indices
-    val sinkMap: NavigableListSet<N>
+    val sinkMap: NavigableListMap<N, Unit>
     val sinkGlobalIndices: IntArray
 
     init {
@@ -197,7 +197,7 @@ private class TreeIndex<N, W>(
                 sinkIndices.add(i)
             }
         }
-        sinkMap = NavigableListSet(sinkList)
+        sinkMap = NavigableListMap.ofKeys(sinkList)
         sinkGlobalIndices = sinkIndices.toIntArray()
     }
 

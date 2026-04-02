@@ -104,6 +104,11 @@ internal class NavigableListMapTest : FreeSpec({
         replaced["X"] shouldBe "X".hashCode()
     }
 
+    "ofKeys creates a key-only map" {
+        val keyOnly = NavigableListMap.ofKeys(listOf("P", "Q"))
+        keyOnly.keys shouldBe setOf("P", "Q")
+        keyOnly["P"] shouldBe Unit
+    }
 
     "equals works with other Map implementations" {
         val map = NavigableListMap(listOf("X", "Y").map { it to it.length * 7 })

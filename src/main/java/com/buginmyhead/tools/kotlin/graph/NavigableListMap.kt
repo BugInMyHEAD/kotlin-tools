@@ -30,7 +30,13 @@ internal class NavigableListMap<K, V> private constructor(
         elements.indices,
     )
 
-    companion object
+    companion object {
+
+        /** Creates a key-only map (values are [Unit]). */
+        fun <K> ofKeys(elements: List<K>): NavigableListMap<K, Unit> =
+            NavigableListMap(elements.map { it to Unit })
+
+    }
 
     // --- Key access ---
 
