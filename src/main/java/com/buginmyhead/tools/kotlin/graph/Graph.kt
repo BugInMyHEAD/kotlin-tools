@@ -8,13 +8,13 @@ import java.io.Serializable
  */
 interface Graph<N, W> : Serializable {
 
-    val nodes: Set<N>
-
     val edges: Map<Pair<N, N>, W>
 
     val outs: Map<N, Set<N>>
 
     val ins: Map<N, Set<N>>
+
+    val nodes: Set<N>
 
     val sinkNodes: Set<N>
 
