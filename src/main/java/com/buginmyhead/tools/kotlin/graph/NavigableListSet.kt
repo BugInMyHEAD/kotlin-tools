@@ -10,7 +10,7 @@ import java.util.SortedSet
  * Supports O(1) [contains] and [subView].
  * Sub-views share the same backing data and are O(1) to create.
  */
-internal class NavigableListSet<E> internal constructor(
+internal class NavigableListSet<E> private constructor(
     private val list: List<E>,
     private val elementToIndex: Map<E, Int>,
     private val window: IntRange,
