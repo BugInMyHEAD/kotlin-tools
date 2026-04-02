@@ -197,7 +197,7 @@ private class TreeIndex<N, W>(
                 sinkIndices.add(i)
             }
         }
-        sinkMap = NavigableListMap.ofKeys(sinkList)
+        sinkMap = NavigableListMap(sinkList.map { it to Unit })
         sinkGlobalIndices = sinkIndices.toIntArray()
     }
 

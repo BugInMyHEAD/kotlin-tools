@@ -30,13 +30,7 @@ internal class NavigableListMap<K, V> private constructor(
         elements.indices,
     )
 
-    companion object {
-
-        /** Creates a key-only map (values are [Unit]). */
-        fun <K> ofKeys(elements: List<K>): NavigableListMap<K, Unit> =
-            NavigableListMap(elements.map { it to Unit })
-
-    }
+    companion object
 
     // --- Key access ---
 
@@ -332,3 +326,10 @@ internal class NavigableListMap<K, V> private constructor(
     }
 
 }
+
+/**
+ * Creates an unmodifiable [NavigableSet] backed by a [NavigableListMap],
+ * where element ordering is defined by the original insertion order.
+ */
+internal fun <E> navigableListSetFrom(elements: List<E>): NavigableSet<E> =
+    NavigableListMap(elements.map { it to Unit }).keys
