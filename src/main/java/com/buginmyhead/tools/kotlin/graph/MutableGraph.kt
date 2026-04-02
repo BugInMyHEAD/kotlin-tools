@@ -15,11 +15,11 @@ class MutableGraph<N, W> : Graph<N, W> {
 
     override val nodes: Set<N> get() = _outs.keys
 
-    private val _sinkNodes = mutableSetOf<N>()
-    override val sinkNodes: Set<N> get() = _sinkNodes
-
     private val _sourceNodes = mutableSetOf<N>()
     override val sourceNodes: Set<N> get() = _sourceNodes
+
+    private val _sinkNodes = mutableSetOf<N>()
+    override val sinkNodes: Set<N> get() = _sinkNodes
 
     /**
      * Adds an edge to the graph.

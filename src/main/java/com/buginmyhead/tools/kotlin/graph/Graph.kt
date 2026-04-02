@@ -16,9 +16,9 @@ interface Graph<N, W> : Serializable {
 
     val nodes: Set<N>
 
-    val sinkNodes: Set<N>
-
     val sourceNodes: Set<N>
+
+    val sinkNodes: Set<N>
 
     enum class Direction {
 
