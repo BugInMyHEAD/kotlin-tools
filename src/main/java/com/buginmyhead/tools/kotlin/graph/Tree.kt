@@ -4,6 +4,7 @@ import com.buginmyhead.tools.kotlin.graph.AcyclicGraph.Companion.toAcyclicGraph
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.bfs
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.leaves
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.root
+import java.util.NavigableMap
 
 /**
  * [Graph.Direction.Forward] means from [root] to [leaves].
@@ -64,23 +65,29 @@ private class IndexedTree<N, W> private constructor(
     private val index: TreeIndex<N, W>,
     private val rangeStart: Int,
     rangeEnd: Int,
+    rootNode: N,
+    endNode: N?,
 ) : Tree<N, W> {
 
     constructor(acyclicGraph: AcyclicGraph<N, W>) : this(
         TreeIndex(acyclicGraph),
         0,
         acyclicGraph.nodes.size,
+        acyclicGraph.sourceNodes.single(),
+        null,
     )
 
     /** Creates a subtree rooted at [node] in O(1) by narrowing the index range. */
     fun subtreeAt(node: N): IndexedTree<N, W> {
         val idx = index.preOrderedMap.globalIndexOf(node)
-        return IndexedTree(index, idx, index.subtreeEnd[idx])
+        val endIdx = index.subtreeEnd[idx]
+        return IndexedTree(index, idx, endIdx, node, index.preOrderedNodes.getOrNull(endIdx))
     }
 
     /** Sub-view that serves as both [nodes] (via keys) and [outs] (as map). */
-    private val _outs: NavigableListMap<N, Set<N>> =
-        index.preOrderedMap.subView(rangeStart ..< rangeEnd)
+    private val _outs: NavigableMap<N, Set<N>> =
+        if (endNode != null) index.preOrderedMap.subMap(rootNode, true, endNode, false)
+        else index.preOrderedMap.tailMap(rootNode, true)
 
     override val outs: Map<N, Set<N>> get() = _outs
 
@@ -91,10 +98,9 @@ private class IndexedTree<N, W> private constructor(
     override val edges: Map<Pair<N, N>, W> =
         index.edgesMap.subView(index.edgeCumCount[rangeStart] ..< index.edgeCumCount[rangeEnd])
 
-    /** View with the subtree root's ins overridden to emptySet(). No copy. */
-    override val ins: Map<N, Set<N>> = run {
-        val root = _outs.firstKey()
-        _outs.withValues { if (it == root) emptySet() else index.allIns[it].orEmpty() }
+    /** Maps each node to its in-neighbors, with the subtree root overridden to emptySet(). */
+    override val ins: Map<N, Set<N>> = _outs.keys.associateWith { node ->
+        if (node == rootNode) emptySet() else index.allIns[node].orEmpty()
     }
 
     /** View backed by binary-searched sink range. No copy. */
@@ -110,8 +116,9 @@ private class IndexedTree<N, W> private constructor(
         index.sinkMap.subView(fromSinkIdx ..< toSinkIdx).keys
     }
 
-    /** View as a singleton sub-view of the pre-order map. No copy. */
-    override val sourceNodes: Set<N> = index.preOrderedMap.subView(rangeStart..rangeStart).keys
+    /** View as a singleton sub-map of the pre-order map. No copy. */
+    override val sourceNodes: Set<N> =
+        index.preOrderedMap.subMap(rootNode, true, rootNode, true).keys
 
 }
 
@@ -130,6 +137,7 @@ private class TreeIndex<N, W>(
 
     /** Keys = nodes in pre-order, values = out-neighbors. Serves as both node set and outs map. */
     val preOrderedMap: NavigableListMap<N, Set<N>>
+    val preOrderedNodes: List<N>
     val subtreeEnd: IntArray
 
     // For ins value function (root override happens per-subtree in IndexedTree)
@@ -160,6 +168,7 @@ private class TreeIndex<N, W>(
 
         // Pre-ordered map: keys = nodes in pre-order, values = outs
         preOrderedMap = NavigableListMap(order.map { it to acyclicGraph.outs[it].orEmpty() })
+        preOrderedNodes = order
 
         // Computes exclusive end index for each node's subtree using reverse pre-order traversal,
         //  a kind of dynamic programming to visit all children before their parent.
