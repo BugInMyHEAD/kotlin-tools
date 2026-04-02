@@ -124,20 +124,21 @@ internal class TreeTest : FreeSpec({
         shouldThrow<IllegalArgumentException> { tree.subtreeOf("C") }
     }
 
+    "subtreeOf the root returns the same tree" {
+        val graph = MutableGraph<String, Int>()
+        graph.addEdge("A" to "B", 5)
+        val tree = graph.toTree()
+
+        val subtreeOfA = tree.subtreeOf("A")
+        subtreeOfA shouldBeSameInstanceAs tree
+    }
+
     "subtreeOf returns the correct subtree" {
         val graph = MutableGraph<String, Int>()
         graph.addEdge("A" to "B", 5)
         graph.addEdge("A" to "C", 7)
         graph.addEdge("C" to "D", 11)
         val tree = graph.toTree()
-
-        val subtreeOfA = tree.subtreeOf("A")
-        subtreeOfA.nodes shouldBe graph.nodes
-        subtreeOfA.edges shouldBe graph.edges
-        subtreeOfA.outs shouldBe graph.outs
-        subtreeOfA.ins shouldBe graph.ins
-        subtreeOfA.sourceNodes shouldBe graph.sourceNodes
-        subtreeOfA.sinkNodes shouldBe graph.sinkNodes
 
         val subtreeOfB = tree.subtreeOf("B")
         subtreeOfB.nodes shouldBe setOf("B")

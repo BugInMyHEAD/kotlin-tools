@@ -45,9 +45,12 @@ interface Tree<N, W> : AcyclicGraph<N, W> {
          */
         @Throws(IllegalArgumentException::class)
         fun <N, W> Tree<N, W>.subtreeOf(node: N): Tree<N, W> {
+            if (node == root) return this
+
             require(node in nodes) {
                 "The specified root node does not exist in the original tree."
             }
+
             val indexed = this as? IndexedTree<N, W> ?: IndexedTree(this)
             return indexed.subtreeAt(node)
         }
