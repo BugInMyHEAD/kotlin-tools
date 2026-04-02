@@ -14,7 +14,7 @@ interface ImmutableGraph<N, W> : Graph<N, W> {
 
     companion object {
 
-        operator fun <N, W> invoke(original: Graph<N, W>): Graph<N, W> =
+        operator fun <N, W> invoke(original: Graph<N, W>): ImmutableGraph<N, W> =
             object : ImmutableGraph<N, W>, Graph<N, W> by original {}
 
     }

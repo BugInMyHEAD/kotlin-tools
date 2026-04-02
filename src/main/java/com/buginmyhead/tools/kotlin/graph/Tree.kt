@@ -62,6 +62,7 @@ interface Tree<N, W> : AcyclicGraph<N, W> {
  * index, making [subtreeAt] an O(1) operation regardless of nesting depth.
  */
 private class IndexedTree<N, W> private constructor(
+    private val original: AcyclicGraph<N, W>,
     private val index: TreeIndex<N, W>,
     private val rangeStart: Int,
     rangeEnd: Int,
@@ -70,6 +71,7 @@ private class IndexedTree<N, W> private constructor(
 ) : Tree<N, W> {
 
     constructor(acyclicGraph: AcyclicGraph<N, W>) : this(
+        acyclicGraph,
         TreeIndex(acyclicGraph),
         0,
         acyclicGraph.nodes.size,
@@ -81,7 +83,14 @@ private class IndexedTree<N, W> private constructor(
     fun subtreeAt(node: N): IndexedTree<N, W> {
         val idx = index.preOrderedMap.globalIndexOf(node)
         val endIdx = index.subtreeEnd[idx]
-        return IndexedTree(index, idx, endIdx, node, index.preOrderedNodes.getOrNull(endIdx))
+        return IndexedTree(
+            original,
+            index,
+            idx,
+            endIdx,
+            node,
+            index.preOrderedNodes.getOrNull(endIdx),
+        )
     }
 
     /** Sub-view that serves as both [nodes] (via keys) and [outs] (as map). */
@@ -119,6 +128,10 @@ private class IndexedTree<N, W> private constructor(
     /** View as a singleton sub-map of the pre-order map. No copy. */
     override val sourceNodes: Set<N> =
         index.preOrderedMap.subMap(rootNode, true, rootNode, true).keys
+
+    override fun equals(other: Any?): Boolean = original == other
+
+    override fun hashCode(): Int = original.hashCode()
 
 }
 
@@ -159,16 +172,15 @@ private class TreeIndex<N, W>(
         stack.addLast(root)
 
         // Iterative DFS pre-order traversal
-        val order = ArrayList<N>(size)
+        preOrderedNodes = ArrayList(size)
         while (stack.isNotEmpty()) {
             val node = stack.removeLast()
-            order.add(node)
+            preOrderedNodes.add(node)
             stack.addAll(acyclicGraph.outs[node].orEmpty())
         }
 
         // Pre-ordered map: keys = nodes in pre-order, values = outs
-        preOrderedMap = NavigableListMap(order.map { it to acyclicGraph.outs[it].orEmpty() })
-        preOrderedNodes = order
+        preOrderedMap = NavigableListMap(preOrderedNodes.map { it to acyclicGraph.outs[it].orEmpty() })
 
         // Computes exclusive end index for each node's subtree using reverse pre-order traversal,
         //  a kind of dynamic programming to visit all children before their parent.

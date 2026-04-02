@@ -15,7 +15,7 @@ interface AcyclicGraph<N, W> : ImmutableGraph<N, W> {
             this as? AcyclicGraph<N, W>
                 // Copies the graph as an AcyclicGraph.
                 // All nodes have been visited without detecting a cycle.
-                ?: object : AcyclicGraph<N, W>, Graph<N, W> by toGraph() {
+                ?: object : AcyclicGraph<N, W>, ImmutableGraph<N, W> by toGraph() {
                     init {
                         // May throw CyclicGraphException
                         topologicalSort(Graph.Direction.Forward).forEach { }

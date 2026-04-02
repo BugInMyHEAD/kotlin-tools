@@ -38,6 +38,18 @@ internal class TreeTest : FreeSpec({
         tree.sinkNodes shouldBe setOf("B", "D")
     }
 
+    "Tree equals the graph that has the same structure" {
+        val graph = MutableGraph<String, Int>()
+        graph.addEdge("A" to "B", 5)
+        graph.addEdge("A" to "C", 7)
+        graph.addEdge("C" to "D", 11)
+        val tree = graph.toTree()
+
+        graph shouldBe tree
+        tree shouldBe graph
+        tree.hashCode() shouldBe graph.hashCode()
+    }
+
     "toTree fails with NotATreeException if graph has a cycle" {
         val graph = MutableGraph<String, Int>()
         graph.addEdge("A" to "B", 5)

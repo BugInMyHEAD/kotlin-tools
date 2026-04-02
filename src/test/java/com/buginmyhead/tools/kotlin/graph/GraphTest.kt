@@ -350,6 +350,17 @@ internal class GraphTest : FreeSpec({
         acyclicGraph.sourceNodes shouldBe setOf("A")
     }
 
+    "AcyclicGraph equals the graph that has the same structure" {
+        val graph = MutableGraph<String, Int>()
+        graph.addEdge("A" to "B", 5)
+        graph.addEdge("B" to "C", 7)
+        val acyclicGraph = graph.toAcyclicGraph()
+
+        graph shouldBe acyclicGraph
+        acyclicGraph shouldBe graph
+        acyclicGraph.hashCode() shouldBe graph.hashCode()
+    }
+
     "toAcyclicGraph fails with CyclicGraphException on cyclic graph 1" {
         val graph = MutableGraph<String, Int>()
         graph.addEdge("A" to "A", 5)

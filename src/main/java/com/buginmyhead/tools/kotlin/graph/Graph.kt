@@ -20,6 +20,10 @@ interface Graph<N, W> : Serializable {
 
     val sinkNodes: Set<N>
 
+    override fun equals(other: Any?): Boolean
+
+    override fun hashCode(): Int
+
     enum class Direction {
 
         Forward {
@@ -63,7 +67,7 @@ interface Graph<N, W> : Serializable {
          * @return itself if it is immutable,
          *  otherwise a new immutable [Graph] copying contents of the receiver.
          */
-        fun <N, W> Graph<N, W>.toGraph(): Graph<N, W> =
+        fun <N, W> Graph<N, W>.toGraph(): ImmutableGraph<N, W> =
             this as? ImmutableGraph<N, W>
                 ?: toGraph({ node -> node }, { _, _, weight, _, _ -> weight })
 
@@ -73,8 +77,7 @@ interface Graph<N, W> : Serializable {
         fun <N, W, M, V> Graph<N, W>.toGraph(
             nodeTransform: (N) -> M,
             weightTransform: (from: N, to: N, weight: W, tFrom: M, tTo: M) -> V
-        ): Graph<M, V> =
-            ImmutableGraph(toMutableGraph(nodeTransform, weightTransform))
+        ) = ImmutableGraph(toMutableGraph(nodeTransform, weightTransform))
 
         fun <N> Graph<N, *>.bfs(
             direction: Direction,
