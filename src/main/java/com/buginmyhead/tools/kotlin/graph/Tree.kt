@@ -201,19 +201,18 @@ private class TreeIndex<N, W>(
 
         // Edges ordered by from-node pre-order with cumulative count for O(1) range lookup
         val edgeKeyList = ArrayList<Pair<N, N>>()
-        val cumCount = IntArray(size + 1)
+        edgeCumCount = IntArray(size + 1)
         var forwardNode: N? = preOrderedMap.firstKey()
         for (i in 0 ..< size) {
-            cumCount[i] = edgeKeyList.size
+            edgeCumCount[i] = edgeKeyList.size
             val node = forwardNode!!
             for (child in acyclicGraph.outs[node].orEmpty()) {
                 edgeKeyList.add(node to child)
             }
             forwardNode = preOrderedMap.higherKey(node)
         }
-        cumCount[size] = edgeKeyList.size
+        edgeCumCount[size] = edgeKeyList.size
         edgesMap = NavigableListMap(edgeKeyList.map { it to acyclicGraph.edges.getValue(it) })
-        edgeCumCount = cumCount
 
         // Sink nodes in pre-order with their global indices for binary search
         val sinkList = ArrayList<N>()
