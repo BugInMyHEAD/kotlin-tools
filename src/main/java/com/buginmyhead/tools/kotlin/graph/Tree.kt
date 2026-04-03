@@ -1,6 +1,7 @@
 package com.buginmyhead.tools.kotlin.graph
 
 import com.buginmyhead.tools.kotlin.DfsPostContext
+import com.buginmyhead.tools.kotlin.IgnoreTestCoverage
 import com.buginmyhead.tools.kotlin.dfsPost
 import com.buginmyhead.tools.kotlin.graph.AcyclicGraph.Companion.toAcyclicGraph
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.bfs
@@ -33,6 +34,7 @@ interface Tree<N, W> : AcyclicGraph<N, W> {
 
         inline val <N> Tree<N, *>.root: N get() = sourceNodes.single()
 
+        @get:IgnoreTestCoverage
         inline val <N> Tree<N, *>.leaves: Set<N> get() = sinkNodes
 
         /**

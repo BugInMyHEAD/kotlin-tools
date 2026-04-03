@@ -48,6 +48,9 @@ kover {
                     "com.buginmyhead.tools.kotlin.WeakIdentityHashMap",
                     "com.buginmyhead.tools.kotlin.WeakIdentityHashMap$*",
                 )
+                annotatedBy(
+                    "com.buginmyhead.tools.kotlin.IgnoreTestCoverage",
+                )
             }
         }
     }
