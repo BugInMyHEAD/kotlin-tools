@@ -192,8 +192,8 @@ private class TreeIndex<N, W>(
         nodeToIndex = preOrderedNodes.withIndex().associate { it.value to it.index }
         nodeToSubtreeSize = preOrderedDfsPostContext.associate { it.node to it.result }
 
-        // Pre-ordered map: keys = nodes in pre-order, values = outs
-        preOrderedMap = NavigableListMap(preOrderedNodes.map { it to acyclicGraph.outs[it].orEmpty() })
+        preOrderedMap =
+            NavigableListMap(preOrderedNodes.map { it to acyclicGraph.outs[it].orEmpty() })
 
         // Edges ordered by from-node pre-order with cumulative count for O(1) range lookup
         val edgeKeyList = ArrayList<Pair<N, N>>()
