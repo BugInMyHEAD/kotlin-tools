@@ -25,6 +25,8 @@ class MyClass {
 When you write a `class` or an `object`,
 put an empty line after the opening brace and before the closing brace.
 
+`..` and `..<` are preferred over `rangeTo`, `until` or `rangeUntil`.
+
 # Unit test
 
 ## Framework and style
