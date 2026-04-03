@@ -88,8 +88,8 @@ private class IndexedTree<N, W> private constructor(
 
     /** Creates a subtree rooted at [node] in O(1) by narrowing the index range. */
     fun subtreeAt(node: N): IndexedTree<N, W> {
-        val idx = index.preOrderedMap.globalIndexOf(node)
-        val endIdx = index.subtreeEnd[idx]
+        val idx = index.nodeToIndex.getValue(node)
+        val endIdx = idx + index.nodeToSubtreeSize.getValue(node)
         return IndexedTree(
             original,
             index,
@@ -158,7 +158,8 @@ private class TreeIndex<N, W>(
     /** Keys = nodes in pre-order, values = out-neighbors. Serves as both node set and outs map. */
     val preOrderedMap: NavigableListMap<N, Set<N>>
     val preOrderedNodes: List<N>
-    val subtreeEnd: IntArray
+    val nodeToIndex: Map<N, Int>
+    val nodeToSubtreeSize: Map<N, Int>
 
     // For ins value function (root override happens per-subtree in IndexedTree)
     val allIns: Map<N, Set<N>> = acyclicGraph.ins
@@ -178,30 +179,21 @@ private class TreeIndex<N, W>(
         val stack = ArrayDeque<N>(size)
         stack.addLast(root)
 
-        preOrderedNodes = dfsPost(
-            cycleSafe = false,
-            roots = sequenceOf(root),
-            initial = { },
-            aggregate = { parent, child -> },
-            flatten = { node -> yieldAll(acyclicGraph.outs[node].orEmpty()) },
-        ).map(DfsPostContext<N, Unit>::node).toList().reversed()
+        val preOrderedDfsPostContext =
+            dfsPost(
+                cycleSafe = false,
+                roots = sequenceOf(root),
+                initial = { 1 },
+                aggregate = { parent, child -> parent + child },
+                flatten = { node -> yieldAll(acyclicGraph.outs[node].orEmpty()) },
+            ).toList().reversed()
+
+        preOrderedNodes = preOrderedDfsPostContext.map(DfsPostContext<N, Int>::node)
+        nodeToIndex = preOrderedNodes.withIndex().associate { it.value to it.index }
+        nodeToSubtreeSize = preOrderedDfsPostContext.associate { it.node to it.result }
 
         // Pre-ordered map: keys = nodes in pre-order, values = outs
         preOrderedMap = NavigableListMap(preOrderedNodes.map { it to acyclicGraph.outs[it].orEmpty() })
-
-        // Computes exclusive end index for each node's subtree using reverse pre-order traversal,
-        //  a kind of dynamic programming to visit all children before their parent.
-        subtreeEnd = IntArray(size)
-        var reverseNode: N? = preOrderedMap.lastKey()
-        for (i in size - 1 downTo 0) {
-            val node = reverseNode!!
-            val children = acyclicGraph.outs[node].orEmpty()
-            subtreeEnd[i] =
-                children.fold(i + 1) { maxEnd, child ->
-                    maxOf(maxEnd, subtreeEnd[preOrderedMap.globalIndexOf(child)])
-                }
-            reverseNode = preOrderedMap.lowerKey(node)
-        }
 
         // Edges ordered by from-node pre-order with cumulative count for O(1) range lookup
         val edgeKeyList = ArrayList<Pair<N, N>>()
