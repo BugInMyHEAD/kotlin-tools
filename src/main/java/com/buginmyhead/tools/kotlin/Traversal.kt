@@ -66,3 +66,103 @@ fun <T> bfs(
         sequence { flatten(node) }.filter(visited::add).forEach(q::addLast)
     }
 }
+
+/**
+ * Depth-first post-order search traversal.
+ *
+ * @param cycleSafe if true, nodes already visited will not be visited again.
+ * @param roots the root nodes to start the traversal from.
+ * @param flatten a suspend function that yields the children of a node.
+ */
+fun <T, R> dfsPost(
+    cycleSafe: Boolean,
+    roots: Sequence<T>,
+    initial: (T) -> R,
+    aggregate: (parent: R, child: R) -> R,
+    flatten: suspend SequenceScope<T>.(T) -> Unit
+): Sequence<DfsPostContext<T, R>> = sequence {
+    var terminated = false
+
+    val visited = if (cycleSafe) mutableSetOf<T>() else fakeMutableSet()
+    val path = mutableListOf<T>()
+    val stack = ArrayDeque<DfsPostContext<T, R>>()
+    roots
+        .filter(visited::add)
+        .onEach(path::addLast)
+        .map {
+            DfsPostContext(
+                { terminated },
+                it,
+                null,
+                initial(it),
+                sequence { flatten(it) }.iterator(),
+                path,
+            )
+        }
+        .forEach(stack::addLast)
+
+    while (stack.isNotEmpty()) {
+        val context = stack.last()
+        if (context.iterator.hasNext()) {
+            val child = context.iterator.next()
+            if (visited.add(child)) {
+                path.addLast(child)
+                stack.addLast(DfsPostContext(
+                    { terminated },
+                    child,
+                    context,
+                    initial(child),
+                    sequence { flatten(child) }.iterator(),
+                    path,
+                ))
+            }
+        } else {
+            context.parent?.result = aggregate(context.parent.result, context.result)
+            yield(context)
+            stack.removeLast()
+            path.removeLast()
+        }
+    }
+
+    terminated = true
+}
+
+class DfsPostContext<T, R> internal constructor(
+    private val isTerminated: () -> Boolean,
+    val node: T,
+    internal val parent: DfsPostContext<T, R>?,
+    initial: R,
+    internal val iterator: Iterator<T>,
+    private val mutablePath: List<T>,
+) {
+
+    var result: R = initial
+        internal set
+
+    val pathToRoot: Sequence<T> =
+        generateSequence(this) { it.parent }
+            .map(DfsPostContext<T, R>::node)
+
+    /**
+     * This must be called before the sequence advances to capture a snapshot of the current context.
+     *
+     * @return Snapshot of the current context that is safe to use after the sequence has advanced.
+     */
+    fun freeze(): FrozenDfsPostContext<T, R> {
+        check(!isTerminated()) { "Cannot freeze after the sequence has advanced." }
+        return FrozenDfsPostContext(
+            node,
+            parent,
+            result,
+            mutablePath.toList(),
+        )
+    }
+
+}
+
+class FrozenDfsPostContext<T, R> internal constructor(
+    val node: T,
+    val parent: DfsPostContext<T, R>?,
+    val result: R,
+    val path: List<T>
+)
