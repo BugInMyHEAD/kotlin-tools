@@ -1,5 +1,7 @@
 package com.buginmyhead.tools.kotlin.graph
 
+import com.buginmyhead.tools.kotlin.DfsPostContext
+import com.buginmyhead.tools.kotlin.dfsPost
 import com.buginmyhead.tools.kotlin.graph.AcyclicGraph.Companion.toAcyclicGraph
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.bfs
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.leaves
@@ -174,13 +176,13 @@ private class TreeIndex<N, W>(
         val stack = ArrayDeque<N>(size)
         stack.addLast(root)
 
-        // Iterative DFS pre-order traversal
-        preOrderedNodes = ArrayList(size)
-        while (stack.isNotEmpty()) {
-            val node = stack.removeLast()
-            preOrderedNodes.add(node)
-            stack.addAll(acyclicGraph.outs[node].orEmpty())
-        }
+        preOrderedNodes = dfsPost(
+            cycleSafe = false,
+            roots = sequenceOf(root),
+            initial = { },
+            aggregate = { parent, child -> },
+            flatten = { node -> yieldAll(acyclicGraph.outs[node].orEmpty()) },
+        ).map(DfsPostContext<N, Unit>::node).toList().reversed()
 
         // Pre-ordered map: keys = nodes in pre-order, values = outs
         preOrderedMap = NavigableListMap(preOrderedNodes.map { it to acyclicGraph.outs[it].orEmpty() })
