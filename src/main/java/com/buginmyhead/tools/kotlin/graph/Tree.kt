@@ -116,7 +116,7 @@ private class IndexedTree<N, W> private constructor(
 
     /** Maps each node to its in-neighbors, with the subtree root overridden to emptySet(). */
     override val ins: Map<N, Set<N>> = _outs.keys.associateWith { node ->
-        if (node == rootNode) emptySet() else index.allIns[node].orEmpty()
+        if (node == rootNode) emptySet() else index.allIns.getValue(node)
     }
 
     /** View backed by binary-searched sink range. No copy. */
@@ -185,7 +185,7 @@ private class TreeIndex<N, W>(
                 roots = sequenceOf(root),
                 initial = { 1 },
                 aggregate = { parent, child -> parent + child },
-                flatten = { node -> yieldAll(acyclicGraph.outs[node].orEmpty()) },
+                flatten = { node -> yieldAll(acyclicGraph.outs.getValue(node)) },
             ).toList().reversed()
 
         preOrderedNodes = preOrderedDfsPostContext.map(DfsPostContext<N, Int>::node)
@@ -193,7 +193,7 @@ private class TreeIndex<N, W>(
         nodeToSubtreeSize = preOrderedDfsPostContext.associate { it.node to it.result }
 
         preOrderedMap =
-            NavigableListMap(preOrderedNodes.map { it to acyclicGraph.outs[it].orEmpty() })
+            NavigableListMap(preOrderedNodes.map { it to acyclicGraph.outs.getValue(it) })
 
         edgesMap =
             NavigableListMap(
@@ -209,12 +209,15 @@ private class TreeIndex<N, W>(
         for (i in 0 ..< size) {
             edgeCumCount[i] = edgeKeyList.size
             val node = forwardNode!!
-            for (child in acyclicGraph.outs[node].orEmpty()) {
+            for (child in acyclicGraph.outs.getValue(node)) {
                 edgeKeyList.add(node to child)
             }
             forwardNode = preOrderedMap.higherKey(node)
         }
         edgeCumCount[size] = edgeKeyList.size
+        // preOrderedNodes.forEachIndexed { i, node ->
+        //     edgeCumCount[i + 1] = acyclicGraph.outs.getValue(node).size
+        // }
 
         // Sink nodes in pre-order with their global indices for binary search
         val sinkList = ArrayList<N>()
