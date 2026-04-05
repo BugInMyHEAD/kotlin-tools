@@ -96,14 +96,14 @@ private class IndexedTree<N, W> private constructor(
             idx,
             endIdx,
             node,
-            index.preOrderedNodes.getOrNull(endIdx),
+            index.nodes.getOrNull(endIdx),
         )
     }
 
     /** Sub-view that serves as both [nodes] (via keys) and [outs] (as map). */
     private val _outs: NavigableMap<N, Set<N>> =
-        if (endNode != null) index.preOrderedMap.subMap(rootNode, true, endNode, false)
-        else index.preOrderedMap.tailMap(rootNode, true)
+        if (endNode != null) index.outs.subMap(rootNode, true, endNode, false)
+        else index.outs.tailMap(rootNode, true)
 
     override val outs: Map<N, Set<N>> get() = _outs
 
@@ -116,7 +116,7 @@ private class IndexedTree<N, W> private constructor(
 
     /** Maps each node to its in-neighbors, with the subtree root overridden to emptySet(). */
     override val ins: Map<N, Set<N>> = _outs.keys.associateWith { node ->
-        if (node == rootNode) emptySet() else index.allIns.getValue(node)
+        if (node == rootNode) emptySet() else index.ins.getValue(node)
     }
 
     /** View backed by binary-searched sink range. No copy. */
@@ -134,7 +134,7 @@ private class IndexedTree<N, W> private constructor(
 
     /** View as a singleton sub-map of the pre-order map. No copy. */
     override val sourceNodes: Set<N> =
-        index.preOrderedMap.subMap(rootNode, true, rootNode, true).keys
+        index.outs.subMap(rootNode, true, rootNode, true).keys
 
     override fun equals(other: Any?): Boolean = original == other
 
@@ -156,13 +156,13 @@ private class TreeIndex<N, W>(
 ) {
 
     /** Keys = nodes in pre-order, values = out-neighbors. Serves as both node set and outs map. */
-    val preOrderedMap: NavigableListMap<N, Set<N>>
-    val preOrderedNodes: List<N>
+    val outs: NavigableListMap<N, Set<N>>
+    val nodes: List<N>
     val nodeToIndex: Map<N, Int>
     val nodeToSubtreeSize: Map<N, Int>
 
     // For ins value function (root override happens per-subtree in IndexedTree)
-    val allIns: Map<N, Set<N>> = acyclicGraph.ins
+    val ins: Map<N, Set<N>> = acyclicGraph.ins
 
     // For edges sub-views: edge keys ordered by from-node pre-order
     val edgesMap: NavigableListMap<Pair<N, N>, W>
@@ -188,37 +188,37 @@ private class TreeIndex<N, W>(
                 flatten = { node -> yieldAll(acyclicGraph.outs.getValue(node)) },
             ).toList().reversed()
 
-        preOrderedNodes = preOrderedDfsPostContext.map(DfsPostContext<N, Int>::node)
-        nodeToIndex = preOrderedNodes.withIndex().associate { it.value to it.index }
+        nodes = preOrderedDfsPostContext.map(DfsPostContext<N, Int>::node)
+        nodeToIndex = nodes.withIndex().associate { it.value to it.index }
         nodeToSubtreeSize = preOrderedDfsPostContext.associate { it.node to it.result }
 
-        preOrderedMap =
-            NavigableListMap(preOrderedNodes.map { it to acyclicGraph.outs.getValue(it) })
+        outs =
+            NavigableListMap(nodes.map { it to acyclicGraph.outs.getValue(it) })
 
         edgesMap =
             NavigableListMap(
-                preOrderedMap
+                outs
                     .flatMap { (out, ins) -> ins.map { `in` -> out to `in` } }
                     .map { it to acyclicGraph.edges.getValue(it) }
             )
 
         // Edges ordered by from-node pre-order with cumulative count for O(1) range lookup
         edgeCumCount = IntArray(size + 1)
-        preOrderedNodes.forEachIndexed { i, node ->
+        nodes.forEachIndexed { i, node ->
             edgeCumCount[i + 1] = edgeCumCount[i] + acyclicGraph.outs.getValue(node).size
         }
 
         // Sink nodes in pre-order with their global indices for binary search
         val sinkList = ArrayList<N>()
         val sinkIndices = ArrayList<Int>()
-        var sinkTraverseNode: N? = preOrderedMap.firstKey()
+        var sinkTraverseNode: N? = outs.firstKey()
         for (i in 0 ..< size) {
             val node = sinkTraverseNode!!
             if (node in acyclicGraph.sinkNodes) {
                 sinkList.add(node)
                 sinkIndices.add(i)
             }
-            sinkTraverseNode = preOrderedMap.higherKey(node)
+            sinkTraverseNode = outs.higherKey(node)
         }
         sinkMap = NavigableListMap(sinkList.map { it to Unit })
         sinkGlobalIndices = sinkIndices.toIntArray()
