@@ -8,16 +8,35 @@ import java.io.Serializable
  */
 interface Graph<N, W> : Serializable {
 
+    /**
+     * A [Map] has a pair of nodes as a key and the weight of the edge between them as a value.
+     * - ```edges[Pair(from, to)]``` returns `null` if there is no edge from `from` to `to`.
+     */
     val edges: Map<Pair<N, N>, W>
 
+    /**
+     * A [Map] has the node as a key and the [Set] of its outgoing neighbors as a value.
+     * - ```outs[node]``` returns `null` if the node is not present.
+     * - ```outs[node]``` returns an empty [Set] if the node is present,
+     *  but it does not have any outgoing neighbors.
+     */
     val outs: Map<N, Set<N>>
 
+    /**
+     * A [Map] has the node as a key and the [Set] of its incoming neighbors as a value.
+     * - ```ins[node]``` returns `null` if the `node` is not present.
+     * - ```ins[node]``` returns an empty [Set] if the node is present,
+     *  but it does not have any incoming neighbors.
+     */
     val ins: Map<N, Set<N>>
 
+    /** A [Set] of all nodes in the graph. */
     val nodes: Set<N>
 
+    /** A [Set] of all nodes that do not have incoming neighbors. */
     val sourceNodes: Set<N>
 
+    /** A [Set] of all nodes that do not have outgoing neighbors. */
     val sinkNodes: Set<N>
 
     override fun equals(other: Any?): Boolean
