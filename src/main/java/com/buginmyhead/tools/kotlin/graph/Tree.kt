@@ -155,14 +155,12 @@ private class TreeIndex<N, W>(
     acyclicGraph: AcyclicGraph<N, W>,
 ) {
 
-    /** Keys = nodes in pre-order, values = out-neighbors. Serves as both node set and outs map. */
-    val outs: NavigableListMap<N, Set<N>>
     val nodes: List<N>
     val nodeToIndex: Map<N, Int>
     val nodeToSubtreeSize: Map<N, Int>
 
-    // For ins value function (root override happens per-subtree in IndexedTree)
-    val ins: Map<N, Set<N>> = acyclicGraph.ins
+    val outs: NavigableListMap<N, Set<N>>
+    val ins: NavigableListMap<N, Set<N>>
 
     // For edges sub-views: edge keys ordered by from-node pre-order
     val edgesMap: NavigableListMap<Pair<N, N>, W>
@@ -192,8 +190,8 @@ private class TreeIndex<N, W>(
         nodeToIndex = nodes.withIndex().associate { it.value to it.index }
         nodeToSubtreeSize = preOrderedDfsPostContext.associate { it.node to it.result }
 
-        outs =
-            NavigableListMap(nodes.map { it to acyclicGraph.outs.getValue(it) })
+        outs = NavigableListMap(nodes.map { it to acyclicGraph.outs.getValue(it) })
+        ins = NavigableListMap(nodes.map { it to acyclicGraph.ins.getValue(it) })
 
         edgesMap =
             NavigableListMap(
