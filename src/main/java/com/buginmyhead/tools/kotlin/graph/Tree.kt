@@ -49,7 +49,7 @@ interface Tree<N, W> : AcyclicGraph<N, W> {
          * @throws IllegalArgumentException if [node] does not exist in the receiver.
          */
         @Throws(IllegalArgumentException::class)
-        fun <N, W> Tree<N, W>.subtreeOf(node: N): Tree<N, W> {
+        fun <N, W> Tree<N, W>.subtreeAt(node: N): Tree<N, W> {
             if (node == root) return this
 
             require(node in nodes) {

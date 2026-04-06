@@ -3,7 +3,7 @@ package com.buginmyhead.tools.kotlin.graph
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.ancestorsFrom
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.leaves
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.root
-import com.buginmyhead.tools.kotlin.graph.Tree.Companion.subtreeOf
+import com.buginmyhead.tools.kotlin.graph.Tree.Companion.subtreeAt
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
@@ -116,84 +116,84 @@ internal class TreeTest : FreeSpec({
         ancestorsFromD shouldBe listOf("D", "C", "A")
     }
 
-    "subtreeOf throws IllegalArgumentException if node does not exist" {
+    "subtreeAt throws IllegalArgumentException if node does not exist" {
         val graph = MutableGraph<String, Int>()
         graph.addEdge("A" to "B", 5)
         val tree = graph.toTree()
 
-        shouldThrow<IllegalArgumentException> { tree.subtreeOf("C") }
+        shouldThrow<IllegalArgumentException> { tree.subtreeAt("C") }
     }
 
-    "subtreeOf the root returns the same tree" {
+    "subtreeAt the root returns the same tree" {
         val graph = MutableGraph<String, Int>()
         graph.addEdge("A" to "B", 5)
         val tree = graph.toTree()
 
-        val subtreeOfA = tree.subtreeOf("A")
-        subtreeOfA shouldBeSameInstanceAs tree
+        val subtreeAtA = tree.subtreeAt("A")
+        subtreeAtA shouldBeSameInstanceAs tree
     }
 
-    "subtreeOf returns the correct subtree" {
+    "subtreeAt returns the correct subtree" {
         val graph = MutableGraph<String, Int>()
         graph.addEdge("A" to "B", 5)
         graph.addEdge("A" to "C", 7)
         graph.addEdge("C" to "D", 11)
         val tree = graph.toTree()
 
-        val subtreeOfB = tree.subtreeOf("B")
-        subtreeOfB.nodes shouldBe setOf("B")
-        subtreeOfB.edges shouldBe emptyMap()
-        subtreeOfB.outs shouldBe mapOf(
+        val subtreeAtB = tree.subtreeAt("B")
+        subtreeAtB.nodes shouldBe setOf("B")
+        subtreeAtB.edges shouldBe emptyMap()
+        subtreeAtB.outs shouldBe mapOf(
             "B" to emptySet(),
         )
-        subtreeOfB.ins shouldBe mapOf(
+        subtreeAtB.ins shouldBe mapOf(
             "B" to emptySet(),
         )
-        subtreeOfB.sourceNodes shouldBe setOf("B")
-        subtreeOfB.sinkNodes shouldBe setOf("B")
+        subtreeAtB.sourceNodes shouldBe setOf("B")
+        subtreeAtB.sinkNodes shouldBe setOf("B")
         val graphOfB = MutableGraph<String, Int>()
         graphOfB.addNode("B")
-        graphOfB shouldBe subtreeOfB
-        subtreeOfB shouldBe graphOfB
+        graphOfB shouldBe subtreeAtB
+        subtreeAtB shouldBe graphOfB
 
-        val subtreeOfC = tree.subtreeOf("C")
-        subtreeOfC.nodes shouldBe setOf("C", "D")
-        subtreeOfC.edges shouldBe mapOf(
+        val subtreeAtC = tree.subtreeAt("C")
+        subtreeAtC.nodes shouldBe setOf("C", "D")
+        subtreeAtC.edges shouldBe mapOf(
             ("C" to "D") to 11,
         )
-        subtreeOfC.outs shouldBe mapOf(
+        subtreeAtC.outs shouldBe mapOf(
             "C" to setOf("D"),
             "D" to emptySet(),
         )
-        subtreeOfC.ins shouldBe mapOf(
+        subtreeAtC.ins shouldBe mapOf(
             "C" to emptySet(),
             "D" to setOf("C"),
         )
-        subtreeOfC.sourceNodes shouldBe setOf("C")
-        subtreeOfC.sinkNodes shouldBe setOf("D")
+        subtreeAtC.sourceNodes shouldBe setOf("C")
+        subtreeAtC.sinkNodes shouldBe setOf("D")
         val graphOfC = MutableGraph<String, Int>()
         graphOfC.addEdge("C" to "D", 11)
-        graphOfC shouldBe subtreeOfC
-        subtreeOfC shouldBe graphOfC
+        graphOfC shouldBe subtreeAtC
+        subtreeAtC shouldBe graphOfC
 
-        val subtreeOfD = tree.subtreeOf("D")
-        subtreeOfD.nodes shouldBe setOf("D")
-        subtreeOfD.edges shouldBe emptyMap()
-        subtreeOfD.outs shouldBe mapOf(
+        val subtreeAtD = tree.subtreeAt("D")
+        subtreeAtD.nodes shouldBe setOf("D")
+        subtreeAtD.edges shouldBe emptyMap()
+        subtreeAtD.outs shouldBe mapOf(
             "D" to emptySet(),
         )
-        subtreeOfD.ins shouldBe mapOf(
+        subtreeAtD.ins shouldBe mapOf(
             "D" to emptySet(),
         )
-        subtreeOfD.sourceNodes shouldBe setOf("D")
-        subtreeOfD.sinkNodes shouldBe setOf("D")
+        subtreeAtD.sourceNodes shouldBe setOf("D")
+        subtreeAtD.sinkNodes shouldBe setOf("D")
         val graphOfD = MutableGraph<String, Int>()
         graphOfD.addNode("D")
-        graphOfD shouldBe subtreeOfD
-        subtreeOfD shouldBe graphOfD
+        graphOfD shouldBe subtreeAtD
+        subtreeAtD shouldBe graphOfD
     }
 
-    "subtreeOf on a subtree returns the correct nested subtree" {
+    "subtreeAt on a subtree returns the correct nested subtree" {
         val graph = MutableGraph<String, Int>()
         graph.addEdge("A" to "B", 5)
         graph.addEdge("A" to "C", 7)
@@ -202,39 +202,39 @@ internal class TreeTest : FreeSpec({
         graph.addEdge("E" to "F", 17)
         val tree = graph.toTree()
 
-        val subtreeOfC = tree.subtreeOf("C")
-        val nestedSubtreeOfE = subtreeOfC.subtreeOf("E")
-        nestedSubtreeOfE.nodes shouldBe setOf("E", "F")
-        nestedSubtreeOfE.edges shouldBe mapOf(
+        val subtreeAtC = tree.subtreeAt("C")
+        val nestedSubtreeAtE = subtreeAtC.subtreeAt("E")
+        nestedSubtreeAtE.nodes shouldBe setOf("E", "F")
+        nestedSubtreeAtE.edges shouldBe mapOf(
             ("E" to "F") to 17,
         )
-        nestedSubtreeOfE.root shouldBe "E"
-        nestedSubtreeOfE.leaves shouldBe setOf("F")
+        nestedSubtreeAtE.root shouldBe "E"
+        nestedSubtreeAtE.leaves shouldBe setOf("F")
         val graphOfE = MutableGraph<String, Int>()
         graphOfE.addEdge("E" to "F", 17)
-        graphOfE shouldBe nestedSubtreeOfE
-        nestedSubtreeOfE shouldBe graphOfE
+        graphOfE shouldBe nestedSubtreeAtE
+        nestedSubtreeAtE shouldBe graphOfE
 
-        val deepSubtreeOfF = nestedSubtreeOfE.subtreeOf("F")
-        deepSubtreeOfF.nodes shouldBe setOf("F")
-        deepSubtreeOfF.edges shouldBe emptyMap()
-        deepSubtreeOfF.root shouldBe "F"
-        deepSubtreeOfF.leaves shouldBe setOf("F")
+        val deepSubtreeAtF = nestedSubtreeAtE.subtreeAt("F")
+        deepSubtreeAtF.nodes shouldBe setOf("F")
+        deepSubtreeAtF.edges shouldBe emptyMap()
+        deepSubtreeAtF.root shouldBe "F"
+        deepSubtreeAtF.leaves shouldBe setOf("F")
         val graphOfF = MutableGraph<String, Int>()
         graphOfF.addNode("F")
-        graphOfF shouldBe deepSubtreeOfF
-        deepSubtreeOfF shouldBe graphOfF
+        graphOfF shouldBe deepSubtreeAtF
+        deepSubtreeAtF shouldBe graphOfF
     }
 
-    "subtreeOf on a subtree throws for node outside the subtree" {
+    "subtreeAt on a subtree throws for node outside the subtree" {
         val graph = MutableGraph<String, Int>()
         graph.addEdge("A" to "B", 5)
         graph.addEdge("A" to "C", 7)
         graph.addEdge("C" to "D", 11)
         val tree = graph.toTree()
 
-        val subtreeOfC = tree.subtreeOf("C")
-        shouldThrow<IllegalArgumentException> { subtreeOfC.subtreeOf("B") }
-        shouldThrow<IllegalArgumentException> { subtreeOfC.subtreeOf("A") }
+        val subtreeAtC = tree.subtreeAt("C")
+        shouldThrow<IllegalArgumentException> { subtreeAtC.subtreeAt("B") }
+        shouldThrow<IllegalArgumentException> { subtreeAtC.subtreeAt("A") }
     }
 })
