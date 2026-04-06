@@ -8,6 +8,7 @@ import com.buginmyhead.tools.kotlin.graph.Graph.Companion.bfs
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.leaves
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.root
 import java.util.NavigableMap
+import java.util.NavigableSet
 import java.util.Objects
 
 /**
@@ -123,7 +124,7 @@ private class IndexedTree<N, W> private constructor(
     override val sinkNodes: Set<N> = run {
         val firstSink = index.preOrderedSinkNodes[index.ceilingSinkIndex[rangeStart]]
         val lastSink = index.preOrderedSinkNodes[index.floorSinkIndex[rangeEndInclusive]]
-        index.sinkMap.subMap(firstSink, true, lastSink, true).keys
+        index.sinkNodes.subSet(firstSink, true, lastSink, true)
     }
 
     /** View as a singleton sub-map of the pre-order map. No copy. */
@@ -169,16 +170,16 @@ private class TreeIndex<N, W>(
     val nodeToIndex: Map<N, Int>
     val nodeToSubtreeSize: Map<N, Int>
 
-    val outs: NavigableListMap<N, Set<N>>
-    val ins: NavigableListMap<N, Set<N>>
+    val outs: NavigableMap<N, Set<N>>
+    val ins: NavigableMap<N, Set<N>>
 
     val preOrderedInEdges: List<Pair<N, N>>
     private val edgeToIndex: Map<Pair<N, N>, Int>
-    val edges: NavigableListMap<Pair<N, N>, W>
+    val edges: NavigableMap<Pair<N, N>, W>
 
     // For sinkNodes sub-views: O(1) ceiling/floor lookup from pre-order index to sink-list index
     val preOrderedSinkNodes: List<N>
-    val sinkMap: NavigableListMap<N, Unit>
+    val sinkNodes: NavigableSet<N>
     val ceilingSinkIndex: IntArray
     val floorSinkIndex: IntArray
 
@@ -217,7 +218,7 @@ private class TreeIndex<N, W>(
 
         // Sink nodes in pre-order with ceiling/floor index arrays for O(1) subtree sink lookup
         preOrderedSinkNodes = nodes.filter { it in original.sinkNodes }
-        sinkMap = NavigableListMap(preOrderedSinkNodes.map { it to Unit })
+        sinkNodes = navigableListSetFrom(preOrderedSinkNodes)
 
         val sinkCount = preOrderedSinkNodes.size
         val sinkIndices = preOrderedSinkNodes.map(nodeToIndex::getValue)
