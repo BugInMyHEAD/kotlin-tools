@@ -72,38 +72,45 @@ private class IndexedTree<N, W> private constructor(
     private val original: AcyclicGraph<N, W>,
     private val index: TreeIndex<N, W>,
     private val rangeStart: Int,
-    rangeEnd: Int,
+    rangeEndInclusive: Int,
     rootNode: N,
-    endNode: N?,
+    lastNode: N,
 ) : Tree<N, W> {
 
-    constructor(acyclicGraph: AcyclicGraph<N, W>) : this(
-        acyclicGraph,
-        TreeIndex(acyclicGraph),
+    constructor(original: AcyclicGraph<N, W>) : this(
+        original,
+        TreeIndex(original),
+    )
+
+    private constructor(
+        original: AcyclicGraph<N, W>,
+        index: TreeIndex<N, W>,
+    ) : this(
+        original,
+        index,
         0,
-        acyclicGraph.nodes.size,
-        acyclicGraph.sourceNodes.single(),
-        null,
+        original.nodes.size - 1,
+        original.sourceNodes.single(),
+        index.nodes.last(),
     )
 
     /** Creates a subtree rooted at [node] in O(1) by narrowing the index range. */
     fun subtreeAt(node: N): IndexedTree<N, W> {
         val idx = index.nodeToIndex.getValue(node)
-        val endIdx = idx + index.nodeToSubtreeSize.getValue(node)
+        val endIdxInclusive = idx + index.nodeToSubtreeSize.getValue(node) - 1
         return IndexedTree(
             original,
             index,
             idx,
-            endIdx,
+            endIdxInclusive,
             node,
-            index.nodes.getOrNull(endIdx),
+            index.nodes[endIdxInclusive],
         )
     }
 
     /** Sub-view that serves as both [nodes] (via keys) and [outs] (as map). */
     private val _outs: NavigableMap<N, Set<N>> =
-        if (endNode != null) index.outs.subMap(rootNode, true, endNode, false)
-        else index.outs.tailMap(rootNode, true)
+        index.outs.subMap(rootNode, true, lastNode, true)
 
     override val outs: Map<N, Set<N>> get() = _outs
 
@@ -112,7 +119,7 @@ private class IndexedTree<N, W> private constructor(
 
     /** View backed by the cumulative edge count range. No copy. */
     override val edges: Map<Pair<N, N>, W> =
-        index.edges.subView(rangeStart ..< rangeEnd - 1)
+        index.edges.subView(rangeStart .. rangeEndInclusive - 1)
 
     /** Maps each node to its in-neighbors, with the subtree root overridden to emptySet(). */
     override val ins: Map<N, Set<N>> = _outs.keys.associateWith { node ->
@@ -127,9 +134,9 @@ private class IndexedTree<N, W> private constructor(
                 .let { if (it < 0) it.inv() else it }
         val toSinkIdx =
             index.sinkGlobalIndices
-                .binarySearch(rangeEnd)
-                .let { if (it < 0) it.inv() else it }
-        index.sinkMap.subView(fromSinkIdx ..< toSinkIdx).keys
+                .binarySearch(rangeEndInclusive)
+                .let { if (it < 0) it.inv() - 1 else it }
+        index.sinkMap.subView(fromSinkIdx .. toSinkIdx).keys
     }
 
     /** View as a singleton sub-map of the pre-order map. No copy. */
@@ -144,9 +151,6 @@ private class IndexedTree<N, W> private constructor(
 
 /**
  * Pre-computed index structure for efficient subtree operations.
- *
- * Stores a DFS pre-order traversal where all descendants of any node form
- *  a contiguous range &#91;nodeToIndex&#91;node&#93;, subtreeEnd&#91;nodeToIndex&#91;node&#93;).
  *
  * All [Map] and [Set] properties in [IndexedTree] are O(1) views over this index,
  *  except [IndexedTree.sinkNodes] which uses O(log s) binary search.
