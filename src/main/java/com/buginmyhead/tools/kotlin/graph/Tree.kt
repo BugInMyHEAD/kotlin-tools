@@ -71,10 +71,10 @@ interface Tree<N, W> : AcyclicGraph<N, W> {
  */
 private class IndexedTree<N, W> private constructor(
     private val index: TreeIndex<N, W>,
+    root: N,
+    last: N,
     private val rangeStart: Int,
     rangeEndInclusive: Int,
-    rootNode: N,
-    lastNode: N,
 ) : Tree<N, W> {
 
     constructor(original: AcyclicGraph<N, W>) : this(
@@ -85,10 +85,10 @@ private class IndexedTree<N, W> private constructor(
         index: TreeIndex<N, W>,
     ) : this(
         index,
-        0,
-        index.nodes.lastIndex,
         index.original.sourceNodes.single(),
         index.nodes.last(),
+        0,
+        index.nodes.lastIndex,
     )
 
     /** Creates a subtree rooted at [node] in O(1) by narrowing the index range. */
@@ -97,16 +97,16 @@ private class IndexedTree<N, W> private constructor(
         val endIdxInclusive = idx + index.nodeToSubtreeSize.getValue(node) - 1
         return IndexedTree(
             index,
-            idx,
-            endIdxInclusive,
             node,
             index.nodes[endIdxInclusive],
+            idx,
+            endIdxInclusive,
         )
     }
 
     /** Sub-view that serves as both [nodes] (via keys) and [outs] (as map). */
     private val _outs: NavigableMap<N, Set<N>> =
-        index.outs.subMap(rootNode, true, lastNode, true)
+        index.outs.subMap(root, true, last, true)
 
     override val outs: Map<N, Set<N>> get() = _outs
 
@@ -119,7 +119,7 @@ private class IndexedTree<N, W> private constructor(
 
     /** Maps each node to its in-neighbors, with the subtree root overridden to emptySet(). */
     override val ins: Map<N, Set<N>> = _outs.keys.associateWith { node ->
-        if (node == rootNode) emptySet() else index.ins.getValue(node)
+        if (node == root) emptySet() else index.ins.getValue(node)
     }
 
     /** View backed by binary-searched sink range. No copy. */
@@ -137,7 +137,7 @@ private class IndexedTree<N, W> private constructor(
 
     /** View as a singleton sub-map of the pre-order map. No copy. */
     override val sourceNodes: Set<N> =
-        index.outs.subMap(rootNode, true, rootNode, true).keys
+        index.outs.subMap(root, true, root, true).keys
 
     override fun equals(other: Any?): Boolean =
         this === other
