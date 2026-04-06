@@ -91,19 +91,6 @@ private class IndexedTree<N, W> private constructor(
         index.nodes.lastIndex,
     )
 
-    /** Creates a subtree rooted at [node] in O(1) by narrowing the index range. */
-    fun subtreeAt(node: N): IndexedTree<N, W> {
-        val idx = index.nodeToIndex.getValue(node)
-        val endIdxInclusive = idx + index.nodeToSubtreeSize.getValue(node) - 1
-        return IndexedTree(
-            index,
-            node,
-            index.nodes[endIdxInclusive],
-            idx,
-            endIdxInclusive,
-        )
-    }
-
     /** Sub-view that serves as both [nodes] (via keys) and [outs] (as map). */
     private val _outs: NavigableMap<N, Set<N>> =
         index.outs.subMap(root, true, last, true)
@@ -149,6 +136,19 @@ private class IndexedTree<N, W> private constructor(
                 )
 
     override fun hashCode(): Int = Objects.hash(edges, sourceNodes, sinkNodes)
+
+    /** Creates a subtree rooted at [node] in O(1) by narrowing the index range. */
+    fun subtreeAt(node: N): IndexedTree<N, W> {
+        val idx = index.nodeToIndex.getValue(node)
+        val endIdxInclusive = idx + index.nodeToSubtreeSize.getValue(node) - 1
+        return IndexedTree(
+            index,
+            node,
+            index.nodes[endIdxInclusive],
+            idx,
+            endIdxInclusive,
+        )
+    }
 
 }
 
