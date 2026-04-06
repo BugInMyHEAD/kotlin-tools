@@ -8,6 +8,7 @@ import com.buginmyhead.tools.kotlin.graph.Graph.Companion.bfs
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.leaves
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.root
 import java.util.NavigableMap
+import java.util.Objects
 
 /**
  * [Graph.Direction.Forward] means from [root] to [leaves].
@@ -138,9 +139,20 @@ private class IndexedTree<N, W> private constructor(
     override val sourceNodes: Set<N> =
         index.outs.subMap(rootNode, true, rootNode, true).keys
 
-    override fun equals(other: Any?): Boolean = index.original == other
+    override fun equals(other: Any?): Boolean =
+        this === other
+                || (
+                other is Graph<*, *>
+                        && this.edges == other.edges
+                        && this.sourceNodes == other.sourceNodes
+                        && this.sinkNodes == other.sinkNodes
+                )
 
-    override fun hashCode(): Int = index.original.hashCode()
+    override fun hashCode(): Int = Objects.hash(
+        edges,
+        sourceNodes,
+        sinkNodes,
+    )
 
 }
 

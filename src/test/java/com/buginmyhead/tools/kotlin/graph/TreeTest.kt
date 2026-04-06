@@ -151,6 +151,10 @@ internal class TreeTest : FreeSpec({
         )
         subtreeOfB.sourceNodes shouldBe setOf("B")
         subtreeOfB.sinkNodes shouldBe setOf("B")
+        val graphOfB = MutableGraph<String, Int>()
+        graphOfB.addNode("B")
+        graphOfB shouldBe subtreeOfB
+        subtreeOfB shouldBe graphOfB
 
         val subtreeOfC = tree.subtreeOf("C")
         subtreeOfC.nodes shouldBe setOf("C", "D")
@@ -167,6 +171,10 @@ internal class TreeTest : FreeSpec({
         )
         subtreeOfC.sourceNodes shouldBe setOf("C")
         subtreeOfC.sinkNodes shouldBe setOf("D")
+        val graphOfC = MutableGraph<String, Int>()
+        graphOfC.addEdge("C" to "D", 11)
+        graphOfC shouldBe subtreeOfC
+        subtreeOfC shouldBe graphOfC
 
         val subtreeOfD = tree.subtreeOf("D")
         subtreeOfD.nodes shouldBe setOf("D")
@@ -179,6 +187,10 @@ internal class TreeTest : FreeSpec({
         )
         subtreeOfD.sourceNodes shouldBe setOf("D")
         subtreeOfD.sinkNodes shouldBe setOf("D")
+        val graphOfD = MutableGraph<String, Int>()
+        graphOfD.addNode("D")
+        graphOfD shouldBe subtreeOfD
+        subtreeOfD shouldBe graphOfD
     }
 
     "subtreeOf on a subtree returns the correct nested subtree" {
@@ -198,12 +210,20 @@ internal class TreeTest : FreeSpec({
         )
         nestedSubtreeOfE.root shouldBe "E"
         nestedSubtreeOfE.leaves shouldBe setOf("F")
+        val graphOfE = MutableGraph<String, Int>()
+        graphOfE.addEdge("E" to "F", 17)
+        graphOfE shouldBe nestedSubtreeOfE
+        nestedSubtreeOfE shouldBe graphOfE
 
         val deepSubtreeOfF = nestedSubtreeOfE.subtreeOf("F")
         deepSubtreeOfF.nodes shouldBe setOf("F")
         deepSubtreeOfF.edges shouldBe emptyMap()
         deepSubtreeOfF.root shouldBe "F"
         deepSubtreeOfF.leaves shouldBe setOf("F")
+        val graphOfF = MutableGraph<String, Int>()
+        graphOfF.addNode("F")
+        graphOfF shouldBe deepSubtreeOfF
+        deepSubtreeOfF shouldBe graphOfF
     }
 
     "subtreeOf on a subtree throws for node outside the subtree" {
