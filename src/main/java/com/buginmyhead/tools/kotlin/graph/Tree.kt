@@ -148,11 +148,7 @@ private class IndexedTree<N, W> private constructor(
                         && this.sinkNodes == other.sinkNodes
                 )
 
-    override fun hashCode(): Int = Objects.hash(
-        edges,
-        sourceNodes,
-        sinkNodes,
-    )
+    override fun hashCode(): Int = Objects.hash(edges, sourceNodes, sinkNodes)
 
 }
 
