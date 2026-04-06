@@ -113,8 +113,7 @@ private class IndexedTree<N, W> private constructor(
 
     /** View backed by ceiling/floor sink node lookup. No copy. */
     override val sinkNodes: Set<N> = run {
-        val rootIdx = index.nodeToIndex.getValue(root)
-        val firstSink = index.preOrderedSinkNodes[index.ceilingSinkIndex[rootIdx]]
+        val firstSink = index.nodeToFirstSink.getValue(root)
         index.sinkNodes.subSet(firstSink, true, last, true)
     }
 
@@ -157,10 +156,11 @@ private class TreeIndex<N, W>(
     val edges: NavigableMap<Pair<N, N>, W>
 
     // For sinkNodes sub-views: O(1) ceiling/floor lookup from pre-order index to sink-list index
-    val preOrderedSinkNodes: List<N>
+    private val preOrderedSinkNodes: List<N>
     val sinkNodes: NavigableSet<N>
-    val ceilingSinkIndex: IntArray
-    val floorSinkIndex: IntArray
+    val nodeToFirstSink: Map<N, N>
+    private val ceilingSinkIndex: IntArray
+    private val floorSinkIndex: IntArray
 
     init {
         val root = original.sourceNodes.single()
@@ -212,6 +212,10 @@ private class TreeIndex<N, W>(
                 }
                 ceiling[i] = next
             }
+        }
+
+        nodeToFirstSink = nodes.associateWith { node ->
+            preOrderedSinkNodes[ceilingSinkIndex[nodeToIndex.getValue(node)]]
         }
 
         // floorSinkIndex[i] = largest j such that sinkIndices[j] <= i
