@@ -101,8 +101,18 @@ private class IndexedTree<N, W> private constructor(
     override val nodes: Set<N> = _outs.keys
 
     /** View backed by the cumulative edge count range. No copy. */
-    override val edges: Map<Pair<N, N>, W> =
-        index.edges.subView(rangeStart .. rangeEndInclusive - 1)
+    override val edges: Map<Pair<N, N>, W> = run {
+        val rootIdx = index.nodeToIndex.getValue(root)
+        val firstChildEdge = index.preOrderedInEdges.getOrElse(rootIdx) {
+            // When the [root] is the only node, there are no child edges.
+            return@run emptyMap()
+        }
+        // -1 for exclusion of in-edge of [root],
+        //  and -1 for [lastInEdge] being inclusive in `subMap` operation.
+        val lastIdx = rootIdx + index.nodeToSubtreeSize.getValue(root) - 2
+        val lastInEdge = index.preOrderedInEdges[lastIdx]
+        index.edges.subMap(firstChildEdge, true, lastInEdge, true)
+    }
 
     /** Maps each node to its in-neighbors, with the subtree root overridden to emptySet(). */
     override val ins: Map<N, Set<N>> = _outs.keys.associateWith { node ->
@@ -169,7 +179,7 @@ private class TreeIndex<N, W>(
     val outs: NavigableListMap<N, Set<N>>
     val ins: NavigableListMap<N, Set<N>>
 
-    private val preOrderedInEdges: List<Pair<N, N>>
+    val preOrderedInEdges: List<Pair<N, N>>
     private val edgeToIndex: Map<Pair<N, N>, Int>
     val edges: NavigableListMap<Pair<N, N>, W>
 
