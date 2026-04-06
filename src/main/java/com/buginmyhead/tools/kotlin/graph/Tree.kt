@@ -69,7 +69,6 @@ interface Tree<N, W> : AcyclicGraph<N, W> {
  * index, making [subtreeAt] an O(1) operation regardless of nesting depth.
  */
 private class IndexedTree<N, W> private constructor(
-    private val original: AcyclicGraph<N, W>,
     private val index: TreeIndex<N, W>,
     private val rangeStart: Int,
     rangeEndInclusive: Int,
@@ -78,19 +77,16 @@ private class IndexedTree<N, W> private constructor(
 ) : Tree<N, W> {
 
     constructor(original: AcyclicGraph<N, W>) : this(
-        original,
         TreeIndex(original),
     )
 
     private constructor(
-        original: AcyclicGraph<N, W>,
         index: TreeIndex<N, W>,
     ) : this(
-        original,
         index,
         0,
-        original.nodes.size - 1,
-        original.sourceNodes.single(),
+        index.original.nodes.size - 1,
+        index.original.sourceNodes.single(),
         index.nodes.last(),
     )
 
@@ -99,7 +95,6 @@ private class IndexedTree<N, W> private constructor(
         val idx = index.nodeToIndex.getValue(node)
         val endIdxInclusive = idx + index.nodeToSubtreeSize.getValue(node) - 1
         return IndexedTree(
-            original,
             index,
             idx,
             endIdxInclusive,
@@ -143,9 +138,9 @@ private class IndexedTree<N, W> private constructor(
     override val sourceNodes: Set<N> =
         index.outs.subMap(rootNode, true, rootNode, true).keys
 
-    override fun equals(other: Any?): Boolean = original == other
+    override fun equals(other: Any?): Boolean = index.original == other
 
-    override fun hashCode(): Int = original.hashCode()
+    override fun hashCode(): Int = index.original.hashCode()
 
 }
 
@@ -156,7 +151,7 @@ private class IndexedTree<N, W> private constructor(
  *  except [IndexedTree.sinkNodes] which uses O(log s) binary search.
  */
 private class TreeIndex<N, W>(
-    acyclicGraph: AcyclicGraph<N, W>,
+    val original: AcyclicGraph<N, W>,
 ) {
 
     val nodes: List<N>
@@ -175,8 +170,8 @@ private class TreeIndex<N, W>(
     val sinkGlobalIndices: IntArray
 
     init {
-        val root = acyclicGraph.sourceNodes.single()
-        val size = acyclicGraph.nodes.size
+        val root = original.sourceNodes.single()
+        val size = original.nodes.size
 
         val stack = ArrayDeque<N>(size)
         stack.addLast(root)
@@ -187,15 +182,15 @@ private class TreeIndex<N, W>(
                 roots = sequenceOf(root),
                 initial = { 1 },
                 aggregate = { parent, child -> parent + child },
-                flatten = { node -> yieldAll(acyclicGraph.outs.getValue(node)) },
+                flatten = { node -> yieldAll(original.outs.getValue(node)) },
             ).toList().reversed()
 
         nodes = preOrderedDfsPostContext.map(DfsPostContext<N, Int>::node)
         nodeToIndex = nodes.withIndex().associate { it.value to it.index }
         nodeToSubtreeSize = preOrderedDfsPostContext.associate { it.node to it.result }
 
-        outs = NavigableListMap(nodes.map { it to acyclicGraph.outs.getValue(it) })
-        ins = NavigableListMap(nodes.map { it to acyclicGraph.ins.getValue(it) })
+        outs = NavigableListMap(nodes.map { it to original.outs.getValue(it) })
+        ins = NavigableListMap(nodes.map { it to original.ins.getValue(it) })
 
         preOrderedInEdges =
             preOrderedDfsPostContext
@@ -204,7 +199,7 @@ private class TreeIndex<N, W>(
                 .map { (child, parent) -> parent to child }
                 .toList()
         edges =
-            NavigableListMap(preOrderedInEdges.map { it to acyclicGraph.edges.getValue(it) })
+            NavigableListMap(preOrderedInEdges.map { it to original.edges.getValue(it) })
         edgeToIndex = preOrderedInEdges.withIndex().associate { it.value to it.index }
 
         // Sink nodes in pre-order with their global indices for binary search
@@ -213,7 +208,7 @@ private class TreeIndex<N, W>(
         var sinkTraverseNode: N? = outs.firstKey()
         for (i in 0 ..< size) {
             val node = sinkTraverseNode!!
-            if (node in acyclicGraph.sinkNodes) {
+            if (node in original.sinkNodes) {
                 sinkList.add(node)
                 sinkIndices.add(i)
             }
