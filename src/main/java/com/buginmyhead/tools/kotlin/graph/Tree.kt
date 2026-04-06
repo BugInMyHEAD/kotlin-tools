@@ -216,21 +216,11 @@ private class TreeIndex<N, W>(
         edgeToIndex = preOrderedInEdges.withIndex().associate { it.value to it.index }
 
         // Sink nodes in pre-order with ceiling/floor index arrays for O(1) subtree sink lookup
-        val sinkList = ArrayList<N>()
-        val sinkIndices = ArrayList<Int>()
-        var sinkTraverseNode: N? = outs.firstKey()
-        for (i in 0 ..< size) {
-            val node = sinkTraverseNode!!
-            if (node in original.sinkNodes) {
-                sinkList.add(node)
-                sinkIndices.add(i)
-            }
-            sinkTraverseNode = outs.higherKey(node)
-        }
-        preOrderedSinkNodes = sinkList.toList()
-        sinkMap = NavigableListMap(sinkList.map { it to Unit })
+        preOrderedSinkNodes = nodes.filter { it in original.sinkNodes }
+        sinkMap = NavigableListMap(preOrderedSinkNodes.map { it to Unit })
 
-        val sinkCount = sinkList.size
+        val sinkCount = preOrderedSinkNodes.size
+        val sinkIndices = preOrderedSinkNodes.map(nodeToIndex::getValue)
 
         // ceilingSinkIndex[i] = smallest j such that sinkIndices[j] >= i
         ceilingSinkIndex = IntArray(size).also { ceiling ->
