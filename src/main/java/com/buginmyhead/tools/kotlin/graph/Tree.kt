@@ -74,8 +74,6 @@ private class IndexedTree<N, W> private constructor(
     private val index: TreeIndex<N, W>,
     root: N,
     last: N,
-    private val rangeStart: Int,
-    rangeEndInclusive: Int,
 ) : Tree<N, W> {
 
     constructor(original: AcyclicGraph<N, W>) : this(
@@ -88,8 +86,6 @@ private class IndexedTree<N, W> private constructor(
         index,
         index.original.sourceNodes.single(),
         index.nodes.last(),
-        0,
-        index.nodes.lastIndex,
     )
 
     /** Sub-view that serves as both [nodes] (via keys) and [outs] (as map). */
@@ -122,8 +118,10 @@ private class IndexedTree<N, W> private constructor(
 
     /** View backed by ceiling/floor sink node lookup. No copy. */
     override val sinkNodes: Set<N> = run {
-        val firstSink = index.preOrderedSinkNodes[index.ceilingSinkIndex[rangeStart]]
-        val lastSink = index.preOrderedSinkNodes[index.floorSinkIndex[rangeEndInclusive]]
+        val rootIdx = index.nodeToIndex.getValue(root)
+        val lastIdx = rootIdx + index.nodeToSubtreeSize.getValue(root) - 1
+        val firstSink = index.preOrderedSinkNodes[index.ceilingSinkIndex[rootIdx]]
+        val lastSink = index.preOrderedSinkNodes[index.floorSinkIndex[lastIdx]]
         index.sinkNodes.subSet(firstSink, true, lastSink, true)
     }
 
@@ -144,14 +142,12 @@ private class IndexedTree<N, W> private constructor(
 
     /** Creates a subtree rooted at [node] in O(1) by narrowing the index range. */
     fun subtreeAt(node: N): IndexedTree<N, W> {
-        val idx = index.nodeToIndex.getValue(node)
-        val endIdxInclusive = idx + index.nodeToSubtreeSize.getValue(node) - 1
+        val newRootIdx = index.nodeToIndex.getValue(node)
+        val newLastIdx = newRootIdx + index.nodeToSubtreeSize.getValue(node) - 1
         return IndexedTree(
             index,
             node,
-            index.nodes[endIdxInclusive],
-            idx,
-            endIdxInclusive,
+            index.nodes[newLastIdx],
         )
     }
 
