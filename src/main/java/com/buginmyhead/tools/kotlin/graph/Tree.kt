@@ -112,7 +112,7 @@ private class IndexedTree<N, W> private constructor(
 
     /** View backed by the cumulative edge count range. No copy. */
     override val edges: Map<Pair<N, N>, W> =
-        index.edgesMap.subView(rangeStart ..< rangeEnd - 1)
+        index.edges.subView(rangeStart ..< rangeEnd - 1)
 
     /** Maps each node to its in-neighbors, with the subtree root overridden to emptySet(). */
     override val ins: Map<N, Set<N>> = _outs.keys.associateWith { node ->
@@ -164,7 +164,7 @@ private class TreeIndex<N, W>(
 
     private val preOrderedInEdges: List<Pair<N, N>>
     private val edgeToIndex: Map<Pair<N, N>, Int>
-    val edgesMap: NavigableListMap<Pair<N, N>, W>
+    val edges: NavigableListMap<Pair<N, N>, W>
 
     // For sinkNodes sub-views: sinks in pre-order with their global indices
     val sinkMap: NavigableListMap<N, Unit>
@@ -199,7 +199,7 @@ private class TreeIndex<N, W>(
                 .filter { it.size == 2 }
                 .map { (child, parent) -> parent to child }
                 .toList()
-        edgesMap =
+        edges =
             NavigableListMap(preOrderedInEdges.map { it to acyclicGraph.edges.getValue(it) })
         edgeToIndex = preOrderedInEdges.withIndex().associate { it.value to it.index }
 
