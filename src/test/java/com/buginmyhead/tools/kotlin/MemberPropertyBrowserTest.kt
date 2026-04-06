@@ -9,33 +9,33 @@ import io.kotest.matchers.shouldBe
 
 internal class MemberPropertyBrowserTest : FreeSpec({
     val root = Node(
-        value = 5,
+        value = 13,
         child = Node(
-            value = 7,
+            value = 17,
             children = listOf(
-                Node(value = 11),
-                Node(value = 13),
+                Node(value = 19),
+                Node(value = 23),
             ),
             stringToChild = mapOf(
-                "seventeen" to Node(value = 17),
-                "nineteen" to Node(value = 19),
+                "twenty-nine" to Node(value = 29),
+                "thirty-one" to Node(value = 31),
             )
         )
     )
 
     "fieldPropertyValues collects all values of field properties" {
-        root.fieldPropertyValues().map(Node::value) shouldContainAll listOf(7)
+        root.fieldPropertyValues().map(Node::value) shouldContainAll listOf(17)
         root.child!!.fieldPropertyValues() shouldBe emptyList()
     }
 
     "collectionPropertyValues collects all values of member properties" {
         root.collectionPropertyValues() shouldBe emptyList()
-        root.child!!.collectionPropertyValues().map(Node::value) shouldContainAll listOf(11, 13)
+        root.child!!.collectionPropertyValues().map(Node::value) shouldContainAll listOf(19, 23)
     }
 
     "mapPropertyValues collects all values of map member properties" {
         root.mapPropertyValues() shouldBe emptyList()
-        root.child!!.mapPropertyValues().map(Node::value) shouldContainAll listOf(17, 19)
+        root.child!!.mapPropertyValues().map(Node::value) shouldContainAll listOf(29, 31)
     }
 
 }) {

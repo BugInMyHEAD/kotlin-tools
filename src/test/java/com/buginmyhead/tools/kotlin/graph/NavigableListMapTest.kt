@@ -7,8 +7,8 @@ import java.util.NavigableMap
 
 internal class NavigableListMapTest : FreeSpec({
 
-    // Full map: keys [A, B, C, D, E], values = key.length * 5
-    fun fullMap() = NavigableListMap(listOf("A", "B", "C", "D", "E").map { it to it.length * 5 })
+    // Full map: keys [A, B, C, D, E], values = key.length * 13
+    fun fullMap() = NavigableListMap(listOf("A", "B", "C", "D", "E").map { it to it.length * 13 })
 
     // Sub-view: keys [B, C, D]
     fun subMap() = fullMap().subView(1..3)
@@ -36,15 +36,15 @@ internal class NavigableListMapTest : FreeSpec({
     }
 
     "containsValue checks if any value matches" {
-        fullMap().containsValue(5) shouldBe true
+        fullMap().containsValue(13) shouldBe true
         fullMap().containsValue(99) shouldBe false
     }
 
     "get returns value for existing key and null for missing key" {
-        fullMap()["A"] shouldBe 5
+        fullMap()["A"] shouldBe 13
         fullMap()["Z"] shouldBe null
         subMap()["A"] shouldBe null
-        subMap()["B"] shouldBe 5
+        subMap()["B"] shouldBe 13
     }
 
     "globalIndexOf returns the global index in the backing list" {
@@ -60,27 +60,27 @@ internal class NavigableListMapTest : FreeSpec({
     }
 
     "values returns the values in key order" {
-        fullMap().values.toList() shouldBe listOf(5, 5, 5, 5, 5)
+        fullMap().values.toList() shouldBe listOf(13, 13, 13, 13, 13)
     }
 
     "entries returns key-value pairs" {
         val entries = fullMap().entries
         entries.map { it.key to it.value } shouldBe listOf(
-            "A" to 5, "B" to 5, "C" to 5, "D" to 5, "E" to 5,
+            "A" to 13, "B" to 13, "C" to 13, "D" to 13, "E" to 13,
         )
-        entries.first().toString() shouldBe "A=5"
+        entries.first().toString() shouldBe "A=13"
     }
 
     "entries equals works across Map.Entry implementations" {
         val entry = fullMap().entries.first()
-        val other = mapOf("A" to 5).entries.first()
+        val other = mapOf("A" to 13).entries.first()
         (entry == other) shouldBe true
     }
 
     "subView creates a narrower map view" {
         subMap().size shouldBe 3
         subMap().keys shouldBe setOf("B", "C", "D")
-        subMap()["B"] shouldBe 5
+        subMap()["B"] shouldBe 13
         subMap()["A"] shouldBe null
     }
 
@@ -97,22 +97,22 @@ internal class NavigableListMapTest : FreeSpec({
     }
 
     "equals works with other Map implementations" {
-        val map = NavigableListMap(listOf("X", "Y").map { it to it.length * 7 })
-        map shouldBe mapOf("X" to 7, "Y" to 7)
+        val map = NavigableListMap(listOf("X", "Y").map { it to it.length * 17 })
+        map shouldBe mapOf("X" to 17, "Y" to 17)
         (map == map) shouldBe true
         (map.equals("not a map")) shouldBe false
-        (map == mapOf("X" to 7)) shouldBe false
-        (map == mapOf("X" to 7, "Y" to 99)) shouldBe false
+        (map == mapOf("X" to 17)) shouldBe false
+        (map == mapOf("X" to 17, "Y" to 99)) shouldBe false
     }
 
     "hashCode is consistent with equals" {
-        val map1 = NavigableListMap(listOf("A" to 5, "B" to 5))
-        val map2 = mapOf("A" to 5, "B" to 5)
+        val map1 = NavigableListMap(listOf("A" to 13, "B" to 13))
+        val map2 = mapOf("A" to 13, "B" to 13)
         map1.hashCode() shouldBe map2.hashCode()
     }
 
     "toString formats as map" {
-        NavigableListMap(listOf("A" to 5)).toString() shouldBe "{A=5}"
+        NavigableListMap(listOf("A" to 13)).toString() shouldBe "{A=13}"
     }
 
     // --- KeySet (NavigableSet) tests ---
@@ -319,32 +319,32 @@ internal class NavigableListMapTest : FreeSpec({
     }
 
     "lowerEntry returns entry with greatest key strictly less" {
-        subMap().lowerEntry("C")?.let { it.key to it.value } shouldBe ("B" to 5)
+        subMap().lowerEntry("C")?.let { it.key to it.value } shouldBe ("B" to 13)
         subMap().lowerEntry("B") shouldBe null
     }
 
     "floorEntry returns entry with greatest key less than or equal" {
-        subMap().floorEntry("C")?.let { it.key to it.value } shouldBe ("C" to 5)
+        subMap().floorEntry("C")?.let { it.key to it.value } shouldBe ("C" to 13)
         subMap().floorEntry("A") shouldBe null
     }
 
     "ceilingEntry returns entry with least key greater than or equal" {
-        subMap().ceilingEntry("C")?.let { it.key to it.value } shouldBe ("C" to 5)
+        subMap().ceilingEntry("C")?.let { it.key to it.value } shouldBe ("C" to 13)
         subMap().ceilingEntry("E") shouldBe null
     }
 
     "higherEntry returns entry with least key strictly greater" {
-        subMap().higherEntry("C")?.let { it.key to it.value } shouldBe ("D" to 5)
+        subMap().higherEntry("C")?.let { it.key to it.value } shouldBe ("D" to 13)
         subMap().higherEntry("D") shouldBe null
     }
 
     "firstEntry returns first entry or null for empty map" {
-        fullMap().firstEntry()?.let { it.key to it.value } shouldBe ("A" to 5)
+        fullMap().firstEntry()?.let { it.key to it.value } shouldBe ("A" to 13)
         fullMap().subView(IntRange.EMPTY).firstEntry() shouldBe null
     }
 
     "lastEntry returns last entry or null for empty map" {
-        fullMap().lastEntry()?.let { it.key to it.value } shouldBe ("E" to 5)
+        fullMap().lastEntry()?.let { it.key to it.value } shouldBe ("E" to 13)
         fullMap().subView(IntRange.EMPTY).lastEntry() shouldBe null
     }
 
@@ -381,13 +381,13 @@ internal class NavigableListMapTest : FreeSpec({
 
     "entry setValue throws UnsupportedOperationException" {
         shouldThrow<UnsupportedOperationException> {
-            (fullMap().firstEntry() as MutableMap.MutableEntry).setValue(7)
+            (fullMap().firstEntry() as MutableMap.MutableEntry).setValue(13)
         }
     }
 
     "put throws UnsupportedOperationException" {
         shouldThrow<UnsupportedOperationException> {
-            (fullMap() as NavigableMap<String, Int>).put("Z", 7)
+            (fullMap() as NavigableMap<String, Int>).put("Z", 13)
         }
     }
 
@@ -399,7 +399,7 @@ internal class NavigableListMapTest : FreeSpec({
 
     "putAll throws UnsupportedOperationException" {
         shouldThrow<UnsupportedOperationException> {
-            (fullMap() as NavigableMap<String, Int>).putAll(mapOf("Z" to 7))
+            (fullMap() as NavigableMap<String, Int>).putAll(mapOf("Z" to 13))
         }
     }
 

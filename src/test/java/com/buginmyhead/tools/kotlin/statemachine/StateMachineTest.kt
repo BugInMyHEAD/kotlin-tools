@@ -84,16 +84,16 @@ internal class StateMachineTest : FreeSpec({
         }
         val machine = StateMachine(a, transitionFunction)
 
-        machine.pushEvent(b, 5)
-        machine.pollEffect(b) shouldBe 5
+        machine.pushEvent(b, 13)
+        machine.pollEffect(b) shouldBe 13
         machine.pollEffect(b) shouldBe null
-        machine.pollEffect(a) shouldBe 5
+        machine.pollEffect(a) shouldBe 13
         machine.pollEffect(a) shouldBe null
 
-        machine.pushEvent(a, 7)
+        machine.pushEvent(a, 17)
         machine.pollEffect(b) shouldBe null
         machine.pollEffect(b) shouldBe null
-        machine.pollEffect(a) shouldBe 7
+        machine.pollEffect(a) shouldBe 17
         machine.pollEffect(a) shouldBe null
     }
 
@@ -107,8 +107,8 @@ internal class StateMachineTest : FreeSpec({
         val machine = StateMachine(a, transitionFunction)
         val context = machine.obtainContext(machine.state)
 
-        context.pushEvent(5)
-        context.pollEffect() shouldBe 5
+        context.pushEvent(13)
+        context.pollEffect() shouldBe 13
         context.pollEffect() shouldBe null
     }
 }) {

@@ -38,10 +38,10 @@ internal class GraphTest : FreeSpec({
 
     "addEdge to empty graph" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
+        graph.addEdge("A" to "B", 13)
 
         graph.nodes shouldBe setOf("A", "B")
-        graph.edges shouldBe mapOf(("A" to "B") to 5)
+        graph.edges shouldBe mapOf(("A" to "B") to 13)
         graph.ins shouldBe mapOf("A" to emptySet(), "B" to setOf("A"))
         graph.outs shouldBe mapOf("A" to setOf("B"), "B" to emptySet())
         graph.sinkNodes shouldBe setOf("B")
@@ -62,11 +62,11 @@ internal class GraphTest : FreeSpec({
 
     "addNode does nothing if node exists" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
+        graph.addEdge("A" to "B", 13)
         graph.addNode("A")
 
         graph.nodes shouldBe setOf("A", "B")
-        graph.edges shouldBe mapOf(("A" to "B") to 5)
+        graph.edges shouldBe mapOf(("A" to "B") to 13)
         graph.ins shouldBe mapOf("A" to emptySet(), "B" to setOf("A"))
         graph.outs shouldBe mapOf("A" to setOf("B"), "B" to emptySet())
         graph.sinkNodes shouldBe setOf("B")
@@ -75,11 +75,11 @@ internal class GraphTest : FreeSpec({
 
     "addEdge updates weight of existing edge" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("A" to "B", 7)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("A" to "B", 17)
 
         graph.nodes shouldBe setOf("A", "B")
-        graph.edges shouldBe mapOf(("A" to "B") to 7)
+        graph.edges shouldBe mapOf(("A" to "B") to 17)
         graph.ins shouldBe mapOf("A" to emptySet(), "B" to setOf("A"))
         graph.outs shouldBe mapOf("A" to setOf("B"), "B" to emptySet())
         graph.sinkNodes shouldBe setOf("B")
@@ -88,17 +88,17 @@ internal class GraphTest : FreeSpec({
 
     "node can have multiple incoming and outgoing edges" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("B" to "C", 7)
-        graph.addEdge("C" to "B", 11)
-        graph.addEdge("B" to "A", 13)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("B" to "C", 17)
+        graph.addEdge("C" to "B", 19)
+        graph.addEdge("B" to "A", 23)
 
         graph.nodes shouldBe setOf("A", "B", "C")
         graph.edges shouldBe mapOf(
-            ("A" to "B") to 5,
-            ("B" to "C") to 7,
-            ("C" to "B") to 11,
-            ("B" to "A") to 13,
+            ("A" to "B") to 13,
+            ("B" to "C") to 17,
+            ("C" to "B") to 19,
+            ("B" to "A") to 23,
         )
         graph.ins shouldBe mapOf(
             "A" to setOf("B"),
@@ -116,8 +116,8 @@ internal class GraphTest : FreeSpec({
 
     "removeNode removes associated edges" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("B" to "C", 7)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("B" to "C", 17)
         graph.removeNode("B")
 
         graph.nodes shouldBe setOf("A", "C")
@@ -130,8 +130,8 @@ internal class GraphTest : FreeSpec({
 
     "toString produces expected output" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("B" to "C", 7)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("B" to "C", 17)
 
         val expected = "MutableGraph(ins={A=[], B=[A], C=[B]}, outs={A=[B], B=[C], C=[]})"
         graph.toString() shouldBe expected
@@ -139,8 +139,8 @@ internal class GraphTest : FreeSpec({
 
     "equals and hashCode are same for the identical graph" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("B" to "C", 7)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("B" to "C", 17)
 
         graph shouldBe graph
         graph.hashCode() shouldBe graph.hashCode()
@@ -148,12 +148,12 @@ internal class GraphTest : FreeSpec({
 
     "equals and hashCode are same for the same graphs" {
         val graphA = MutableGraph<String, Int>()
-        graphA.addEdge("A" to "B", 5)
-        graphA.addEdge("B" to "C", 7)
+        graphA.addEdge("A" to "B", 13)
+        graphA.addEdge("B" to "C", 17)
 
         val graphB = MutableGraph<String, Int>()
-        graphB.addEdge("A" to "B", 5)
-        graphB.addEdge("B" to "C", 7)
+        graphB.addEdge("A" to "B", 13)
+        graphB.addEdge("B" to "C", 17)
 
         graphA shouldBe graphB
         graphA.hashCode() shouldBe graphB.hashCode()
@@ -161,10 +161,10 @@ internal class GraphTest : FreeSpec({
 
     "equals and hashCode are different for the different graphs" {
         val graphA = MutableGraph<String, Int>()
-        graphA.addEdge("A" to "B", 5)
+        graphA.addEdge("A" to "B", 13)
 
         val graphB = MutableGraph<String, Int>()
-        graphB.addEdge("C" to "D", 7)
+        graphB.addEdge("C" to "D", 17)
 
         graphA shouldNotBe graphB
         graphA.hashCode() shouldNotBe graphB.hashCode()
@@ -172,8 +172,8 @@ internal class GraphTest : FreeSpec({
 
     "toGraph copies the graph if it is mutable" {
         val original = MutableGraph<String, Int>()
-        original.addEdge("A" to "B", 5)
-        original.addEdge("B" to "C", 7)
+        original.addEdge("A" to "B", 13)
+        original.addEdge("B" to "C", 17)
         val copied = original.toGraph()
 
         copied.nodes shouldBe original.nodes
@@ -186,8 +186,8 @@ internal class GraphTest : FreeSpec({
 
     "toGraph does not copy the graph if it is immutable" {
         val original = MutableGraph<String, Int>()
-        original.addEdge("A" to "B", 5)
-        original.addEdge("B" to "C", 7)
+        original.addEdge("A" to "B", 13)
+        original.addEdge("B" to "C", 17)
         val immutable = original.toGraph()
 
         immutable.toGraph() shouldBeSameInstanceAs immutable
@@ -195,8 +195,8 @@ internal class GraphTest : FreeSpec({
 
     "toMutableGraph copies the graph" {
         val original = MutableGraph<String, Int>()
-        original.addEdge("A" to "B", 5)
-        original.addEdge("B" to "C", 7)
+        original.addEdge("A" to "B", 13)
+        original.addEdge("B" to "C", 17)
         val copied = original.toMutableGraph()
 
         copied.nodes shouldBe original.nodes
@@ -209,16 +209,16 @@ internal class GraphTest : FreeSpec({
 
     "toMutableGraph transforms the graph" {
         val original = MutableGraph<String, Int>()
-        original.addEdge("A" to "B", 5)
-        original.addEdge("B" to "C", 7)
+        original.addEdge("A" to "B", 13)
+        original.addEdge("B" to "C", 17)
         val transformed = original.toMutableGraph(
             nodeTransform = { node -> node.lowercase() }
         ) { from, to, weight, tFrom, tTo -> "$from$to$weight$tFrom$tTo" }
 
         transformed.nodes shouldBe setOf("a", "b", "c")
         transformed.edges shouldBe mapOf(
-            ("a" to "b") to "AB5ab",
-            ("b" to "c") to "BC7bc",
+            ("a" to "b") to "AB13ab",
+            ("b" to "c") to "BC17bc",
         )
         transformed.ins shouldBe mapOf(
             "a" to emptySet(),
@@ -327,14 +327,14 @@ internal class GraphTest : FreeSpec({
 
     "toAcyclicGraph copies the graph that is acyclic graph" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("B" to "C", 7)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("B" to "C", 17)
 
         val acyclicGraph = graph.toAcyclicGraph()
         acyclicGraph.nodes shouldBe setOf("A", "B", "C")
         acyclicGraph.edges shouldBe mapOf(
-            ("A" to "B") to 5,
-            ("B" to "C") to 7,
+            ("A" to "B") to 13,
+            ("B" to "C") to 17,
         )
         acyclicGraph.ins shouldBe mapOf(
             "A" to emptySet(),
@@ -352,8 +352,8 @@ internal class GraphTest : FreeSpec({
 
     "AcyclicGraph equals the graph that has the same structure" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("B" to "C", 7)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("B" to "C", 17)
         val acyclicGraph = graph.toAcyclicGraph()
 
         graph shouldBe acyclicGraph
@@ -363,24 +363,24 @@ internal class GraphTest : FreeSpec({
 
     "toAcyclicGraph fails with CyclicGraphException on cyclic graph 1" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "A", 5)
+        graph.addEdge("A" to "A", 13)
 
         shouldThrow<CyclicGraphException> { graph.toAcyclicGraph() }
     }
 
     "toAcyclicGraph fails with CyclicGraphException on cyclic graph 2" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("B" to "A", 7)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("B" to "A", 17)
 
         shouldThrow<CyclicGraphException> { graph.toAcyclicGraph() }
     }
 
     "toAcyclicGraph fails with CyclicGraphException on cyclic graph 3" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("B" to "C", 7)
-        graph.addEdge("C" to "A", 11)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("B" to "C", 17)
+        graph.addEdge("C" to "A", 19)
 
         shouldThrow<CyclicGraphException> { graph.toAcyclicGraph() }
     }

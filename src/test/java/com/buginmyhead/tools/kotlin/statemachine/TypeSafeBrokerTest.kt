@@ -34,14 +34,14 @@ internal class TypeSafeBrokerTest : FreeSpec({
                 setValueCaptured = value
             }
 
-            override fun <V : Any> poll(key: TypeSafeBroker.Key<V>): V? {
+            override fun <V : Any> poll(key: TypeSafeBroker.Key<V>): V {
                 pollKeyCaptured = key
                 @Suppress("UNCHECKED_CAST")
                 return pollGenericResult as V
             }
         })
         val setKey = object : TypeSafeBroker.Key<Int> {}
-        val setValue = 5
+        val setValue = 13
         val pollKey = object : TypeSafeBroker.Key<Any> {}
 
         broker[setKey] = setValue
@@ -55,27 +55,27 @@ internal class TypeSafeBrokerTest : FreeSpec({
     "TypeSafeBrokerOnWeakIdentityHashMap poll removes an effect for the identical key" {
         val broker = TypeSafeBrokerOnWeakIdentityHashMap()
         val stateA = State("A")
-        broker[stateA] = 5
+        broker[stateA] = 13
         gc()
 
-        broker.poll(stateA) shouldBe 5
+        broker.poll(stateA) shouldBe 13
         broker.poll(stateA) shouldBe null
     }
 
     "TypeSafeBrokerOnWeakIdentityHashMap poll does not remove an effect if the key is equal but not identical" {
         val broker = TypeSafeBrokerOnWeakIdentityHashMap()
         val stateA = State("A")
-        broker[stateA] = 5
+        broker[stateA] = 13
         gc()
 
         stateA shouldBe State("A")
         broker.poll(State("A")) shouldBe null
-        broker.poll(stateA) shouldBe 5
+        broker.poll(stateA) shouldBe 13
     }
 
     "TypeSafeBrokerOnWeakIdentityHashMap removes zombie effects" {
         val broker = TypeSafeBrokerOnWeakIdentityHashMap()
-        broker[State("A")] = 5
+        broker[State("A")] = 13
         gc()
 
         broker.store shouldBe emptyMap()

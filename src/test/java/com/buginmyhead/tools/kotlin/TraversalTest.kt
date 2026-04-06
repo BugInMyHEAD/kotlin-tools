@@ -62,58 +62,58 @@ internal class TraversalTest : FreeSpec({
     "dfsPost yields nodes and freeze captures path" {
         val frozen = dfsPost(
             cycleSafe = true,
-            roots = sequenceOf(5),
-            initial = { 7 },
+            roots = sequenceOf(13),
+            initial = { 17 },
             aggregate = { r, _ -> r },
         ) {
             when (it) {
-                5 -> {
-                    yield(11)
-                    yield(13)
+                13 -> {
+                    yield(19)
+                    yield(23)
                 }
                 else -> Unit
             }
         }.map { it.freeze() }.toList()
 
-        frozen.map { it.node } shouldBe listOf(11, 13, 5)
-        frozen.map { it.result } shouldBe listOf(7, 7, 7)
-        frozen.map { it.path } shouldBe listOf(listOf(5, 11), listOf(5, 13), listOf(5))
+        frozen.map { it.node } shouldBe listOf(19, 23, 13)
+        frozen.map { it.result } shouldBe listOf(17, 17, 17)
+        frozen.map { it.path } shouldBe listOf(listOf(13, 19), listOf(13, 23), listOf(13))
     }
 
     "dfsPost pathToRoot captures ancestor chain from current node to root" {
         val paths = dfsPost(
             cycleSafe = true,
-            roots = sequenceOf(5),
-            initial = { 7 },
+            roots = sequenceOf(13),
+            initial = { 17 },
             aggregate = { r, _ -> r },
         ) {
             when (it) {
-                5 -> {
-                    yield(11)
-                    yield(13)
+                13 -> {
+                    yield(19)
+                    yield(23)
                 }
-                11 -> yield(17)
+                19 -> yield(29)
                 else -> Unit
             }
         }.map { it.pathToRoot.toList() }.toList()
 
         paths shouldBe listOf(
-            listOf(17, 11, 5),
-            listOf(11, 5),
-            listOf(13, 5),
-            listOf(5),
+            listOf(29, 19, 13),
+            listOf(19, 13),
+            listOf(23, 13),
+            listOf(13),
         )
     }
 
     "dfsPost freeze after sequence advanced throws" {
         val staleContexts = dfsPost(
             cycleSafe = true,
-            roots = sequenceOf(5),
-            initial = { 7 },
+            roots = sequenceOf(13),
+            initial = { 17 },
             aggregate = { r, _ -> r },
         ) {
             when (it) {
-                5 -> yield(11)
+                13 -> yield(19)
                 else -> Unit
             }
         }.toList()

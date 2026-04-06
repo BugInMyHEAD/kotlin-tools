@@ -5,18 +5,18 @@ import io.kotest.matchers.shouldBe
 
 internal class FunctionalTest : FreeSpec({
     "andThen invokes left-side function firstly, and then right-side function secondly" {
-        val add5: (Int) -> Int = { x: Int -> x + 5 }
-        val multiply7: (Int) -> Int = { x -> x * 7 }
-        val combined = add5 andThen multiply7
+        val add13: (Int) -> Int = { x: Int -> x + 13 }
+        val multiply17: (Int) -> Int = { x -> x * 17 }
+        val combined = add13 andThen multiply17
 
-        combined(0) shouldBe 35 // (0 + 5) * 7 = 35
+        combined(0) shouldBe 221 // (0 + 13) * 17 = 221
     }
 
     "compose invokes right-side function firstly, and then left-side function secondly" {
-        val add5: (Int) -> Int = { x: Int -> x + 5 }
-        val multiply7: (Int) -> Int = { x -> x * 7 }
-        val combined = add5 compose multiply7
+        val add13: (Int) -> Int = { x: Int -> x + 13 }
+        val multiply17: (Int) -> Int = { x -> x * 17 }
+        val combined = add13 compose multiply17
 
-        combined(0) shouldBe 5 // 5 + (0 * 7) = 5
+        combined(0) shouldBe 13 // 13 + (0 * 17) = 13
     }
 })

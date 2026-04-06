@@ -22,17 +22,17 @@ internal class TreeTest : FreeSpec({
 
     "toTree copies the graph that is a tree" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("A" to "C", 7)
-        graph.addEdge("C" to "D", 11)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("A" to "C", 17)
+        graph.addEdge("C" to "D", 19)
         val tree = graph.toTree()
 
         tree.nodes shouldBe setOf("A", "B", "C", "D")
         tree.edges shouldBe mapOf(
-            ("A" to "B") to 5,
-            ("A" to "C") to 7,
-            ("A" to "C") to 7,
-            ("C" to "D") to 11,
+            ("A" to "B") to 13,
+            ("A" to "C") to 17,
+            ("A" to "C") to 17,
+            ("C" to "D") to 19,
         )
         tree.sourceNodes shouldBe setOf("A")
         tree.sinkNodes shouldBe setOf("B", "D")
@@ -40,9 +40,9 @@ internal class TreeTest : FreeSpec({
 
     "Tree equals the graph that has the same structure" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("A" to "C", 7)
-        graph.addEdge("C" to "D", 11)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("A" to "C", 17)
+        graph.addEdge("C" to "D", 19)
         val tree = graph.toTree()
 
         graph shouldBe tree
@@ -52,35 +52,35 @@ internal class TreeTest : FreeSpec({
 
     "toTree fails with NotATreeException if graph has a cycle" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("B" to "C", 7)
-        graph.addEdge("C" to "A", 11)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("B" to "C", 17)
+        graph.addEdge("C" to "A", 19)
 
         shouldThrow<NotATreeException> { graph.toTree() }
     }
 
     "toTree fails with NotATreeException if graph has multiple roots" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "C", 5)
-        graph.addEdge("B" to "D", 7)
+        graph.addEdge("A" to "C", 13)
+        graph.addEdge("B" to "D", 17)
 
         shouldThrow<NotATreeException> { graph.toTree() }
     }
 
     "toTree fails with NotATreeException if any node has multiple parents" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("A" to "C", 7)
-        graph.addEdge("B" to "D", 11)
-        graph.addEdge("C" to "D", 13)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("A" to "C", 17)
+        graph.addEdge("B" to "D", 19)
+        graph.addEdge("C" to "D", 23)
 
         shouldThrow<NotATreeException> { graph.toTree() }
     }
 
     "root returns the single root node" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("A" to "C", 7)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("A" to "C", 17)
         val tree = graph.toTree()
 
         tree.root shouldBe "A"
@@ -88,9 +88,9 @@ internal class TreeTest : FreeSpec({
 
     "leaves returns the leaf nodes" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("A" to "C", 7)
-        graph.addEdge("C" to "D", 11)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("A" to "C", 17)
+        graph.addEdge("C" to "D", 19)
         val tree = graph.toTree()
 
         tree.leaves shouldBe setOf("B", "D")
@@ -98,9 +98,9 @@ internal class TreeTest : FreeSpec({
 
     "ancestorsFrom returns the ancestors from the specified node to the root" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("A" to "C", 7)
-        graph.addEdge("C" to "D", 11)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("A" to "C", 17)
+        graph.addEdge("C" to "D", 19)
         val tree = graph.toTree()
 
         val ancestorsFromA = tree.ancestorsFrom("A").toList()
@@ -118,7 +118,7 @@ internal class TreeTest : FreeSpec({
 
     "subtreeAt throws IllegalArgumentException if node does not exist" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
+        graph.addEdge("A" to "B", 13)
         val tree = graph.toTree()
 
         shouldThrow<IllegalArgumentException> { tree.subtreeAt("C") }
@@ -126,7 +126,7 @@ internal class TreeTest : FreeSpec({
 
     "subtreeAt the root returns the same tree" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
+        graph.addEdge("A" to "B", 13)
         val tree = graph.toTree()
 
         val subtreeAtA = tree.subtreeAt("A")
@@ -135,9 +135,9 @@ internal class TreeTest : FreeSpec({
 
     "subtreeAt returns the correct subtree" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("A" to "C", 7)
-        graph.addEdge("C" to "D", 11)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("A" to "C", 17)
+        graph.addEdge("C" to "D", 19)
         val tree = graph.toTree()
 
         val subtreeAtB = tree.subtreeAt("B")
@@ -159,7 +159,7 @@ internal class TreeTest : FreeSpec({
         val subtreeAtC = tree.subtreeAt("C")
         subtreeAtC.nodes shouldBe setOf("C", "D")
         subtreeAtC.edges shouldBe mapOf(
-            ("C" to "D") to 11,
+            ("C" to "D") to 19,
         )
         subtreeAtC.outs shouldBe mapOf(
             "C" to setOf("D"),
@@ -172,7 +172,7 @@ internal class TreeTest : FreeSpec({
         subtreeAtC.sourceNodes shouldBe setOf("C")
         subtreeAtC.sinkNodes shouldBe setOf("D")
         val graphOfC = MutableGraph<String, Int>()
-        graphOfC.addEdge("C" to "D", 11)
+        graphOfC.addEdge("C" to "D", 19)
         graphOfC shouldBe subtreeAtC
         subtreeAtC shouldBe graphOfC
 
@@ -195,23 +195,23 @@ internal class TreeTest : FreeSpec({
 
     "subtreeAt on a subtree returns the correct nested subtree" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("A" to "C", 7)
-        graph.addEdge("C" to "D", 11)
-        graph.addEdge("C" to "E", 13)
-        graph.addEdge("E" to "F", 17)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("A" to "C", 17)
+        graph.addEdge("C" to "D", 19)
+        graph.addEdge("C" to "E", 23)
+        graph.addEdge("E" to "F", 29)
         val tree = graph.toTree()
 
         val subtreeAtC = tree.subtreeAt("C")
         val nestedSubtreeAtE = subtreeAtC.subtreeAt("E")
         nestedSubtreeAtE.nodes shouldBe setOf("E", "F")
         nestedSubtreeAtE.edges shouldBe mapOf(
-            ("E" to "F") to 17,
+            ("E" to "F") to 29,
         )
         nestedSubtreeAtE.root shouldBe "E"
         nestedSubtreeAtE.leaves shouldBe setOf("F")
         val graphOfE = MutableGraph<String, Int>()
-        graphOfE.addEdge("E" to "F", 17)
+        graphOfE.addEdge("E" to "F", 29)
         graphOfE shouldBe nestedSubtreeAtE
         nestedSubtreeAtE shouldBe graphOfE
 
@@ -228,9 +228,9 @@ internal class TreeTest : FreeSpec({
 
     "subtreeAt on a subtree throws for node outside the subtree" {
         val graph = MutableGraph<String, Int>()
-        graph.addEdge("A" to "B", 5)
-        graph.addEdge("A" to "C", 7)
-        graph.addEdge("C" to "D", 11)
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("A" to "C", 17)
+        graph.addEdge("C" to "D", 19)
         val tree = graph.toTree()
 
         val subtreeAtC = tree.subtreeAt("C")

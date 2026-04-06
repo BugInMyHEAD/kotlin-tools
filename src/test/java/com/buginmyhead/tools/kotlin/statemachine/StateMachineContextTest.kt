@@ -27,13 +27,13 @@ internal class StateMachineContextTest : FreeSpec({
         val pushEvent: (Any, Any) -> Unit = { _, _ -> }
         val pollEffect: (Any) -> Any? = { state ->
             stateCaptured = state
-            7
+            13
         }
 
         val state = State("A")
         val ctx = StateMachine.Context(state, pushEvent, pollEffect)
 
-        ctx.pollEffect() shouldBe 7
+        ctx.pollEffect() shouldBe 13
         stateCaptured shouldBe state
     }
 
@@ -47,7 +47,7 @@ internal class StateMachineContextTest : FreeSpec({
         var polledState: Any? = null
         val pollEffect: (Any) -> Any? = { s ->
             polledState = s
-            11
+            17
         }
 
         val stateA = State("A")
@@ -59,7 +59,7 @@ internal class StateMachineContextTest : FreeSpec({
         stateCaptured shouldBe stateB
         eventCaptured shouldBe "evt"
 
-        ctxB.pollEffect() shouldBe 11
+        ctxB.pollEffect() shouldBe 17
         polledState shouldBe stateB
 
         ctxA shouldNotBe ctxB
@@ -67,7 +67,7 @@ internal class StateMachineContextTest : FreeSpec({
 
     "equals and hashCode consider state and delegates" {
         val push = { v: Any, s: Any -> }
-        val poll = { s: Any -> 5 }
+        val poll = { s: Any -> 13 }
         val state = State("A")
 
         val a = StateMachine.Context(state, push, poll)

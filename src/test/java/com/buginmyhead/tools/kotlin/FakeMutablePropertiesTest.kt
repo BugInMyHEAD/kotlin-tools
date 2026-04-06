@@ -5,17 +5,17 @@ import io.kotest.matchers.shouldBe
 
 internal class FakeMutablePropertiesTest : FreeSpec({
     "fakeMutableProperty0Of always returns fixedValue" {
-        var x: Int by (null as Container?)?.run { ::content } ?: fakeMutableProperty0Of<Int>(5)
-        x = 7
+        var x: Int by (null as Container?)?.run { ::content } ?: fakeMutableProperty0Of<Int>(13)
+        x = 17
 
-        x shouldBe 5
+        x shouldBe 13
     }
 
     "fakeMutableProperty0By always returns return from getter" {
-        var x: Int by (null as Container?)?.run { ::content } ?: fakeMutableProperty0By<Int> { 5 }
-        x = 7
+        var x: Int by (null as Container?)?.run { ::content } ?: fakeMutableProperty0By<Int> { 13 }
+        x = 17
 
-        x shouldBe 5
+        x shouldBe 13
     }
 }) {
 
