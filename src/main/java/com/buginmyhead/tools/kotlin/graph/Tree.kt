@@ -73,31 +73,18 @@ interface Tree<N, W> : AcyclicGraph<N, W> {
 private class IndexedTree<N, W> private constructor(
     private val index: TreeIndex<N, W>,
     root: N,
-    last: N,
 ) : Tree<N, W> {
 
     constructor(original: AcyclicGraph<N, W>) : this(
         TreeIndex(original),
+        original.sourceNodes.single(),
     )
 
-    private constructor(
-        index: TreeIndex<N, W>,
-    ) : this(
-        index,
-        index.original.sourceNodes.single(),
-        index.nodes.last(),
-    )
+    private val last: N = run {
+        val rootIdx = index.nodeToIndex.getValue(root)
+        index.nodes[rootIdx + index.nodeToSubtreeSize.getValue(root) - 1]
+    }
 
-    /** Sub-view that serves as both [nodes] (via keys) and [outs] (as map). */
-    private val _outs: NavigableMap<N, Set<N>> =
-        index.outs.subMap(root, true, last, true)
-
-    override val outs: Map<N, Set<N>> get() = _outs
-
-    /** View backed by the pre-order index range. No copy. */
-    override val nodes: Set<N> = _outs.keys
-
-    /** View backed by the cumulative edge count range. No copy. */
     override val edges: Map<Pair<N, N>, W> = run {
         val rootIdx = index.nodeToIndex.getValue(root)
         val firstChildEdge = index.preOrderedInEdges.getOrElse(rootIdx) {
@@ -111,23 +98,24 @@ private class IndexedTree<N, W> private constructor(
         index.edges.subMap(firstChildEdge, true, lastInEdge, true)
     }
 
-    /** Maps each node to its in-neighbors, with the subtree root overridden to emptySet(). */
-    override val ins: Map<N, Set<N>> = _outs.keys.associateWith { node ->
-        if (node == root) emptySet() else index.ins.getValue(node)
-    }
+    override val outs: Map<N, Set<N>> = index.outs.subMap(root, true, last, true)
+
+    override val ins: Map<N, Set<N>> =
+        UnsafeMergeMap(
+            mapOf(root to emptySet()),
+            index.ins.subMap(root, false, last, true),
+        )
+
+    override val nodes: Set<N> = outs.keys
+
+    override val sourceNodes: Set<N> = setOf(root)
 
     /** View backed by ceiling/floor sink node lookup. No copy. */
     override val sinkNodes: Set<N> = run {
         val rootIdx = index.nodeToIndex.getValue(root)
-        val lastIdx = rootIdx + index.nodeToSubtreeSize.getValue(root) - 1
         val firstSink = index.preOrderedSinkNodes[index.ceilingSinkIndex[rootIdx]]
-        val lastSink = index.preOrderedSinkNodes[index.floorSinkIndex[lastIdx]]
-        index.sinkNodes.subSet(firstSink, true, lastSink, true)
+        index.sinkNodes.subSet(firstSink, true, last, true)
     }
-
-    /** View as a singleton sub-map of the pre-order map. No copy. */
-    override val sourceNodes: Set<N> =
-        index.outs.subMap(root, true, root, true).keys
 
     override fun equals(other: Any?): Boolean =
         this === other
@@ -141,15 +129,10 @@ private class IndexedTree<N, W> private constructor(
     override fun hashCode(): Int = Objects.hash(edges, sourceNodes, sinkNodes)
 
     /** Creates a subtree rooted at [node] in O(1) by narrowing the index range. */
-    fun subtreeAt(node: N): IndexedTree<N, W> {
-        val newRootIdx = index.nodeToIndex.getValue(node)
-        val newLastIdx = newRootIdx + index.nodeToSubtreeSize.getValue(node) - 1
-        return IndexedTree(
-            index,
-            node,
-            index.nodes[newLastIdx],
-        )
-    }
+    fun subtreeAt(node: N) = IndexedTree(
+        index,
+        node,
+    )
 
 }
 
@@ -243,5 +226,57 @@ private class TreeIndex<N, W>(
             }
         }
     }
+
+}
+
+/**
+ * @param original the original map to back this [UnsafeMergeMap].
+ *  The caller must guarantee that
+ *  the keys of all maps in [original] are disjoint,
+ *  otherwise the behavior of this class is undefined.
+ */
+private class UnsafeMergeMap<K, V>(
+    private vararg val original: Map<K, V>
+) : Map<K, V> {
+
+    override val size: Int
+        get() = original.sumOf(Map<K, V>::size)
+
+    override val keys: Set<K> =
+        UnsafeMergeSet(*original.map(Map<K, V>::keys).toTypedArray())
+
+    override val values: Collection<V> =
+        UnsafeMergeCollection(*original.map(Map<K, V>::values).toTypedArray())
+
+    override val entries: Set<Map.Entry<K, V>> =
+        UnsafeMergeSet(*original.map(Map<K, V>::entries).toTypedArray())
+
+    override fun isEmpty(): Boolean = original.all(Map<K, V>::isEmpty)
+
+    override fun containsKey(key: K): Boolean = original.any { key in it }
+
+    override fun containsValue(value: V): Boolean = original.any { value in it.values }
+
+    override fun get(key: K): V? = original.firstNotNullOfOrNull { it[key] }
+
+}
+
+private class UnsafeMergeSet<T>(
+    vararg original: Set<T>
+) : Set<T>, Collection<T> by UnsafeMergeCollection(*original)
+
+private class UnsafeMergeCollection<T>(
+    private vararg val original: Collection<T>
+) : Collection<T> {
+
+    override val size: Int get() = original.sumOf(Collection<T>::size)
+
+    override fun isEmpty(): Boolean = original.all(Collection<T>::isEmpty)
+
+    override fun contains(element: T): Boolean = original.any { element in it }
+
+    override fun containsAll(elements: Collection<T>): Boolean = elements.all(::contains)
+
+    override fun iterator() : Iterator<T> = original.asSequence().flatten().iterator()
 
 }

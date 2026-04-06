@@ -136,25 +136,46 @@ internal class TreeTest : FreeSpec({
     "subtreeAt returns the correct subtree" {
         val graph = MutableGraph<String, Int>()
         graph.addEdge("A" to "B", 13)
+        graph.addEdge("B" to "E", 23)
         graph.addEdge("A" to "C", 17)
         graph.addEdge("C" to "D", 19)
         val tree = graph.toTree()
 
         val subtreeAtB = tree.subtreeAt("B")
-        subtreeAtB.nodes shouldBe setOf("B")
-        subtreeAtB.edges shouldBe emptyMap()
+        subtreeAtB.nodes shouldBe setOf("B", "E")
+        subtreeAtB.edges shouldBe mapOf(
+            ("B" to "E") to 23,
+        )
         subtreeAtB.outs shouldBe mapOf(
-            "B" to emptySet(),
+            "B" to setOf("E"),
+            "E" to emptySet(),
         )
         subtreeAtB.ins shouldBe mapOf(
             "B" to emptySet(),
+            "E" to setOf("B"),
         )
         subtreeAtB.sourceNodes shouldBe setOf("B")
-        subtreeAtB.sinkNodes shouldBe setOf("B")
+        subtreeAtB.sinkNodes shouldBe setOf("E")
         val graphOfB = MutableGraph<String, Int>()
-        graphOfB.addNode("B")
+        graphOfB.addEdge("B" to "E", 23)
         graphOfB shouldBe subtreeAtB
         subtreeAtB shouldBe graphOfB
+
+        val subtreeAtE = tree.subtreeAt("E")
+        subtreeAtE.nodes shouldBe setOf("E")
+        subtreeAtE.edges shouldBe emptyMap()
+        subtreeAtE.outs shouldBe mapOf(
+            "E" to emptySet(),
+        )
+        subtreeAtE.ins shouldBe mapOf(
+            "E" to emptySet(),
+        )
+        subtreeAtE.sourceNodes shouldBe setOf("E")
+        subtreeAtE.sinkNodes shouldBe setOf("E")
+        val graphOfE = MutableGraph<String, Int>()
+        graphOfE.addNode("E")
+        graphOfE shouldBe subtreeAtE
+        subtreeAtE shouldBe graphOfE
 
         val subtreeAtC = tree.subtreeAt("C")
         subtreeAtC.nodes shouldBe setOf("C", "D")
