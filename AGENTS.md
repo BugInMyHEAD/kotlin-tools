@@ -31,7 +31,7 @@ put an empty line after the opening brace and before the closing brace.
 
 ## Framework and style
 
-Use FreeSpec of Kotest.
+Use FreeSpec of Kotest with the `internal` visibility modifier for test classes.
 
 Use AAA (Arrange, Act, Assert) style if a test case is longer than 30 lines.
 Even though a test case is within length of 30 lines,
