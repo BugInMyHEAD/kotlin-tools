@@ -174,7 +174,6 @@ private class TreeIndex<N, W>(
     val ins: NavigableMap<N, Set<N>>
 
     val preOrderedInEdges: List<Pair<N, N>>
-    private val edgeToIndex: Map<Pair<N, N>, Int>
     val edges: NavigableMap<Pair<N, N>, W>
 
     // For sinkNodes sub-views: O(1) ceiling/floor lookup from pre-order index to sink-list index
@@ -214,7 +213,6 @@ private class TreeIndex<N, W>(
                 .toList()
         edges =
             NavigableListMap(preOrderedInEdges.map { it to original.edges.getValue(it) })
-        edgeToIndex = preOrderedInEdges.withIndex().associate { it.value to it.index }
 
         // Sink nodes in pre-order with ceiling/floor index arrays for O(1) subtree sink lookup
         preOrderedSinkNodes = nodes.filter { it in original.sinkNodes }
