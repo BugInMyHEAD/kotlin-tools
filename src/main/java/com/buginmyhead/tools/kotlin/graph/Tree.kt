@@ -112,7 +112,7 @@ private class IndexedTree<N, W> private constructor(
 
     /** View backed by the cumulative edge count range. No copy. */
     override val edges: Map<Pair<N, N>, W> =
-        index.edgesMap.subView(index.edgeCumCount[rangeStart] ..< index.edgeCumCount[rangeEnd])
+        index.edgesMap.subView(rangeStart ..< rangeEnd - 1)
 
     /** Maps each node to its in-neighbors, with the subtree root overridden to emptySet(). */
     override val ins: Map<N, Set<N>> = _outs.keys.associateWith { node ->
@@ -162,9 +162,9 @@ private class TreeIndex<N, W>(
     val outs: NavigableListMap<N, Set<N>>
     val ins: NavigableListMap<N, Set<N>>
 
-    // For edges sub-views: edge keys ordered by from-node pre-order
+    private val preOrderedInEdges: List<Pair<N, N>>
+    private val edgeToIndex: Map<Pair<N, N>, Int>
     val edgesMap: NavigableListMap<Pair<N, N>, W>
-    val edgeCumCount: IntArray
 
     // For sinkNodes sub-views: sinks in pre-order with their global indices
     val sinkMap: NavigableListMap<N, Unit>
@@ -193,18 +193,15 @@ private class TreeIndex<N, W>(
         outs = NavigableListMap(nodes.map { it to acyclicGraph.outs.getValue(it) })
         ins = NavigableListMap(nodes.map { it to acyclicGraph.ins.getValue(it) })
 
+        preOrderedInEdges =
+            preOrderedDfsPostContext
+                .map { it.pathToRoot.take(2).toList() }
+                .filter { it.size == 2 }
+                .map { (child, parent) -> parent to child }
+                .toList()
         edgesMap =
-            NavigableListMap(
-                outs
-                    .flatMap { (out, ins) -> ins.map { `in` -> out to `in` } }
-                    .map { it to acyclicGraph.edges.getValue(it) }
-            )
-
-        // Edges ordered by from-node pre-order with cumulative count for O(1) range lookup
-        edgeCumCount = IntArray(size + 1)
-        nodes.forEachIndexed { i, node ->
-            edgeCumCount[i + 1] = edgeCumCount[i] + acyclicGraph.outs.getValue(node).size
-        }
+            NavigableListMap(preOrderedInEdges.map { it to acyclicGraph.edges.getValue(it) })
+        edgeToIndex = preOrderedInEdges.withIndex().associate { it.value to it.index }
 
         // Sink nodes in pre-order with their global indices for binary search
         val sinkList = ArrayList<N>()
