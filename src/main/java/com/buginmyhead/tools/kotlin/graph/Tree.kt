@@ -107,7 +107,7 @@ private class IndexedTree<N, W> private constructor(
             // When the [root] is the only node, there are no child edges.
             return@run emptyMap()
         }
-        // -1 for exclusion of in-edge of [root],
+        // -1 for exclusion of the in-edge of [root],
         //  and -1 for [lastInEdge] being inclusive in `subMap` operation.
         val lastIdx = rootIdx + index.nodeToSubtreeSize.getValue(root) - 2
         val lastInEdge = index.preOrderedInEdges[lastIdx]
