@@ -119,16 +119,10 @@ private class IndexedTree<N, W> private constructor(
         if (node == root) emptySet() else index.ins.getValue(node)
     }
 
-    /** View backed by binary-searched sink range. No copy. */
+    /** View backed by ceiling/floor sink index lookup. No copy. */
     override val sinkNodes: Set<N> = run {
-        val fromSinkIdx =
-            index.sinkGlobalIndices
-                .binarySearch(rangeStart)
-                .let { if (it < 0) it.inv() else it }
-        val toSinkIdx =
-            index.sinkGlobalIndices
-                .binarySearch(rangeEndInclusive)
-                .let { if (it < 0) it.inv() - 1 else it }
+        val fromSinkIdx = index.ceilingSinkIndex[rangeStart]
+        val toSinkIdx = index.floorSinkIndex[rangeEndInclusive]
         index.sinkMap.subView(fromSinkIdx .. toSinkIdx).keys
     }
 
@@ -165,8 +159,7 @@ private class IndexedTree<N, W> private constructor(
 /**
  * Pre-computed index structure for efficient subtree operations.
  *
- * All [Map] and [Set] properties in [IndexedTree] are O(1) views over this index,
- *  except [IndexedTree.sinkNodes] which uses O(log s) binary search.
+ * All [Map] and [Set] properties in [IndexedTree] are O(1) views over this index.
  */
 private class TreeIndex<N, W>(
     val original: AcyclicGraph<N, W>,
@@ -183,9 +176,10 @@ private class TreeIndex<N, W>(
     private val edgeToIndex: Map<Pair<N, N>, Int>
     val edges: NavigableListMap<Pair<N, N>, W>
 
-    // For sinkNodes sub-views: sinks in pre-order with their global indices
+    // For sinkNodes sub-views: O(1) ceiling/floor lookup from pre-order index to sink-list index
     val sinkMap: NavigableListMap<N, Unit>
-    val sinkGlobalIndices: IntArray
+    val ceilingSinkIndex: IntArray
+    val floorSinkIndex: IntArray
 
     init {
         val root = original.sourceNodes.single()
@@ -220,7 +214,7 @@ private class TreeIndex<N, W>(
             NavigableListMap(preOrderedInEdges.map { it to original.edges.getValue(it) })
         edgeToIndex = preOrderedInEdges.withIndex().associate { it.value to it.index }
 
-        // Sink nodes in pre-order with their global indices for binary search
+        // Sink nodes in pre-order with ceiling/floor index arrays for O(1) subtree sink lookup
         val sinkList = ArrayList<N>()
         val sinkIndices = ArrayList<Int>()
         var sinkTraverseNode: N? = outs.firstKey()
@@ -233,7 +227,34 @@ private class TreeIndex<N, W>(
             sinkTraverseNode = outs.higherKey(node)
         }
         sinkMap = NavigableListMap(sinkList.map { it to Unit })
-        sinkGlobalIndices = sinkIndices.toIntArray()
+
+        val sinkCount = sinkList.size
+
+        // ceilingSinkIndex[i] = smallest j such that sinkIndices[j] >= i
+        ceilingSinkIndex = IntArray(size).also { ceiling ->
+            var j = sinkCount - 1
+            var next = sinkCount
+            for (i in (size - 1) downTo 0) {
+                if (j >= 0 && sinkIndices[j] == i) {
+                    next = j
+                    j--
+                }
+                ceiling[i] = next
+            }
+        }
+
+        // floorSinkIndex[i] = largest j such that sinkIndices[j] <= i
+        floorSinkIndex = IntArray(size).also { floor ->
+            var j = 0
+            var prev = -1
+            for (i in 0 ..< size) {
+                if (j < sinkCount && sinkIndices[j] == i) {
+                    prev = j
+                    j++
+                }
+                floor[i] = prev
+            }
+        }
     }
 
 }
