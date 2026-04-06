@@ -136,30 +136,66 @@ internal class TreeTest : FreeSpec({
     "subtreeAt returns the correct subtree" {
         val graph = MutableGraph<String, Int>()
         graph.addEdge("A" to "B", 13)
-        graph.addEdge("B" to "E", 23)
-        graph.addEdge("A" to "C", 17)
-        graph.addEdge("C" to "D", 19)
+        graph.addEdge("B" to "C", 17)
+        graph.addEdge("A" to "D", 19)
+        graph.addEdge("D" to "E", 23)
         val tree = graph.toTree()
 
         val subtreeAtB = tree.subtreeAt("B")
-        subtreeAtB.nodes shouldBe setOf("B", "E")
+        subtreeAtB.nodes shouldBe setOf("B", "C")
         subtreeAtB.edges shouldBe mapOf(
-            ("B" to "E") to 23,
+            ("B" to "C") to 17,
         )
         subtreeAtB.outs shouldBe mapOf(
-            "B" to setOf("E"),
-            "E" to emptySet(),
+            "B" to setOf("C"),
+            "C" to emptySet(),
         )
         subtreeAtB.ins shouldBe mapOf(
             "B" to emptySet(),
-            "E" to setOf("B"),
+            "C" to setOf("B"),
         )
         subtreeAtB.sourceNodes shouldBe setOf("B")
-        subtreeAtB.sinkNodes shouldBe setOf("E")
+        subtreeAtB.sinkNodes shouldBe setOf("C")
         val graphOfB = MutableGraph<String, Int>()
-        graphOfB.addEdge("B" to "E", 23)
+        graphOfB.addEdge("B" to "C", 17)
         graphOfB shouldBe subtreeAtB
         subtreeAtB shouldBe graphOfB
+
+        val subtreeAtC = tree.subtreeAt("C")
+        subtreeAtC.nodes shouldBe setOf("C")
+        subtreeAtC.edges shouldBe emptyMap()
+        subtreeAtC.outs shouldBe mapOf(
+            "C" to emptySet(),
+        )
+        subtreeAtC.ins shouldBe mapOf(
+            "C" to emptySet(),
+        )
+        subtreeAtC.sourceNodes shouldBe setOf("C")
+        subtreeAtC.sinkNodes shouldBe setOf("C")
+        val graphOfC = MutableGraph<String, Int>()
+        graphOfC.addNode("C")
+        graphOfC shouldBe subtreeAtC
+        subtreeAtC shouldBe graphOfC
+
+        val subtreeAtD = tree.subtreeAt("D")
+        subtreeAtD.nodes shouldBe setOf("D", "E")
+        subtreeAtD.edges shouldBe mapOf(
+            ("D" to "E") to 23,
+        )
+        subtreeAtD.outs shouldBe mapOf(
+            "D" to setOf("E"),
+            "E" to emptySet(),
+        )
+        subtreeAtD.ins shouldBe mapOf(
+            "D" to emptySet(),
+            "E" to setOf("D"),
+        )
+        subtreeAtD.sourceNodes shouldBe setOf("D")
+        subtreeAtD.sinkNodes shouldBe setOf("E")
+        val graphOfD = MutableGraph<String, Int>()
+        graphOfD.addEdge("D" to "E", 23)
+        graphOfD shouldBe subtreeAtD
+        subtreeAtD shouldBe graphOfD
 
         val subtreeAtE = tree.subtreeAt("E")
         subtreeAtE.nodes shouldBe setOf("E")
@@ -176,42 +212,6 @@ internal class TreeTest : FreeSpec({
         graphOfE.addNode("E")
         graphOfE shouldBe subtreeAtE
         subtreeAtE shouldBe graphOfE
-
-        val subtreeAtC = tree.subtreeAt("C")
-        subtreeAtC.nodes shouldBe setOf("C", "D")
-        subtreeAtC.edges shouldBe mapOf(
-            ("C" to "D") to 19,
-        )
-        subtreeAtC.outs shouldBe mapOf(
-            "C" to setOf("D"),
-            "D" to emptySet(),
-        )
-        subtreeAtC.ins shouldBe mapOf(
-            "C" to emptySet(),
-            "D" to setOf("C"),
-        )
-        subtreeAtC.sourceNodes shouldBe setOf("C")
-        subtreeAtC.sinkNodes shouldBe setOf("D")
-        val graphOfC = MutableGraph<String, Int>()
-        graphOfC.addEdge("C" to "D", 19)
-        graphOfC shouldBe subtreeAtC
-        subtreeAtC shouldBe graphOfC
-
-        val subtreeAtD = tree.subtreeAt("D")
-        subtreeAtD.nodes shouldBe setOf("D")
-        subtreeAtD.edges shouldBe emptyMap()
-        subtreeAtD.outs shouldBe mapOf(
-            "D" to emptySet(),
-        )
-        subtreeAtD.ins shouldBe mapOf(
-            "D" to emptySet(),
-        )
-        subtreeAtD.sourceNodes shouldBe setOf("D")
-        subtreeAtD.sinkNodes shouldBe setOf("D")
-        val graphOfD = MutableGraph<String, Int>()
-        graphOfD.addNode("D")
-        graphOfD shouldBe subtreeAtD
-        subtreeAtD shouldBe graphOfD
     }
 
     "subtreeAt on a subtree returns the correct nested subtree" {
