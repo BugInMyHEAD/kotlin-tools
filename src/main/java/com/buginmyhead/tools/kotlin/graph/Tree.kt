@@ -101,7 +101,7 @@ private class IndexedTree<N, W> private constructor(
     override val edges: Map<Pair<N, N>, W> = run {
         val rootIdx = index.nodeToIndex.getValue(root)
         val firstChildEdge = index.preOrderedInEdges.getOrElse(rootIdx) {
-            // When the [root] is the only node, there are no child edges.
+            // When [root] is the only node, there are no child edges.
             return@run emptyMap()
         }
         // -1 for exclusion of the in-edge of [root],
