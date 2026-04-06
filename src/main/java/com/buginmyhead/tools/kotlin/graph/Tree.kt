@@ -86,7 +86,7 @@ private class IndexedTree<N, W> private constructor(
     ) : this(
         index,
         0,
-        index.original.nodes.size - 1,
+        index.nodes.lastIndex,
         index.original.sourceNodes.single(),
         index.nodes.last(),
     )
