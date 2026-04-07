@@ -145,15 +145,15 @@ private class TreeIndex<N, W>(
     val original: AcyclicGraph<N, W>,
 ) {
 
+    val preOrderedInEdges: List<Pair<N, N>>
+    val edges: NavigableMap<Pair<N, N>, W>
+
     val nodes: List<N>
     val nodeToIndex: Map<N, Int>
     val nodeToSubtreeSize: Map<N, Int>
 
     val outs: NavigableMap<N, Set<N>>
     val ins: NavigableMap<N, Set<N>>
-
-    val preOrderedInEdges: List<Pair<N, N>>
-    val edges: NavigableMap<Pair<N, N>, W>
 
     // For sinkNodes sub-views: O(1) ceiling/floor lookup from pre-order index to sink-list index
     private val preOrderedSinkNodes: List<N>
@@ -177,13 +177,6 @@ private class TreeIndex<N, W>(
                 flatten = { node -> yieldAll(original.outs.getValue(node)) },
             ).toList().reversed()
 
-        nodes = preOrderedDfsPostContext.map(DfsPostContext<N, Int>::node)
-        nodeToIndex = nodes.withIndex().associate { it.value to it.index }
-        nodeToSubtreeSize = preOrderedDfsPostContext.associate { it.node to it.result }
-
-        outs = NavigableListMap(nodes.map { it to original.outs.getValue(it) })
-        ins = NavigableListMap(nodes.map { it to original.ins.getValue(it) })
-
         preOrderedInEdges =
             preOrderedDfsPostContext
                 .map { it.pathToRoot.take(2).toList() }
@@ -192,6 +185,13 @@ private class TreeIndex<N, W>(
                 .toList()
         edges =
             NavigableListMap(preOrderedInEdges.map { it to original.edges.getValue(it) })
+
+        nodes = preOrderedDfsPostContext.map(DfsPostContext<N, Int>::node)
+        nodeToIndex = nodes.withIndex().associate { it.value to it.index }
+        nodeToSubtreeSize = preOrderedDfsPostContext.associate { it.node to it.result }
+
+        outs = NavigableListMap(nodes.map { it to original.outs.getValue(it) })
+        ins = NavigableListMap(nodes.map { it to original.ins.getValue(it) })
 
         // Sink nodes in pre-order with ceiling/floor index arrays for O(1) subtree sink lookup
         preOrderedSinkNodes = nodes.filter { it in original.sinkNodes }
