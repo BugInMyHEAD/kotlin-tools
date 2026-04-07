@@ -160,7 +160,6 @@ private class TreeIndex<N, W>(
     val sinkNodes: NavigableSet<N>
     val nodeToFirstSink: Map<N, N>
     private val ceilingSinkIndex: IntArray
-    private val floorSinkIndex: IntArray
 
     init {
         val root = original.sourceNodes.single()
@@ -198,37 +197,18 @@ private class TreeIndex<N, W>(
         preOrderedSinkNodes = nodes.filter { it in original.sinkNodes }
         sinkNodes = navigableListSetFrom(preOrderedSinkNodes)
 
-        val sinkCount = preOrderedSinkNodes.size
-        val sinkIndices = preOrderedSinkNodes.map(nodeToIndex::getValue)
-
-        // ceilingSinkIndex[i] = smallest j such that sinkIndices[j] >= i
         ceilingSinkIndex = IntArray(size).also { ceiling ->
-            var j = sinkCount - 1
-            var next = sinkCount
+            var lastSinkIndex = size - 1
             for (i in (size - 1) downTo 0) {
-                if (j >= 0 && sinkIndices[j] == i) {
-                    next = j
-                    j--
+                if (nodes[i] in original.sinkNodes) {
+                    lastSinkIndex = i
                 }
-                ceiling[i] = next
+                ceiling[i] = lastSinkIndex
             }
         }
 
         nodeToFirstSink = nodes.associateWith { node ->
-            preOrderedSinkNodes[ceilingSinkIndex[nodeToIndex.getValue(node)]]
-        }
-
-        // floorSinkIndex[i] = largest j such that sinkIndices[j] <= i
-        floorSinkIndex = IntArray(size).also { floor ->
-            var j = 0
-            var prev = -1
-            for (i in 0 ..< size) {
-                if (j < sinkCount && sinkIndices[j] == i) {
-                    prev = j
-                    j++
-                }
-                floor[i] = prev
-            }
+            nodes[ceilingSinkIndex[nodeToIndex.getValue(node)]]
         }
     }
 
