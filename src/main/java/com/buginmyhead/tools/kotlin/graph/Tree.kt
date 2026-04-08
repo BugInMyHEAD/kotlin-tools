@@ -82,8 +82,6 @@ private class IndexedTree<N, W> private constructor(
 
     override val sourceNodes: Set<N> = setOf(root)
 
-    private val last: N get() = index.nodeToLast.getValue(root)
-
     override val edges: Map<Pair<N, N>, W> = run {
         val firstChildEdge = index.nodeToFirstChildEdge.getOrElse(root) {
             // When [root] is a leaf node, there are no child edges.
@@ -108,6 +106,8 @@ private class IndexedTree<N, W> private constructor(
         val firstSink = index.nodeToFirstSink.getValue(root)
         index.sinkNodes.subSet(firstSink, true, last, true)
     }
+
+    private val last: N get() = index.nodeToLast.getValue(root)
 
     override fun equals(other: Any?): Boolean =
         this === other
