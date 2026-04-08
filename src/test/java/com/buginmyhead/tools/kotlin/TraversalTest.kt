@@ -2,7 +2,6 @@ package com.buginmyhead.tools.kotlin
 
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.assertThrows
 
 internal class TraversalTest : FreeSpec({
     "bfs cycleSafe true remove duplicates in roots" {
@@ -59,27 +58,6 @@ internal class TraversalTest : FreeSpec({
         result shouldBe listOf("A", "B")
     }
 
-    "dfsPost yields nodes and freeze captures path" {
-        val frozen = dfsPost(
-            cycleSafe = true,
-            roots = sequenceOf(13),
-            initial = { 17 },
-            aggregate = { r, _ -> r },
-        ) {
-            when (it) {
-                13 -> {
-                    yield(19)
-                    yield(23)
-                }
-                else -> Unit
-            }
-        }.map { it.freeze() }.toList()
-
-        frozen.map { it.node } shouldBe listOf(19, 23, 13)
-        frozen.map { it.result } shouldBe listOf(17, 17, 17)
-        frozen.map { it.path } shouldBe listOf(listOf(13, 19), listOf(13, 23), listOf(13))
-    }
-
     "dfsPost pathToRoot captures ancestor chain from current node to root" {
         val paths = dfsPost(
             cycleSafe = true,
@@ -103,22 +81,5 @@ internal class TraversalTest : FreeSpec({
             listOf(23, 13),
             listOf(13),
         )
-    }
-
-    "dfsPost freeze after sequence advanced throws" {
-        val staleContexts = dfsPost(
-            cycleSafe = true,
-            roots = sequenceOf(13),
-            initial = { 17 },
-            aggregate = { r, _ -> r },
-        ) {
-            when (it) {
-                13 -> yield(19)
-                else -> Unit
-            }
-        }.toList()
-        // after full iteration the last context is also terminated
-        assertThrows<IllegalStateException> { staleContexts[0].freeze() }
-        assertThrows<IllegalStateException> { staleContexts[1].freeze() }
     }
 })

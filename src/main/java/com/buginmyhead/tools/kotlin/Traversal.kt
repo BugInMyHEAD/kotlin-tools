@@ -81,8 +81,6 @@ fun <T, R> dfsPost(
     aggregate: (parent: R, child: R) -> R,
     flatten: suspend SequenceScope<T>.(T) -> Unit
 ): Sequence<DfsPostContext<T, R>> = sequence {
-    var terminated = false
-
     val visited = if (cycleSafe) mutableSetOf<T>() else fakeMutableSet()
     val path = mutableListOf<T>()
     val stack = ArrayDeque<DfsPostContext<T, R>>()
@@ -91,7 +89,6 @@ fun <T, R> dfsPost(
         .onEach(path::addLast)
         .map {
             DfsPostContext(
-                { terminated },
                 it,
                 null,
                 initial(it),
@@ -108,7 +105,6 @@ fun <T, R> dfsPost(
             if (visited.add(child)) {
                 path.addLast(child)
                 stack.addLast(DfsPostContext(
-                    { terminated },
                     child,
                     context,
                     initial(child),
@@ -123,12 +119,9 @@ fun <T, R> dfsPost(
             path.removeLast()
         }
     }
-
-    terminated = true
 }
 
 class DfsPostContext<T, R> internal constructor(
-    private val isTerminated: () -> Boolean,
     val node: T,
     internal val parent: DfsPostContext<T, R>?,
     initial: R,
@@ -143,26 +136,4 @@ class DfsPostContext<T, R> internal constructor(
         generateSequence(this) { it.parent }
             .map(DfsPostContext<T, R>::node)
 
-    /**
-     * This must be called before the sequence advances to capture a snapshot of the current context.
-     *
-     * @return Snapshot of the current context that is safe to use after the sequence has advanced.
-     */
-    fun freeze(): FrozenDfsPostContext<T, R> {
-        check(!isTerminated()) { "Cannot freeze after the sequence has advanced." }
-        return FrozenDfsPostContext(
-            node,
-            parent,
-            result,
-            mutablePath.toList(),
-        )
-    }
-
 }
-
-class FrozenDfsPostContext<T, R> internal constructor(
-    val node: T,
-    val parent: DfsPostContext<T, R>?,
-    val result: R,
-    val path: List<T>
-)
