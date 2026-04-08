@@ -24,12 +24,12 @@ interface Tree<N, W> : AcyclicGraph<N, W> {
         fun <N, W> Graph<N, W>.toTree(): Tree<N, W> = try {
             this as? Tree<N, W>
                 ?: run {
-                    val acyclic = toAcyclicGraph()
-                    if (acyclic.sourceNodes.size != 1)
+                    val original = toAcyclicGraph()
+                    if (original.sourceNodes.size != 1)
                         throw NotATreeException("Multiple root node candidates found.")
-                    if (acyclic.ins.values.any { it.size > 1 })
+                    if (original.ins.values.any { it.size > 1 })
                         throw NotATreeException("A node with multiple parents found.")
-                    IndexedTree(acyclic)
+                    IndexedTree(original)
                 }
         } catch (cause: CyclicGraphException) {
             throw NotATreeException(cause)
