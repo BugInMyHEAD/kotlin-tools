@@ -21,19 +21,18 @@ interface Tree<N, W> : AcyclicGraph<N, W> {
     companion object {
 
         @Throws(NotATreeException::class)
-        fun <N, W> Graph<N, W>.toTree(): Tree<N, W> = try {
+        fun <N, W> Graph<N, W>.toTree(): Tree<N, W> =
             this as? Tree<N, W>
-                ?: run {
+                ?: try {
                     val original = toAcyclicGraph()
                     if (original.sourceNodes.size != 1)
                         throw NotATreeException("Multiple root node candidates found.")
                     if (original.ins.values.any { it.size > 1 })
                         throw NotATreeException("A node with multiple parents found.")
                     IndexedTree(original)
+                } catch (cause: CyclicGraphException) {
+                    throw NotATreeException(cause)
                 }
-        } catch (cause: CyclicGraphException) {
-            throw NotATreeException(cause)
-        }
 
         inline val <N> Tree<N, *>.root: N get() = sourceNodes.single()
 
