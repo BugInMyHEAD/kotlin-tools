@@ -1,7 +1,7 @@
 package com.buginmyhead.tools.kotlin.graph
 
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.isEmpty
-import com.buginmyhead.tools.kotlin.graph.Graph.Companion.toGraph
+import com.buginmyhead.tools.kotlin.graph.ImmutableGraph.Companion.toGraph
 
 /**
  * Represents a directed acyclic graph structure.
