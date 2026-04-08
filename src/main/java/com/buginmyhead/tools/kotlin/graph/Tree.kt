@@ -124,10 +124,7 @@ private class IndexedTree<N, W> private constructor(
     override fun hashCode(): Int = Objects.hash(edges, sourceNodes, sinkNodes)
 
     /** Creates a subtree rooted at [node] in O(1) by narrowing the index range. */
-    fun subtreeAt(node: N) = IndexedTree(
-        index,
-        node,
-    )
+    fun subtreeAt(node: N) = IndexedTree(index, node)
 
 }
 
@@ -155,11 +152,6 @@ private class TreeIndex<N, W>(
 
     init {
         val root = original.sourceNodes.single()
-        val size = original.nodes.size
-
-        val stack = ArrayDeque<N>(size)
-        stack.addLast(root)
-
         val preOrderedDfsPostContext =
             dfsPost(
                 cycleSafe = false,
