@@ -86,15 +86,12 @@ private class IndexedTree<N, W> private constructor(
     }
 
     override val edges: Map<Pair<N, N>, W> = run {
-        val rootIdx = index.nodeToIndex.getValue(root)
-        val firstChildEdge = index.preOrderedInEdges.getOrElse(rootIdx) {
-            // When [root] is the only node, there are no child edges.
+        val firstChildEdge = index.nodeToFirstChildEdge.getOrElse(root) {
+            // When [root] is a leaf node, there are no child edges.
             return@run emptyMap()
         }
-        // -1 for exclusion of the in-edge of [root],
-        //  and -1 for [lastInEdge] being inclusive in `subMap` operation.
-        val lastIdx = rootIdx + index.nodeToSubtreeSize.getValue(root) - 2
-        val lastInEdge = index.preOrderedInEdges[lastIdx]
+        val parentOfLast = index.ins.getValue(last).single()
+        val lastInEdge = parentOfLast to last
         index.edges.subMap(firstChildEdge, true, lastInEdge, true)
     }
 
@@ -143,10 +140,10 @@ private class TreeIndex<N, W>(
     val original: AcyclicGraph<N, W>,
 ) {
 
-    val preOrderedInEdges: List<Pair<N, N>>
     val edges: NavigableMap<Pair<N, N>, W>
-
     val nodes: List<N>
+
+    val nodeToFirstChildEdge: Map<N, Pair<N, N>>
     val nodeToIndex: Map<N, Int>
     val nodeToSubtreeSize: Map<N, Int>
 
@@ -172,16 +169,21 @@ private class TreeIndex<N, W>(
                 flatten = { node -> yieldAll(original.outs.getValue(node)) },
             ).toList().asReversed()
 
-        preOrderedInEdges =
+        val preOrderedInEdges =
             preOrderedDfsPostContext
+                .drop(1) // The first node is the root, which does not have an in-edge.
                 .map { it.pathToRoot.take(2).toList() }
-                .filter { it.size == 2 }
                 .map { (child, parent) -> parent to child }
                 .toList()
-        edges =
-            NavigableListMap(preOrderedInEdges.map { it to original.edges.getValue(it) })
 
+        edges = NavigableListMap(preOrderedInEdges.map { it to original.edges.getValue(it) })
         nodes = preOrderedDfsPostContext.map(DfsPostContext<N, Int>::node)
+
+        // Parent nodes are mapped to their first child edge
+        //  since [preOrderedInEdges] has one less element than [nodes].
+        nodeToFirstChildEdge =
+            (nodes zip preOrderedInEdges).toMap().filterKeys { it !in original.sinkNodes }
+
         nodeToIndex = nodes.withIndex().associate { it.value to it.index }
         nodeToSubtreeSize = preOrderedDfsPostContext.associate { it.node to it.result }
 
