@@ -154,7 +154,7 @@ private class TreeIndex<N, W>(
                 flatten = { node -> yieldAll(original.outs.getValue(node)) },
             ).toList().asReversed()
 
-        val preOrderedInEdges =
+        val inEdges =
             preOrderedDfsPostContext
                 .drop(1) // The first node is the root, which does not have an in-edge.
                 .map { it.pathToRoot.take(2).toList() }
@@ -163,7 +163,7 @@ private class TreeIndex<N, W>(
 
         val nodes = preOrderedDfsPostContext.map(DfsPostContext<N, Int>::node)
 
-        edges = NavigableListMap(preOrderedInEdges.map { it to original.edges.getValue(it) })
+        edges = NavigableListMap(inEdges.map { it to original.edges.getValue(it) })
         outs = NavigableListMap(nodes.map { it to original.outs.getValue(it) })
         ins = NavigableListMap(nodes.map { it to original.ins.getValue(it) })
         sinkNodes = navigableListSetFrom(nodes.filter { it in original.sinkNodes })
@@ -176,7 +176,7 @@ private class TreeIndex<N, W>(
         // Parent nodes are mapped to their first child edge
         //  since [preOrderedInEdges] has one less element than [nodes].
         nodeToFirstChildEdge =
-            (nodes zip preOrderedInEdges).toMap().filterKeys { it !in original.sinkNodes }
+            (nodes zip inEdges).toMap().filterKeys { it !in original.sinkNodes }
 
         val firstSink =
             nodes.asReversed()
