@@ -18,14 +18,14 @@ interface ImmutableGraph<N, W> : Graph<N, W> {
 
         /**
          * @return itself if it is immutable,
-         *  otherwise a new immutable [Graph] copying contents of the receiver.
+         *  otherwise a new [ImmutableGraph] copying contents of the receiver.
          */
         fun <N, W> Graph<N, W>.toGraph(): ImmutableGraph<N, W> =
             this as? ImmutableGraph<N, W>
                 ?: toGraph({ node -> node }, { _, _, weight, _, _ -> weight })
 
         /**
-         * @return A new immutable [Graph] transforming contents of the receiver.
+         * @return A new immutable [ImmutableGraph] transforming contents of the receiver.
          */
         fun <N, W, M, V> Graph<N, W>.toGraph(
             nodeTransform: (N) -> M,
