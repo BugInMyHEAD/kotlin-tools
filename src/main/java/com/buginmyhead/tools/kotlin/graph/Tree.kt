@@ -110,7 +110,6 @@ private class IndexedTree<N, W> private constructor(
 
     override val sourceNodes: Set<N> = setOf(root)
 
-    /** View backed by ceiling/floor sink node lookup. No copy. */
     override val sinkNodes: Set<N> = run {
         val firstSink = index.nodeToFirstSink.getValue(root)
         index.sinkNodes.subSet(firstSink, true, last, true)
