@@ -168,10 +168,11 @@ private class TreeIndex<N, W>(
         ins = NavigableListMap(nodes.map { it to original.ins.getValue(it) })
         sinkNodes = navigableListSetFrom(nodes.filter { it in original.sinkNodes })
 
-        val nodeToSubtreeSize = preOrderedDfsPostContext.associate { it.node to it.result }
-        nodeToLast =
-            nodes.withIndex()
-                .associate { (i, node) -> node to nodes[i + nodeToSubtreeSize.getValue(node) - 1] }
+        val subtreeSizes =
+            preOrderedDfsPostContext.map(DfsPostContext<N, Int>::result)
+        val lastNodes =
+            subtreeSizes.withIndex().map { (i, subtreeSize) -> nodes[i + subtreeSize - 1] }
+        nodeToLast = (nodes zip lastNodes).toMap()
 
         // Parent nodes are mapped to their first child edge
         //  since [preOrderedInEdges] has one less element than [nodes].
