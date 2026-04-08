@@ -80,10 +80,9 @@ private class IndexedTree<N, W> private constructor(
         original.sourceNodes.single(),
     )
 
-    private val last: N = run {
-        val rootIdx = index.nodeToIndex.getValue(root)
-        index.nodes[rootIdx + index.nodeToSubtreeSize.getValue(root) - 1]
-    }
+    override val sourceNodes: Set<N> = setOf(root)
+
+    private val last: N get() = index.nodeToLast.getValue(root)
 
     override val edges: Map<Pair<N, N>, W> = run {
         val firstChildEdge = index.nodeToFirstChildEdge.getOrElse(root) {
@@ -104,8 +103,6 @@ private class IndexedTree<N, W> private constructor(
         )
 
     override val nodes: Set<N> = outs.keys
-
-    override val sourceNodes: Set<N> = setOf(root)
 
     override val sinkNodes: Set<N> = run {
         val firstSink = index.nodeToFirstSink.getValue(root)
@@ -138,16 +135,12 @@ private class TreeIndex<N, W>(
 ) {
 
     val edges: NavigableMap<Pair<N, N>, W>
-    val nodes: List<N>
-
-    val nodeToFirstChildEdge: Map<N, Pair<N, N>>
-    val nodeToIndex: Map<N, Int>
-    val nodeToSubtreeSize: Map<N, Int>
-
     val outs: NavigableMap<N, Set<N>>
     val ins: NavigableMap<N, Set<N>>
-
     val sinkNodes: NavigableSet<N>
+
+    val nodeToLast: Map<N, N>
+    val nodeToFirstChildEdge: Map<N, Pair<N, N>>
     val nodeToFirstSink: Map<N, N>
 
     init {
@@ -168,21 +161,22 @@ private class TreeIndex<N, W>(
                 .map { (child, parent) -> parent to child }
                 .toList()
 
+        val nodes = preOrderedDfsPostContext.map(DfsPostContext<N, Int>::node)
+
         edges = NavigableListMap(preOrderedInEdges.map { it to original.edges.getValue(it) })
-        nodes = preOrderedDfsPostContext.map(DfsPostContext<N, Int>::node)
+        outs = NavigableListMap(nodes.map { it to original.outs.getValue(it) })
+        ins = NavigableListMap(nodes.map { it to original.ins.getValue(it) })
+        sinkNodes = navigableListSetFrom(nodes.filter { it in original.sinkNodes })
+
+        val nodeToSubtreeSize = preOrderedDfsPostContext.associate { it.node to it.result }
+        nodeToLast =
+            nodes.withIndex()
+                .associate { (i, node) -> node to nodes[i + nodeToSubtreeSize.getValue(node) - 1] }
 
         // Parent nodes are mapped to their first child edge
         //  since [preOrderedInEdges] has one less element than [nodes].
         nodeToFirstChildEdge =
             (nodes zip preOrderedInEdges).toMap().filterKeys { it !in original.sinkNodes }
-
-        nodeToIndex = nodes.withIndex().associate { it.value to it.index }
-        nodeToSubtreeSize = preOrderedDfsPostContext.associate { it.node to it.result }
-
-        outs = NavigableListMap(nodes.map { it to original.outs.getValue(it) })
-        ins = NavigableListMap(nodes.map { it to original.ins.getValue(it) })
-
-        sinkNodes = navigableListSetFrom(nodes.filter { it in original.sinkNodes })
 
         val firstSink =
             nodes.asReversed()
