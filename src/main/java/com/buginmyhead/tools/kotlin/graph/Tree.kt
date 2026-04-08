@@ -170,7 +170,7 @@ private class TreeIndex<N, W>(
                 initial = { 1 },
                 aggregate = { parent, child -> parent + child },
                 flatten = { node -> yieldAll(original.outs.getValue(node)) },
-            ).toList().reversed()
+            ).toList().asReversed()
 
         preOrderedInEdges =
             preOrderedDfsPostContext
