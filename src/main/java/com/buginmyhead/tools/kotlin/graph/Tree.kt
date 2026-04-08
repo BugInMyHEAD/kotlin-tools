@@ -155,11 +155,8 @@ private class TreeIndex<N, W>(
     val outs: NavigableMap<N, Set<N>>
     val ins: NavigableMap<N, Set<N>>
 
-    // For sinkNodes sub-views: O(1) ceiling/floor lookup from pre-order index to sink-list index
-    private val preOrderedSinkNodes: List<N>
     val sinkNodes: NavigableSet<N>
     val nodeToFirstSink: Map<N, N>
-    private val ceilingSinkIndex: IntArray
 
     init {
         val root = original.sourceNodes.single()
@@ -193,23 +190,15 @@ private class TreeIndex<N, W>(
         outs = NavigableListMap(nodes.map { it to original.outs.getValue(it) })
         ins = NavigableListMap(nodes.map { it to original.ins.getValue(it) })
 
-        // Sink nodes in pre-order with ceiling/floor index arrays for O(1) subtree sink lookup
-        preOrderedSinkNodes = nodes.filter { it in original.sinkNodes }
-        sinkNodes = navigableListSetFrom(preOrderedSinkNodes)
+        sinkNodes = navigableListSetFrom(nodes.filter { it in original.sinkNodes })
 
-        ceilingSinkIndex = IntArray(size).also { ceiling ->
-            var lastSinkIndex = size - 1
-            for (i in (size - 1) downTo 0) {
-                if (nodes[i] in original.sinkNodes) {
-                    lastSinkIndex = i
+        val firstSink =
+            nodes.asReversed()
+                .runningReduce { lastSink, node ->
+                    if (node in original.sinkNodes) node else lastSink
                 }
-                ceiling[i] = lastSinkIndex
-            }
-        }
-
-        nodeToFirstSink = nodes.associateWith { node ->
-            nodes[ceilingSinkIndex[nodeToIndex.getValue(node)]]
-        }
+                .asReversed()
+        nodeToFirstSink = (nodes zip firstSink).toMap()
     }
 
 }
