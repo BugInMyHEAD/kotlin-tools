@@ -82,18 +82,15 @@ fun <T, R> dfsPost(
     flatten: suspend SequenceScope<T>.(T) -> Unit
 ): Sequence<DfsPostContext<T, R>> = sequence {
     val visited = if (cycleSafe) mutableSetOf<T>() else fakeMutableSet()
-    val path = mutableListOf<T>()
     val stack = ArrayDeque<DfsPostContext<T, R>>()
     roots
         .filter(visited::add)
-        .onEach(path::addLast)
         .map {
             DfsPostContext(
                 it,
                 null,
                 initial(it),
                 sequence { flatten(it) }.iterator(),
-                path,
             )
         }
         .forEach(stack::addLast)
@@ -103,20 +100,17 @@ fun <T, R> dfsPost(
         if (context.iterator.hasNext()) {
             val child = context.iterator.next()
             if (visited.add(child)) {
-                path.addLast(child)
                 stack.addLast(DfsPostContext(
                     child,
                     context,
                     initial(child),
                     sequence { flatten(child) }.iterator(),
-                    path,
                 ))
             }
         } else {
             context.parent?.result = aggregate(context.parent.result, context.result)
             yield(context)
             stack.removeLast()
-            path.removeLast()
         }
     }
 }
@@ -126,7 +120,6 @@ class DfsPostContext<T, R> internal constructor(
     internal val parent: DfsPostContext<T, R>?,
     initial: R,
     internal val iterator: Iterator<T>,
-    private val mutablePath: List<T>,
 ) {
 
     var result: R = initial
