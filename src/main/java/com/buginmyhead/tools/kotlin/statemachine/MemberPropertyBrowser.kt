@@ -14,17 +14,13 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.jvmErasure
 
-// inline fun <reified T : Any> Any.fieldPropertyValues(): Collection<T> =
-//     fieldPropertyValues(T::class)
-
+@Suppress("UNCHECKED_CAST")
 fun Any.fieldPropertyValues(): Collection<Any> =
     this::class.memberProperties
         .filter { it.returnType.jvmErasure.hasAnnotation<StateMachine.State>() }
         .mapNotNull { (it as KProperty1<Any, Any?>).get(this) }
 
-// inline fun <reified T : Any> T.collectionPropertyValues(): Collection<T> =
-//     collectionPropertyValues(T::class)
-
+@Suppress("UNCHECKED_CAST")
 fun Any.collectionPropertyValues(): Collection<Any> =
     this::class.memberProperties
         .filter {
