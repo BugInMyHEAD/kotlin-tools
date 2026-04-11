@@ -33,7 +33,7 @@ interface TypeSafeBroker {
      *
      * @param V the type of the value to be associated with the key
      */
-    interface Key<V : Any>
+    interface Key<out V : Any>
 
     companion object {
 
