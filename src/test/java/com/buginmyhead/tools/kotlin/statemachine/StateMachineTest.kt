@@ -7,7 +7,7 @@ internal class StateMachineTest : FreeSpec({
     "pushEvent updates state" {
         val a = State()
         val b = State()
-        val transitionFunction = TransitionFunction.WithScope { states, root, event ->
+        val transitionFunction = TransitionFunction.WithScope<State> { states, root, event ->
             b
         }
         val machine = StateMachine(a, transitionFunction)
@@ -18,12 +18,12 @@ internal class StateMachineTest : FreeSpec({
     }
 
     "default implementation browses all nested field states" {
-        var statesCaptured: List<State>? = null
+        var statesCaptured: List<Any>? = null
 
         val c = State()
         val b = State(child = c)
         val a = State(child = b)
-        val transitionFunction = TransitionFunction.WithScope { states, root, event ->
+        val transitionFunction = TransitionFunction.WithScope<State> { states, root, event ->
             statesCaptured = states
             root
         }
@@ -35,12 +35,12 @@ internal class StateMachineTest : FreeSpec({
     }
 
     "default implementation browses all nested states in collection" {
-        var statesCaptured: List<State>? = null
+        var statesCaptured: List<Any>? = null
 
         val c = State()
         val b = State(children = setOf(c))
         val a = State(children = listOf(b))
-        val transitionFunction = TransitionFunction.WithScope { states, root, event ->
+        val transitionFunction = TransitionFunction.WithScope<State> { states, root, event ->
             statesCaptured = states
             root
         }
@@ -52,12 +52,12 @@ internal class StateMachineTest : FreeSpec({
     }
 
     "onEvent receives ancestors from sender to root (sender first, root last)" {
-        var statesCaptured: List<State>? = null
+        var statesCaptured: List<Any>? = null
 
         val c = State()
         val b = State(children = listOf(c))
         val a = State(child = b)
-        val transitionFunction = TransitionFunction.WithScope { states, root, event ->
+        val transitionFunction = TransitionFunction.WithScope<State> { states, root, event ->
             statesCaptured = states
             root
         }
@@ -76,9 +76,9 @@ internal class StateMachineTest : FreeSpec({
     "pushEffect stores effect retrievable by pollEffect and is removed after polling" {
         val b = State()
         val a = State(child = b)
-        val transitionFunction = TransitionFunction.WithScope { states, root, event ->
+        val transitionFunction = TransitionFunction.WithScope<State> { states, root, event ->
              states.forEach { state ->
-                 stateToEffect[state] = event as Int
+                 stateToEffect[state as TypeSafeBroker.Key<*>] = event as Int
              }
              root
         }
@@ -100,8 +100,8 @@ internal class StateMachineTest : FreeSpec({
     "obtainContext creates context with current state and delegates" {
         val b = State()
         val a = State(child = b)
-        val transitionFunction = TransitionFunction.WithScope { states, root, event ->
-             stateToEffect[states.first()] = event as Int
+        val transitionFunction = TransitionFunction.WithScope<State> { states, root, event ->
+             stateToEffect[states.first() as TypeSafeBroker.Key<*>] = event as Int
              root
         }
         val machine = StateMachine(a, transitionFunction)
@@ -113,6 +113,7 @@ internal class StateMachineTest : FreeSpec({
     }
 }) {
 
+    @StateMachine.State
     class State(
         val child: State? = null,
         val children: Collection<State> = emptyList()

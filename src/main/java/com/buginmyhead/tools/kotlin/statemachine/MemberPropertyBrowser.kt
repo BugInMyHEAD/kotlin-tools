@@ -7,41 +7,35 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.KVariance
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.jvmErasure
 
-inline fun <reified T : Any> T.fieldPropertyValues(): Collection<T> =
-    fieldPropertyValues(T::class)
+// inline fun <reified T : Any> Any.fieldPropertyValues(): Collection<T> =
+//     fieldPropertyValues(T::class)
 
-fun <T : Any> T.fieldPropertyValues(kClass: KClass<T>): Collection<T> =
+fun Any.fieldPropertyValues(): Collection<Any> =
     this::class.memberProperties
-        .filter { it.returnType.jvmErasure.isSubclassOf(kClass) }
-        .filterIsInstance<KProperty1<T, T?>>()
-        .mapNotNull { it.get(this) }
+        .filter { it.returnType.jvmErasure.hasAnnotation<StateMachine.State>() }
+        .mapNotNull { (it as KProperty1<Any, Any?>).get(this) }
 
-inline fun <reified T : Any> T.collectionPropertyValues(): Collection<T> =
-    collectionPropertyValues(T::class)
+// inline fun <reified T : Any> T.collectionPropertyValues(): Collection<T> =
+//     collectionPropertyValues(T::class)
 
-fun <T : Any> T.collectionPropertyValues(kClass: KClass<T>): Collection<T> =
+fun Any.collectionPropertyValues(): Collection<Any> =
     this::class.memberProperties
         .filter {
-            it.returnType.isSubtypeOf(
-                Collection::class.createType(
-                    arguments = listOf(
-                        KTypeProjection(
-                            KVariance.OUT,
-                            kClass.starProjectedType
-                        ),
-                    ),
-                    nullable = false,
-                )
-            )
+            it.returnType.jvmErasure.isSubclassOf(Collection::class)
+                    && (
+                    it.hasAnnotation<StateMachine.State>()
+                            || it.returnType.arguments[0].type?.jvmErasure?.hasAnnotation<StateMachine.State>() == true
+                    )
         }
-        .filterIsInstance<KProperty1<T, Collection<T>>>()
-        .flatMap { it.get(this) }
+        .flatMap { (it as KProperty1<Any, Collection<Any?>>).get(this) }
+        .filterNotNull()
 
 inline fun <reified T : Any> T.mapPropertyValues(): Collection<T> =
     mapPropertyValues(T::class)

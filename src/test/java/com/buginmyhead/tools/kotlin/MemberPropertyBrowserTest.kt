@@ -1,5 +1,6 @@
 package com.buginmyhead.tools.kotlin
 
+import com.buginmyhead.tools.kotlin.statemachine.StateMachine
 import com.buginmyhead.tools.kotlin.statemachine.collectionPropertyValues
 import com.buginmyhead.tools.kotlin.statemachine.fieldPropertyValues
 import com.buginmyhead.tools.kotlin.statemachine.mapPropertyValues
@@ -24,13 +25,13 @@ internal class MemberPropertyBrowserTest : FreeSpec({
     )
 
     "fieldPropertyValues collects all values of field properties" {
-        root.fieldPropertyValues().map(Node::value) shouldContainAll listOf(17)
+        root.fieldPropertyValues() shouldContainAll listOf(root.child)
         root.child!!.fieldPropertyValues() shouldBe emptyList()
     }
 
     "collectionPropertyValues collects all values of member properties" {
         root.collectionPropertyValues() shouldBe emptyList()
-        root.child!!.collectionPropertyValues().map(Node::value) shouldContainAll listOf(19, 23)
+        root.child!!.collectionPropertyValues() shouldContainAll root.child.children
     }
 
     "mapPropertyValues collects all values of map member properties" {
@@ -40,6 +41,7 @@ internal class MemberPropertyBrowserTest : FreeSpec({
 
 }) {
 
+    @StateMachine.State
     data class Node(
         val value: Int,
         val child: Node? = null,

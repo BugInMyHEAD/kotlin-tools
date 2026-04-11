@@ -9,25 +9,23 @@ import java.util.Objects
 
 /**
  * @param S The type of the root state.
- * @param T The type for the root and all nested states.
  * @param transitionFunction A pure function to determine the next state and effects
  *  when an event is pushed.
  * @param nestedStatesAt How to browse first-depth nested states of the [state].
  *  This is repetitively executed to build the [stateTree].
  *  You can consider using such as [fieldPropertyValues] and/or [collectionPropertyValues].
- *
- * @see Companion.invoke
  */
-class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
+class StateMachine<S : TypeSafeBroker.Key<*>>(
     initialState: S,
-    private val transitionFunction: TransitionFunction<S, T>,
-    private val nestedStatesAt: (state: T) -> Iterable<T>,
+    private val transitionFunction: TransitionFunction<S>,
+    private val nestedStatesAt: (state: Any) -> Iterable<Any> =
+        { it.fieldPropertyValues() + it.collectionPropertyValues() },
 ) {
 
     /**
      * To find the path of states from the sender to the root state when an event is pushed.
      */
-    private lateinit var stateTree: Tree<T, Unit>
+    private lateinit var stateTree: Tree<Any, Unit>
 
     var state: S
         @Suppress("UNCHECKED_CAST")
@@ -45,7 +43,7 @@ class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
 
     private var stateToEffect = TypeSafeBroker()
 
-    fun pushEvent(sender: T, event: Any) {
+    fun pushEvent(sender: Any, event: Any) {
         val transition =
             transitionFunction.onEvent(stateTree.ancestorsFrom(sender).toList(), state, event)
         state = transition.state
@@ -55,10 +53,9 @@ class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
     fun <T : TypeSafeBroker.Key<G>, G : Any> pollEffect(receiver: T): G? =
         stateToEffect.poll(receiver)
 
-    @Suppress("UNCHECKED_CAST")
     fun <U : TypeSafeBroker.Key<H>, H : Any> obtainContext(state: U) = Context(
         state,
-        pushEvent = { state, event -> pushEvent(state as T, event) },
+        pushEvent = { state, event -> pushEvent(state, event) },
         pollEffect = { state -> pollEffect(state as TypeSafeBroker.Key<*>) },
     )
 
@@ -89,25 +86,6 @@ class StateMachine<S : T, T : TypeSafeBroker.Key<*>>(
 
     }
 
-    companion object {
-
-        /**
-         * @param nestedStatesAt The default argument uses
-         *  [fieldPropertyValues] and [collectionPropertyValues] to find nested states recursively.
-         *
-         * @see [StateMachine.nestedStatesAt]
-         */
-        inline operator fun <S : T, reified T : TypeSafeBroker.Key<*>> invoke(
-            initialState: S,
-            transitionFunction: TransitionFunction<S, T>,
-            noinline nestedStatesAt: (state: T) -> Iterable<T> =
-                { it.fieldPropertyValues() + it.collectionPropertyValues() },
-        ) = StateMachine(
-            initialState,
-            transitionFunction,
-            nestedStatesAt,
-        )
-
-    }
+    annotation class State
 
 }
