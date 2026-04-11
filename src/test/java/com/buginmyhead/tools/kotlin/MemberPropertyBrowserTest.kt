@@ -36,7 +36,7 @@ internal class MemberPropertyBrowserTest : FreeSpec({
 
     "mapPropertyValues collects all values of map member properties" {
         root.mapPropertyValues() shouldBe emptyList()
-        root.child!!.mapPropertyValues().map(Node::value) shouldContainAll listOf(29, 31)
+        root.child!!.mapPropertyValues() shouldContainAll root.child.stringToChild.values
     }
 
 }) {
