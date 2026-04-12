@@ -105,7 +105,7 @@ internal class StateMachineTest : FreeSpec({
              root
         }
         val machine = StateMachine(a, transitionFunction)
-        val context = machine.obtainContext(machine.state)
+        val context = machine.obtainContext()
 
         context.pushEvent(13)
         context.pollEffect() shouldBe 13

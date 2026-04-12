@@ -27,8 +27,8 @@ class StateMachine<S : TypeSafeBroker.Key<*>>(
      */
     private lateinit var stateTree: Tree<Any, Unit>
 
+    @Suppress("UNCHECKED_CAST")
     var state: S
-        @Suppress("UNCHECKED_CAST")
         get() = stateTree.root as S
         private set(value) {
             stateTree =
@@ -53,7 +53,7 @@ class StateMachine<S : TypeSafeBroker.Key<*>>(
     fun <T : TypeSafeBroker.Key<G>, G : Any> pollEffect(receiver: T): G? =
         stateToEffect.poll(receiver)
 
-    fun <U : TypeSafeBroker.Key<H>, H : Any> obtainContext(state: U) = Context(
+    fun obtainContext() = Context(
         state,
         pushEvent = { state, event -> pushEvent(state, event) },
         pollEffect = { state -> pollEffect(state as TypeSafeBroker.Key<*>) },
@@ -65,7 +65,7 @@ class StateMachine<S : TypeSafeBroker.Key<*>>(
         private val pollEffect: (state: Any) -> Any?,
     ) {
 
-        fun pushEvent(event: Any): Unit = pushEvent(state, event)
+        fun pushEvent(event: Any) = pushEvent(state, event)
 
         @Suppress("UNCHECKED_CAST")
         fun pollEffect(): G? = pollEffect(state) as G?
