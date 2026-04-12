@@ -43,7 +43,7 @@ class StateMachine<S : TypeSafeBroker.Key<*>>(
 
     private var stateToEffect = TypeSafeBroker()
 
-    fun pushEvent(sender: Any, event: Any) {
+    fun pushEvent(sender: TypeSafeBroker.Key<*>, event: Any) {
         val transition =
             transitionFunction.onEvent(stateTree.ancestorsFrom(sender).toList(), state, event)
         state = transition.state
@@ -56,13 +56,13 @@ class StateMachine<S : TypeSafeBroker.Key<*>>(
     fun obtainContext() = Context(
         state,
         pushEvent = { state, event -> pushEvent(state, event) },
-        pollEffect = { state -> pollEffect(state as TypeSafeBroker.Key<*>) },
+        pollEffect = { state -> pollEffect(state) },
     )
 
     class Context<T : TypeSafeBroker.Key<G>, G : Any>(
         val state: T,
-        private val pushEvent: (state: Any, event: Any) -> Unit,
-        private val pollEffect: (state: Any) -> Any?,
+        private val pushEvent: (state: TypeSafeBroker.Key<*>, event: Any) -> Unit,
+        private val pollEffect: (state: TypeSafeBroker.Key<*>) -> Any?,
     ) {
 
         fun pushEvent(event: Any) = pushEvent(state, event)
