@@ -44,6 +44,10 @@ class StateMachine<S : TypeSafeBroker.Key<*>>(
     private var stateToEffect = TypeSafeBroker()
 
     fun pushEvent(sender: TypeSafeBroker.Key<*>, event: Any) {
+        require(sender in stateTree.nodes) {
+            "The sender state does not exist in the current state tree."
+        }
+
         val transition =
             transitionFunction.onEvent(stateTree.ancestorsFrom(sender).toList(), state, event)
         state = transition.state
