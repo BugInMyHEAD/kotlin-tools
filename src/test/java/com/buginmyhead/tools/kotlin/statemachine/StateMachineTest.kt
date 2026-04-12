@@ -51,7 +51,7 @@ internal class StateMachineTest : FreeSpec({
         statesCaptured shouldBe listOf(c, b, a)
     }
 
-    "onEvent receives ancestors from sender to root (sender first, root last)" {
+    "TransitionFunction onEvent receives states from sender to root" {
         var statesCaptured: List<Any>? = null
 
         val c = State()
@@ -73,27 +73,32 @@ internal class StateMachineTest : FreeSpec({
         statesCaptured shouldBe listOf(a)
     }
 
-    "pushEffect stores effect retrievable by pollEffect and is removed after polling" {
+    "TransitionFunction onEvent stores effect retrievable by pollEffect and is removed after polling" {
         val b = State()
         val a = State(child = b)
-        val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
-             states.forEach { state ->
-                 stateToEffect[state as TypeSafeBroker.Key<*>] = event as Int
-             }
-             root
+        val transitionFunction = TransitionFunction.WithScope<State, Int> { states, root, event ->
+            states.forEach { state ->
+                stateToEffect[state] = event
+            }
+            effect = event as Int
+            root
         }
         val machine = StateMachine(a, transitionFunction)
 
-        machine.pushEvent(b, 13)
-        machine.pollEffect(b) shouldBe 13
-        machine.pollEffect(b) shouldBe null
-        machine.pollEffect(a) shouldBe 13
-        machine.pollEffect(a) shouldBe null
-
-        machine.pushEvent(a, 17)
-        machine.pollEffect(b) shouldBe null
+        machine.pushEvent(b, 17)
+        machine.pollEffect(transitionFunction) shouldBe 17
+        machine.pollEffect(transitionFunction) shouldBe null
+        machine.pollEffect(b) shouldBe 17
         machine.pollEffect(b) shouldBe null
         machine.pollEffect(a) shouldBe 17
+        machine.pollEffect(a) shouldBe null
+
+        machine.pushEvent(a, 19)
+        machine.pollEffect(transitionFunction) shouldBe 19
+        machine.pollEffect(transitionFunction) shouldBe null
+        machine.pollEffect(b) shouldBe null
+        machine.pollEffect(b) shouldBe null
+        machine.pollEffect(a) shouldBe 19
         machine.pollEffect(a) shouldBe null
     }
 
@@ -101,7 +106,7 @@ internal class StateMachineTest : FreeSpec({
         val b = State()
         val a = State(child = b)
         val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
-             stateToEffect[states.first() as TypeSafeBroker.Key<*>] = event as Int
+             stateToEffect[states.first()] = event
              root
         }
         val machine = StateMachine(a, transitionFunction)
