@@ -55,8 +55,8 @@ class StateMachine<S : TypeSafeBroker.Key<*>>(
 
     fun obtainContext() = Context(
         state,
-        pushEvent = { state, event -> pushEvent(state, event) },
-        pollEffect = { state -> pollEffect(state) },
+        pushEvent = ::pushEvent,
+        pollEffect = ::pollEffect,
     )
 
     class Context<T : TypeSafeBroker.Key<G>, G : Any>(
