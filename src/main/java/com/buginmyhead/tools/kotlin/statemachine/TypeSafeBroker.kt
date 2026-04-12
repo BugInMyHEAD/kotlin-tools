@@ -32,7 +32,7 @@ interface TypeSafeBroker {
      * Moves all associations from [other] into this broker and clears [other].
      *
      * If this broker already contains an association for a key present in [other],
-     * the existing value is overwritten by the one from [other].
+     *  the existing value is overwritten by the one from [other].
      */
     operator fun plusAssign(other: TypeSafeBroker)
 
