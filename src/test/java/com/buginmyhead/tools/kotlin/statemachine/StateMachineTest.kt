@@ -1,5 +1,6 @@
 package com.buginmyhead.tools.kotlin.statemachine
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 
@@ -15,6 +16,19 @@ internal class StateMachineTest : FreeSpec({
         machine.state shouldBe a
         machine.pushEvent(a, "event")
         machine.state shouldBe b
+    }
+
+    "pushEvent throws if sender is not in stateTree" {
+        val b = State()
+        val a = State() // a is root and does not contain b
+        val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
+            root
+        }
+        val machine = StateMachine(a, transitionFunction)
+
+        shouldThrow<IllegalArgumentException> {
+            machine.pushEvent(b, "event")
+        }
     }
 
     "default implementation browses all nested field states" {
