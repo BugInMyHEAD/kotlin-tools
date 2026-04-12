@@ -5,7 +5,6 @@ import com.buginmyhead.tools.kotlin.graph.Tree
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.ancestorsFrom
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.root
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
-import java.util.Objects
 
 /**
  * A framework-agnostic state transition engine.
@@ -30,7 +29,7 @@ import java.util.Objects
  *  To avoid the `kotlin-reflect` dependency,
  *  provide an explicit lambda that returns the nested states manually.
  */
-class StateMachine<S : TypeSafeBroker.Key<*>>(
+class StateMachine<S : TypeSafeBroker.Key<F>, F : Any>(
     initialState: S,
     private val transitionFunction: TransitionFunction<S, *>,
     private val nestedStatesAt: (state: TypeSafeBroker.Key<*>) -> Iterable<TypeSafeBroker.Key<*>> =
@@ -95,11 +94,7 @@ class StateMachine<S : TypeSafeBroker.Key<*>>(
      * The returned [Context] captures [state] at call time.
      * It is designed to have the same life as [state].
      */
-    fun obtainContext() = Context(
-        state,
-        pushEvent = ::pushEvent,
-        pollEffect = ::pollEffect,
-    )
+    fun obtainContext() = Context(state)
 
     /**
      * A parameter object that bundles a [state] with [pushEvent] and [pollEffect] delegates.
@@ -107,34 +102,32 @@ class StateMachine<S : TypeSafeBroker.Key<*>>(
      * Use [with] to navigate to a nested state's context
      *  while reusing the same delegates.
      */
-    class Context<T : TypeSafeBroker.Key<G>, G : Any>(
+    inner class Context<T : TypeSafeBroker.Key<G>, G : Any>(
         val state: T,
-        private val pushEvent: (state: TypeSafeBroker.Key<*>, event: Any) -> Unit,
-        private val pollEffect: (state: TypeSafeBroker.Key<*>) -> Any?,
     ) {
 
         fun pushEvent(event: Any) = pushEvent(state, event)
 
         @Suppress("UNCHECKED_CAST")
-        fun pollEffect(): G? = pollEffect(state) as G?
+        fun pollEffect(): G? = pollEffect(state)
 
         /**
          * Creates a new [Context] with the given nested [state],
          *  reusing the same [pushEvent] and [pollEffect] delegates.
          */
         fun <U : TypeSafeBroker.Key<H>, H : Any> with(state: U) =
-            Context(state, pushEvent, pollEffect)
+            Context(state)
 
         override fun equals(other: Any?): Boolean =
             this === other
                     || (
                     other is Context<*, *>
                             && state == other.state
-                            && pushEvent == other.pushEvent
-                            && pollEffect == other.pollEffect
+                            // && pushEvent == other.pushEvent
+                            // && pollEffect == other.pollEffect
                     )
 
-        override fun hashCode(): Int = Objects.hash(state, pushEvent, pollEffect)
+        override fun hashCode(): Int = state.hashCode()
 
     }
 

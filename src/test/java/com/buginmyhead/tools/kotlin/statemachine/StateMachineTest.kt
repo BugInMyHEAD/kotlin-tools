@@ -92,7 +92,7 @@ internal class StateMachineTest : FreeSpec({
         val a = State(child = b)
         val transitionFunction = TransitionFunction.WithScope<State, Int> { states, root, event ->
             states.forEach { state ->
-                stateToEffect[state] = event
+                stateToEffect[state as State] = event as Int
             }
             effect = event as Int
             root
@@ -120,7 +120,7 @@ internal class StateMachineTest : FreeSpec({
         val b = State()
         val a = State(child = b)
         val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
-             stateToEffect[states.first()] = event
+             stateToEffect[states.first() as State] = event as Int
              root
         }
         val machine = StateMachine(a, transitionFunction)
