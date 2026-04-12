@@ -47,7 +47,7 @@ class StateMachine<S : TypeSafeBroker.Key<*>>(
         val transition =
             transitionFunction.onEvent(stateTree.ancestorsFrom(sender).toList(), state, event)
         state = transition.state
-        stateToEffect = transition.stateToEffect
+        stateToEffect += transition.stateToEffect
     }
 
     fun <T : TypeSafeBroker.Key<G>, G : Any> pollEffect(receiver: T): G? =

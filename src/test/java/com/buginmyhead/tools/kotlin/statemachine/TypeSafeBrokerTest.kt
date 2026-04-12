@@ -2,6 +2,7 @@ package com.buginmyhead.tools.kotlin.statemachine
 
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 
 internal class TypeSafeBrokerTest : FreeSpec({
     fun gc() {
@@ -26,6 +27,7 @@ internal class TypeSafeBrokerTest : FreeSpec({
         var setKeyCaptured: Any? = null
         var setValueCaptured: Any? = null
         var pollKeyCaptured: Any? = null
+        var plusAssignOtherCaptured: Any? = null
 
         val pollGenericResult = Any()
         val broker = SynchronizedTypeSafeBroker(object : TypeSafeBroker {
@@ -39,17 +41,24 @@ internal class TypeSafeBrokerTest : FreeSpec({
                 @Suppress("UNCHECKED_CAST")
                 return pollGenericResult as V
             }
+
+            override fun plusAssign(other: TypeSafeBroker) {
+                plusAssignOtherCaptured = other
+            }
         })
         val setKey = object : TypeSafeBroker.Key<Int> {}
         val setValue = 13
         val pollKey = object : TypeSafeBroker.Key<Any> {}
+        val other = TypeSafeBroker()
 
         broker[setKey] = setValue
         broker.poll(pollKey)
+        broker += other
 
-        setKeyCaptured shouldBe setKey
+        setKeyCaptured shouldBeSameInstanceAs setKey
         setValueCaptured shouldBe setValue
-        pollKeyCaptured shouldBe pollKey
+        pollKeyCaptured shouldBeSameInstanceAs pollKey
+        plusAssignOtherCaptured shouldBeSameInstanceAs other
     }
 
     "TypeSafeBrokerOnWeakIdentityHashMap poll removes an effect for the identical key" {
@@ -79,6 +88,22 @@ internal class TypeSafeBrokerTest : FreeSpec({
         gc()
 
         broker.store shouldBe emptyMap()
+    }
+
+    "TypeSafeBrokerOnWeakIdentityHashMap plusAssign merges effects" {
+        val broker1 = TypeSafeBrokerOnWeakIdentityHashMap()
+        val broker2 = TypeSafeBrokerOnWeakIdentityHashMap()
+        val stateA = State("A")
+        val stateB = State("B")
+        broker1[stateA] = 13
+        broker2[stateB] = 17
+
+        broker1 += broker2
+
+        broker1.poll(stateA) shouldBe 13
+        broker1.poll(stateB) shouldBe 17
+        broker2.poll(stateA) shouldBe null
+        broker2.poll(stateB) shouldBe null
     }
 }) {
 

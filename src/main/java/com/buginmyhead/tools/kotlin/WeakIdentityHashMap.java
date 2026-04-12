@@ -20,6 +20,8 @@
  */
 package com.buginmyhead.tools.kotlin;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
@@ -32,7 +34,6 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Implements a combination of WeakHashMap and IdentityHashMap. Useful for
  * caches that need to key off of a == comparison instead of a .equals.
- *
  * <b> This class is not a general-purpose Map implementation! While this class
  * implements the Map interface, it intentionally violates Map's general
  * contract, which mandates the use of the equals method when comparing objects.
@@ -42,8 +43,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Note that this implementation is not synchronized. </b>
  */
 public class WeakIdentityHashMap<K, V> implements Map<K, V> {
+
     private final ReferenceQueue<K> queue = new ReferenceQueue<>();
-    private Map<IdentityWeakReference, V> backingStore = new ConcurrentHashMap<>();
+    private final Map<IdentityWeakReference, V> backingStore = new ConcurrentHashMap<>();
 
     public WeakIdentityHashMap() {
     }
@@ -67,7 +69,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
+    public @NotNull Set<Map.Entry<K, V>> entrySet() {
         reap();
         Set<Map.Entry<K, V>> ret = new HashSet<>();
         for (Map.Entry<IdentityWeakReference, V> ref : backingStore.entrySet()) {
@@ -95,7 +97,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public Set<K> keySet() {
+    public @NotNull Set<K> keySet() {
         reap();
         Set<K> ret = new HashSet<>();
         for (IdentityWeakReference ref : backingStore.keySet()) {
@@ -109,7 +111,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
         if (!(o instanceof WeakIdentityHashMap)) {
             return false;
         }
-        return backingStore.equals(((WeakIdentityHashMap) o).backingStore);
+        return backingStore.equals(((WeakIdentityHashMap<?, ?>) o).backingStore);
     }
 
     @Override
@@ -136,9 +138,13 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
         return backingStore.isEmpty();
     }
 
+    // Customized logic of com.buginmyhead.tools.kotlin
     @Override
-    public void putAll(Map t) {
-        throw new UnsupportedOperationException();
+    public void putAll(@NotNull Map<? extends K, ? extends V> m) {
+        reap();
+        for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
+            backingStore.put(new IdentityWeakReference(e.getKey()), e.getValue());
+        }
     }
 
     @Override
@@ -154,7 +160,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public Collection<V> values() {
+    public @NotNull Collection<V> values() {
         reap();
         return backingStore.values();
     }
@@ -163,6 +169,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
         Object zombie = queue.poll();
 
         while (zombie != null) {
+            @SuppressWarnings("unchecked")
             IdentityWeakReference victim = (IdentityWeakReference) zombie;
             backingStore.remove(victim);
             zombie = queue.poll();
@@ -191,8 +198,11 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
             if (!(o instanceof WeakIdentityHashMap.IdentityWeakReference)) {
                 return false;
             }
+            @SuppressWarnings("unchecked")
             IdentityWeakReference ref = (IdentityWeakReference) o;
             return this.get() == ref.get();
         }
+
     }
+
 }

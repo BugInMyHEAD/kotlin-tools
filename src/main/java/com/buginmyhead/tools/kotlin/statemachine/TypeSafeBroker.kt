@@ -28,6 +28,8 @@ interface TypeSafeBroker {
      */
     fun <V : Any> poll(key: Key<V>): V?
 
+    operator fun plusAssign(other: TypeSafeBroker)
+
     /**
      * A key used to associate values in the [TypeSafeBroker].
      *
@@ -69,6 +71,10 @@ internal class SynchronizedTypeSafeBroker(
     override fun <V : Any> poll(key: TypeSafeBroker.Key<V>): V? =
         delegate.poll(key)
 
+    @Synchronized
+    override operator fun plusAssign(other: TypeSafeBroker) =
+        delegate.plusAssign(other)
+
 }
 
 internal class TypeSafeBrokerOnWeakIdentityHashMap : TypeSafeBroker {
@@ -82,5 +88,14 @@ internal class TypeSafeBrokerOnWeakIdentityHashMap : TypeSafeBroker {
     @Suppress("UNCHECKED_CAST")
     override fun <V : Any> poll(key: TypeSafeBroker.Key<V>): V? =
         store.remove(key) as V?
+
+    override operator fun plusAssign(other: TypeSafeBroker) {
+        require(other is TypeSafeBrokerOnWeakIdentityHashMap) {
+            "Unsupported TypeSafeBroker implementation: ${other::class}"
+        }
+
+        store.putAll(other.store)
+        other.store.clear()
+    }
 
 }
