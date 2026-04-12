@@ -26,6 +26,7 @@ fun Any.collectionPropertyValues(): Collection<Any> =
         }
         .flatMap { (it as KProperty1<Any, Collection<Any?>>).get(this) }
         .filterNotNull()
+        .filter { it::class.hasAnnotation<StateMachine.State>() }
 
 @Suppress("UNCHECKED_CAST")
 fun Any.mapPropertyValues(): Collection<Any> =
@@ -39,3 +40,4 @@ fun Any.mapPropertyValues(): Collection<Any> =
         }
         .flatMap { (it as KProperty1<Any, Map<Any, Any?>>).get(this).values }
         .filterNotNull()
+        .filter { it::class.hasAnnotation<StateMachine.State>() }
