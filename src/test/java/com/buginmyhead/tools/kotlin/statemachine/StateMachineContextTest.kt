@@ -4,88 +4,88 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 
-internal class StateMachineContextTest : FreeSpec({
-    "pushEvent delegates to provided pushEvent" {
-        var stateCaptured: Any? = null
-        var eventCaptured: Any? = null
-        val pushEvent: (Any, Any) -> Unit = { state, event ->
-            stateCaptured = state
-            eventCaptured = event
-        }
-        val pollEffect: (Any) -> Any? = { null }
+internal class StateMachineContextTest : FreeSpec(
+    {
+        "pushEvent delegates to provided pushEvent" {
+            var stateCaptured: Any? = null
+            var eventCaptured: Any? = null
+            val pushEvent = { state: Any, event: Any ->
+                stateCaptured = state
+                eventCaptured = event
+            }
 
-        val state = State("A")
-        val ctx = StateMachine.Context(state, pushEvent, pollEffect)
+            val state = State("A")
+            val ctx = StateMachine.Context(state, pushEvent, { null })
 
-        ctx.pushEvent("ev")
-        eventCaptured shouldBe "ev"
-        stateCaptured shouldBe state
-    }
-
-    "pollEffect delegates and casts result" {
-        var stateCaptured: Any? = null
-        val pushEvent: (Any, Any) -> Unit = { _, _ -> }
-        val pollEffect: (Any) -> Any? = { state ->
-            stateCaptured = state
-            13
+            ctx.pushEvent("ev")
+            eventCaptured shouldBe "ev"
+            stateCaptured shouldBe state
         }
 
-        val state = State("A")
-        val ctx = StateMachine.Context(state, pushEvent, pollEffect)
+        "pollEffect delegates and casts result" {
+            var stateCaptured: Any? = null
+            val pollEffect = { state: Any ->
+                stateCaptured = state
+                13
+            }
 
-        ctx.pollEffect() shouldBe 13
-        stateCaptured shouldBe state
-    }
+            val state = State("A")
+            val ctx = StateMachine.Context(state, { _, _ -> }, pollEffect)
 
-    "with creates new context with provided state and reuses delegates" {
-        var stateCaptured: Any? = null
-        var eventCaptured: Any? = null
-        val pushEvent: (Any, Any) -> Unit = { state, event ->
-            stateCaptured = state
-            eventCaptured = event
-        }
-        var polledState: Any? = null
-        val pollEffect: (Any) -> Any? = { s ->
-            polledState = s
-            17
+            ctx.pollEffect() shouldBe 13
+            stateCaptured shouldBe state
         }
 
-        val stateA = State("A")
-        val stateB = State("B")
-        val ctxA = StateMachine.Context(stateA, pushEvent, pollEffect)
-        val ctxB = ctxA.with(stateB)
+        "with creates new context with provided state and reuses delegates" {
+            var stateCaptured: Any? = null
+            var eventCaptured: Any? = null
+            val pushEvent = { state: Any, event: Any ->
+                stateCaptured = state
+                eventCaptured = event
+            }
+            var polledState: Any? = null
+            val pollEffect = { state: Any ->
+                polledState = state
+                17
+            }
 
-        ctxB.pushEvent("evt")
-        stateCaptured shouldBe stateB
-        eventCaptured shouldBe "evt"
+            val stateA = State("A")
+            val stateB = State("B")
+            val ctxA = StateMachine.Context(stateA, pushEvent, pollEffect)
+            val ctxB = ctxA.with(stateB)
 
-        ctxB.pollEffect() shouldBe 17
-        polledState shouldBe stateB
+            ctxB.pushEvent("evt")
+            stateCaptured shouldBe stateB
+            eventCaptured shouldBe "evt"
 
-        ctxA shouldNotBe ctxB
+            ctxB.pollEffect() shouldBe 17
+            polledState shouldBe stateB
+
+            ctxA shouldNotBe ctxB
+        }
+
+        "equals and hashCode consider state and delegates" {
+            val pushEvent = { _: Any, _: Any -> }
+            val pollEffect = { _: Any -> 13 }
+            val state = State("A")
+
+            val a = StateMachine.Context(state, pushEvent, pollEffect)
+
+            a shouldBe a
+            a.hashCode() shouldBe a.hashCode()
+            a shouldNotBe null
+            a shouldNotBe Any()
+
+            val b = StateMachine.Context(state, pushEvent, pollEffect)
+
+            a shouldBe b
+            a.hashCode() shouldBe b.hashCode()
+
+            val c = StateMachine.Context(state, { _, _ -> }, pollEffect)
+            a shouldNotBe c
+        }
     }
-
-    "equals and hashCode consider state and delegates" {
-        val push = { v: Any, s: Any -> }
-        val poll = { s: Any -> 13 }
-        val state = State("A")
-
-        val a = StateMachine.Context(state, push, poll)
-
-        a shouldBe a
-        a.hashCode() shouldBe a.hashCode()
-        a shouldNotBe null
-        a shouldNotBe Any()
-
-        val b = StateMachine.Context(state, push, poll)
-
-        a shouldBe b
-        a.hashCode() shouldBe b.hashCode()
-
-        val c = StateMachine.Context(state, { _, _ -> }, poll)
-        a shouldNotBe c
-    }
-}) {
+) {
 
     private data class State(val value: String) : TypeSafeBroker.Key<Int>
 
