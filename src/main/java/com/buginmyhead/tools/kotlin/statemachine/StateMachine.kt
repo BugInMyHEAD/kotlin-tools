@@ -94,7 +94,7 @@ class StateMachine<S : TypeSafeBroker.Key<F>, F : Any>(
      * The returned [Context] captures [state] at call time.
      * It is designed to have the same life as [state].
      */
-    fun obtainContext() = Context(state)
+    fun obtainContext() = Context(this, state)
 
     /**
      * A parameter object that bundles a [state] with [pushEvent] and [pollEffect] delegates.
@@ -102,29 +102,28 @@ class StateMachine<S : TypeSafeBroker.Key<F>, F : Any>(
      * Use [with] to navigate to a nested state's context
      *  while reusing the same delegates.
      */
-    inner class Context<T : TypeSafeBroker.Key<G>, G : Any>(
+    class Context<S : TypeSafeBroker.Key<F>, F : Any, T : TypeSafeBroker.Key<G>, G : Any>(
+        private val stateMachine: StateMachine<S, F>,
         val state: T,
     ) {
 
-        fun pushEvent(event: Any) = pushEvent(state, event)
+        fun pushEvent(event: Any) = stateMachine.pushEvent(state, event)
 
         @Suppress("UNCHECKED_CAST")
-        fun pollEffect(): G? = pollEffect(state)
+        fun pollEffect(): G? = stateMachine.pollEffect(state)
 
         /**
          * Creates a new [Context] with the given nested [state],
          *  reusing the same [pushEvent] and [pollEffect] delegates.
          */
         fun <U : TypeSafeBroker.Key<H>, H : Any> with(state: U) =
-            Context(state)
+            Context(stateMachine, state)
 
         override fun equals(other: Any?): Boolean =
-            this === other
-                    || (
-                    other is Context<*, *>
+            this === other || (
+                    other is Context<*, *, *, *>
+                            && stateMachine === other.stateMachine
                             && state == other.state
-                            // && pushEvent == other.pushEvent
-                            // && pollEffect == other.pollEffect
                     )
 
         override fun hashCode(): Int = state.hashCode()
