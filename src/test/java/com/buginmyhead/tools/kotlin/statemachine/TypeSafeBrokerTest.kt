@@ -1,5 +1,6 @@
 package com.buginmyhead.tools.kotlin.statemachine
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
@@ -105,8 +106,27 @@ internal class TypeSafeBrokerTest : FreeSpec({
         broker2.poll(stateA) shouldBe null
         broker2.poll(stateB) shouldBe null
     }
+
+    "TypeSafeBrokerOnWeakIdentityHashMap plusAssign throws if other is not TypeSafeBrokerOnWeakIdentityHashMap" {
+        val broker1 = TypeSafeBrokerOnWeakIdentityHashMap()
+        val broker2 = DummyTypeSafeBroker
+
+        shouldThrow<IllegalArgumentException> {
+            broker1 += broker2
+        }
+    }
 }) {
 
     private data class State(val value: String) : TypeSafeBroker.Key<Int>
+
+    private object DummyTypeSafeBroker : TypeSafeBroker {
+
+        override fun <V : Any> set(key: TypeSafeBroker.Key<V>, value: V) = Unit
+
+        override fun <V : Any> poll(key: TypeSafeBroker.Key<V>): V? = null
+
+        override fun plusAssign(other: TypeSafeBroker) = Unit
+
+    }
 
 }
