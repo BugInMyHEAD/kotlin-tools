@@ -1,6 +1,6 @@
 package com.buginmyhead.tools.kotlin
 
-import com.buginmyhead.tools.kotlin.statemachine.StateMachine
+import com.buginmyhead.tools.kotlin.statemachine.TypeSafeBroker
 import com.buginmyhead.tools.kotlin.statemachine.collectionPropertyValues
 import com.buginmyhead.tools.kotlin.statemachine.fieldPropertyValues
 import com.buginmyhead.tools.kotlin.statemachine.mapPropertyValues
@@ -41,12 +41,11 @@ internal class MemberPropertyBrowserTest : FreeSpec({
 
 }) {
 
-    @StateMachine.State
     data class Node(
         val value: Int,
         val child: Node? = null,
         val children: List<Node> = emptyList(),
         val stringToChild: Map<String, Node> = emptyMap(),
-    )
+    ) : TypeSafeBroker.Key<Unit>
 
 }

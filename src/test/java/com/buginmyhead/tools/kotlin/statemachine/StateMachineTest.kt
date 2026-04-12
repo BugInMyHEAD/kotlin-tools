@@ -113,7 +113,6 @@ internal class StateMachineTest : FreeSpec({
     }
 }) {
 
-    @StateMachine.State
     class State(
         val child: State? = null,
         val children: Collection<State> = emptyList()

@@ -3,41 +3,31 @@
 package com.buginmyhead.tools.kotlin.statemachine
 
 import kotlin.reflect.KProperty1
-import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.jvmErasure
 
 @Suppress("UNCHECKED_CAST")
-fun Any.fieldPropertyValues(): Collection<Any> =
+fun TypeSafeBroker.Key<*>.fieldPropertyValues(): Collection<TypeSafeBroker.Key<*>> =
     this::class.memberProperties
-        .filter { it.returnType.jvmErasure.hasAnnotation<StateMachine.State>() }
-        .mapNotNull { (it as KProperty1<Any, Any?>).get(this) }
+        .filter { it.returnType.jvmErasure.isSubclassOf(TypeSafeBroker.Key::class) }
+        .mapNotNull { (it as KProperty1<TypeSafeBroker.Key<*>, TypeSafeBroker.Key<*>?>).get(this) }
 
 @Suppress("UNCHECKED_CAST")
-fun Any.collectionPropertyValues(): Collection<Any> =
+fun TypeSafeBroker.Key<*>.collectionPropertyValues(): Collection<TypeSafeBroker.Key<*>> =
     this::class.memberProperties
         .filter {
             it.returnType.jvmErasure.isSubclassOf(Collection::class)
-                    && (
-                    it.hasAnnotation<StateMachine.State>()
-                            || it.returnType.arguments[0].type?.jvmErasure?.hasAnnotation<StateMachine.State>() == true
-                    )
+                    && it.returnType.arguments[0].type?.jvmErasure?.isSubclassOf(TypeSafeBroker.Key::class) == true
         }
-        .flatMap { (it as KProperty1<Any, Collection<Any?>>).get(this) }
-        .filterNotNull()
-        .filter { it::class.hasAnnotation<StateMachine.State>() }
+        .flatMap { (it as KProperty1<TypeSafeBroker.Key<*>, Collection<TypeSafeBroker.Key<*>>>).get(this) }
 
 @Suppress("UNCHECKED_CAST")
-fun Any.mapPropertyValues(): Collection<Any> =
+fun TypeSafeBroker.Key<*>.mapPropertyValues(): Collection<TypeSafeBroker.Key<*>> =
     this::class.memberProperties
         .filter {
             it.returnType.jvmErasure.isSubclassOf(Map::class)
-                    && (
-                    it.hasAnnotation<StateMachine.State>()
-                            || it.returnType.arguments[1].type?.jvmErasure?.hasAnnotation<StateMachine.State>() == true
-                    )
+                    && it.returnType.arguments[1].type?.jvmErasure?.isSubclassOf(TypeSafeBroker.Key::class) == true
         }
-        .flatMap { (it as KProperty1<Any, Map<Any, Any?>>).get(this).values }
+        .flatMap { (it as KProperty1<TypeSafeBroker.Key<*>, Map<in Any, TypeSafeBroker.Key<*>?>>).get(this).values }
         .filterNotNull()
-        .filter { it::class.hasAnnotation<StateMachine.State>() }

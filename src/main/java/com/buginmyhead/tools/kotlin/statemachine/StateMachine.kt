@@ -18,14 +18,14 @@ import java.util.Objects
 class StateMachine<S : TypeSafeBroker.Key<*>>(
     initialState: S,
     private val transitionFunction: TransitionFunction<S>,
-    private val nestedStatesAt: (state: Any) -> Iterable<Any> =
+    private val nestedStatesAt: (state: TypeSafeBroker.Key<*>) -> Iterable<TypeSafeBroker.Key<*>> =
         { it.fieldPropertyValues() + it.collectionPropertyValues() },
 ) {
 
     /**
      * To find the path of states from the sender to the root state when an event is pushed.
      */
-    private lateinit var stateTree: Tree<Any, Unit>
+    private lateinit var stateTree: Tree<TypeSafeBroker.Key<*>, Unit>
 
     @Suppress("UNCHECKED_CAST")
     var state: S
@@ -85,7 +85,5 @@ class StateMachine<S : TypeSafeBroker.Key<*>>(
         override fun hashCode(): Int = Objects.hash(state, pushEvent, pollEffect)
 
     }
-
-    annotation class State
 
 }
