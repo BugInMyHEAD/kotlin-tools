@@ -1,5 +1,12 @@
 package com.buginmyhead.tools.kotlin.statemachine
 
+/**
+ * A function that defines how the state machine transitions from one state to another
+ *  in response to an event.
+ *
+ * @param S The type of the root state.
+ * @param F The type of the 'global' effect, which is not mapped by a certain state.
+ */
 fun interface TransitionFunction<S : TypeSafeBroker.Key<*>, F : Any> : TypeSafeBroker.Key<F> {
 
     /**
@@ -13,10 +20,15 @@ fun interface TransitionFunction<S : TypeSafeBroker.Key<*>, F : Any> : TypeSafeB
     /**
      * The default implementation of [TransitionFunction]
      *  that creates a [Scope] and passes it to [Scope.onEvent].
+     *
+     * @param S The type of the root state.
+     * @param F The type of the 'global' effect, which is not mapped by a certain state.
      */
     fun interface WithScope<S : TypeSafeBroker.Key<*>, F : Any> : TransitionFunction<S, F> {
 
         /**
+         * @param F The type of the 'global' effect, which is not mapped by a certain state.
+         *
          * @see TransitionFunction.onEvent
          */
         fun Scope<F>.onEvent(states: List<TypeSafeBroker.Key<*>>, root: S, event: Any): S
@@ -36,6 +48,9 @@ fun interface TransitionFunction<S : TypeSafeBroker.Key<*>, F : Any> : TypeSafeB
 
     }
 
+    /**
+     * @param F The type of the 'global' effect, which is not mapped by a certain state.
+     */
     interface Scope<F : Any> {
 
         val stateToEffect: TypeSafeBroker
