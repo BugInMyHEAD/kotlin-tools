@@ -8,7 +8,7 @@ fun interface TransitionFunction<S : TypeSafeBroker.Key<*>> {
      * @param states The list of states from the sender to the root state. It guarantees that
      *  the first element is the sender state and the last element is the [root] state.
      */
-    fun onEvent(states: List<Any>, root: S, event: Any): Transition<S>
+    fun onEvent(states: List<TypeSafeBroker.Key<*>>, root: S, event: Any): Transition<S>
 
     /**
      * The default implementation of [TransitionFunction]
@@ -19,9 +19,9 @@ fun interface TransitionFunction<S : TypeSafeBroker.Key<*>> {
         /**
          * @see TransitionFunction.onEvent
          */
-        fun Scope.onEvent(states: List<Any>, root: S, event: Any): S
+        fun Scope.onEvent(states: List<TypeSafeBroker.Key<*>>, root: S, event: Any): S
 
-        override fun onEvent(states: List<Any>, root: S, event: Any): Transition<S> {
+        override fun onEvent(states: List<TypeSafeBroker.Key<*>>, root: S, event: Any): Transition<S> {
             val scope = object : Scope {
                 override val stateToEffect = TypeSafeBroker()
             }
