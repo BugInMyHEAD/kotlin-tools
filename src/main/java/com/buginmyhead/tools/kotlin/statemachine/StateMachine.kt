@@ -17,7 +17,7 @@ import java.util.Objects
  */
 class StateMachine<S : TypeSafeBroker.Key<*>>(
     initialState: S,
-    private val transitionFunction: TransitionFunction<S>,
+    private val transitionFunction: TransitionFunction<S, *>,
     private val nestedStatesAt: (state: TypeSafeBroker.Key<*>) -> Iterable<TypeSafeBroker.Key<*>> =
         { it.fieldPropertyValues() + it.collectionPropertyValues() },
 ) {

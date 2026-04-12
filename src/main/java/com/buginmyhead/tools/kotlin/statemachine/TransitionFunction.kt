@@ -1,6 +1,6 @@
 package com.buginmyhead.tools.kotlin.statemachine
 
-fun interface TransitionFunction<S : TypeSafeBroker.Key<*>> {
+fun interface TransitionFunction<S : TypeSafeBroker.Key<*>, F : Any> : TypeSafeBroker.Key<F> {
 
     /**
      * Implementation is highly recommended to be pure.
@@ -14,7 +14,7 @@ fun interface TransitionFunction<S : TypeSafeBroker.Key<*>> {
      * The default implementation of [TransitionFunction]
      *  that creates a [Scope] and passes it to [Scope.onEvent].
      */
-    fun interface WithScope<S : TypeSafeBroker.Key<*>> : TransitionFunction<S> {
+    fun interface WithScope<S : TypeSafeBroker.Key<*>, F : Any> : TransitionFunction<S, F> {
 
         /**
          * @see TransitionFunction.onEvent
