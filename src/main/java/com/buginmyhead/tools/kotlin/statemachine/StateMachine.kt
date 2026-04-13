@@ -71,7 +71,7 @@ class StateMachine<S : TypeSafeBroker.Key<F>, F : Any>(
      */
     fun pushEvent(sender: TypeSafeBroker.Key<*>, event: Any) {
         require(sender in stateTree.nodes) {
-            "The sender state does not exist in the current state tree."
+            "The [sender] state does not exist in the current [stateTree].\n[sender]: $sender"
         }
 
         val transition =
@@ -101,11 +101,19 @@ class StateMachine<S : TypeSafeBroker.Key<F>, F : Any>(
      *
      * Use [with] to navigate to a nested state's context
      *  while reusing the same delegates.
+     *
+     * @throws IllegalArgumentException if [state] is not in the current [stateTree].
      */
     class Context<S : TypeSafeBroker.Key<F>, F : Any, T : TypeSafeBroker.Key<G>, G : Any>(
         private val stateMachine: StateMachine<S, F>,
         val state: T,
     ) {
+
+        init {
+            require(state in stateMachine.stateTree.nodes) {
+                "[state] does not exist in the current [stateTree].\n[state]: $state"
+            }
+        }
 
         fun pushEvent(event: Any) = stateMachine.pushEvent(state, event)
 

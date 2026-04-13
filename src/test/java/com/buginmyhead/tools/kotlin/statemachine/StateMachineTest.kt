@@ -179,6 +179,18 @@ internal class StateMachineTest : FreeSpec({
         ctxA shouldNotBe ctxB
     }
 
+    "Context with throws if state is not in stateTree" {
+        val a = State()
+        val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
+            root
+        }
+        val machine = StateMachine(a, transitionFunction)
+
+        shouldThrow<IllegalArgumentException> {
+            machine.obtainContext().with(State())
+        }
+    }
+
     "Context equals and hashCode consider state" {
         val state = State()
         val transitionFunction = TransitionFunction.WithScope<State, Int> { _, root, _ -> root }
