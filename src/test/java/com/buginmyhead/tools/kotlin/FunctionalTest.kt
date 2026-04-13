@@ -4,10 +4,10 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 
 internal class FunctionalTest : FreeSpec({
-    "andThen invokes left-side function firstly, and then right-side function secondly" {
+    "then invokes left-side function firstly, and then right-side function secondly" {
         val add13: (Int) -> Int = { x: Int -> x + 13 }
         val multiply17: (Int) -> Int = { x -> x * 17 }
-        val combined = add13 andThen multiply17
+        val combined = add13 then multiply17
 
         combined(0) shouldBe 221 // (0 + 13) * 17 = 221
     }
