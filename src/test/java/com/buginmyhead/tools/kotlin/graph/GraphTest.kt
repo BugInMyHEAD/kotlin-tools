@@ -6,6 +6,8 @@ import com.buginmyhead.tools.kotlin.graph.Graph.Companion.bfs
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.nodes
 import com.buginmyhead.tools.kotlin.graph.ImmutableGraph.Companion.toGraph
 import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.addEdge
+import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.filterEdges
+import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.filterNodes
 import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.toMutableGraph
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
@@ -129,7 +131,7 @@ internal class GraphTest : FreeSpec({
         graph.sourceNodes shouldBe setOf("A", "C")
     }
 
-    "toString produces expected output" {
+    "toString prints ins and outs" {
         val graph = MutableGraph<String, Int>()
         graph.addEdge("A" to "B", 13)
         graph.addEdge("B" to "C", 17)
@@ -318,6 +320,57 @@ internal class GraphTest : FreeSpec({
         )
         graph.sourceNodes shouldBe setOf("A", "B")
         graph.sinkNodes shouldBe setOf("E")
+    }
+
+    "filterNodes returns a graph with only specified nodes and edges between them" {
+        val graph = MutableGraph<String, Int>()
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("B" to "C", 17)
+        graph.addEdge("C" to "D", 19)
+
+        val filtered = graph.filterNodes { it != "B" }
+        filtered.nodes shouldBe setOf("A", "C", "D")
+        filtered.edges shouldBe mapOf(("C" to "D") to 19)
+        filtered.ins shouldBe mapOf(
+            "A" to emptySet(),
+            "C" to emptySet(),
+            "D" to setOf("C"),
+        )
+        filtered.outs shouldBe mapOf(
+            "A" to emptySet(),
+            "C" to setOf("D"),
+            "D" to emptySet(),
+        )
+        filtered.sinkNodes shouldBe setOf("A", "D")
+        filtered.sourceNodes shouldBe setOf("A", "C")
+    }
+
+    "filterEdges returns a graph with only specified edges and nodes between them" {
+        val graph = MutableGraph<String, Int>()
+        graph.addEdge("A" to "B", 13)
+        graph.addEdge("B" to "C", 17)
+        graph.addEdge("C" to "D", 19)
+
+        val filtered = graph.filterEdges { edge, weight -> weight != 17 }
+        filtered.nodes shouldBe setOf("A", "B", "C", "D")
+        filtered.edges shouldBe mapOf(
+            ("A" to "B") to 13,
+            ("C" to "D") to 19,
+        )
+        filtered.ins shouldBe mapOf(
+            "A" to emptySet(),
+            "B" to setOf("A"),
+            "C" to emptySet(),
+            "D" to setOf("C"),
+        )
+        filtered.outs shouldBe mapOf(
+            "A" to setOf("B"),
+            "B" to emptySet(),
+            "C" to setOf("D"),
+            "D" to emptySet(),
+        )
+        filtered.sinkNodes shouldBe setOf("B", "D")
+        filtered.sourceNodes shouldBe setOf("A", "C")
     }
 
     "toAcyclicGraph returns the same instance if the graph is AcyclicGraph" {

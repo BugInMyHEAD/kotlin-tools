@@ -96,34 +96,6 @@ class MutableGraph<N, W> : Graph<N, W> {
 
     companion object {
 
-        fun <N, W> Graph<N, W>.toMutableGraph(): MutableGraph<N, W> =
-            toMutableGraph({ node -> node }) { _, _, weight, _, _ -> weight }
-
-        fun <N, W, M, V> Graph<N, W>.toMutableGraph(
-            nodeTransform: (N) -> M,
-            weightTransform: (from: N, to: N, weight: W, tFrom: M, tTo: M) -> V
-        ): MutableGraph<M, V> {
-            val mutableGraph = MutableGraph<M, V>()
-            val transformedNodes: Map<N, M> = nodes.associateWith(nodeTransform)
-
-            for ((edge, weight) in edges) {
-                val (from, to) = edge
-                val transformedFrom = transformedNodes.getValue(from)
-                val transformedTo = transformedNodes.getValue(to)
-                mutableGraph._edges[transformedFrom to transformedTo] =
-                    weightTransform(from, to, weight, transformedFrom, transformedTo)
-            }
-            for ((n, m) in transformedNodes) {
-                mutableGraph._outs[m] =
-                    outs[n].orEmpty().mapNotNull { transformedNodes[it] }.toMutableSet()
-                mutableGraph._ins[m] =
-                    ins[n].orEmpty().mapNotNull { transformedNodes[it] }.toMutableSet()
-            }
-            mutableGraph._sinkNodes += sinkNodes.mapNotNull { transformedNodes[it] }
-            mutableGraph._sourceNodes += sourceNodes.mapNotNull { transformedNodes[it] }
-            return mutableGraph
-        }
-
         fun <N> MutableGraph<N, Unit>.addEdge(edge: Pair<N, N>) = addEdge(edge, Unit)
 
         fun <N> from(
@@ -152,6 +124,53 @@ class MutableGraph<N, W> : Graph<N, W> {
             sourceNodes.forEach(::build)
             return graph
         }
+
+        fun <N, W> Graph<N, W>.toMutableGraph(): MutableGraph<N, W> =
+            toMutableGraph({ node -> node }) { _, _, weight, _, _ -> weight }
+
+        fun <N, W, M, V> Graph<N, W>.toMutableGraph(
+            nodeTransform: (N) -> M,
+            weightTransform: (from: N, to: N, weight: W, tFrom: M, tTo: M) -> V
+        ): MutableGraph<M, V> {
+            val mutableGraph = MutableGraph<M, V>()
+            val transformedNodes: Map<N, M> = nodes.associateWith(nodeTransform)
+
+            for ((edge, weight) in edges) {
+                val (from, to) = edge
+                val transformedFrom = transformedNodes.getValue(from)
+                val transformedTo = transformedNodes.getValue(to)
+                mutableGraph._edges[transformedFrom to transformedTo] =
+                    weightTransform(from, to, weight, transformedFrom, transformedTo)
+            }
+            for ((n, m) in transformedNodes) {
+                mutableGraph._outs[m] =
+                    outs[n].orEmpty().mapNotNull { transformedNodes[it] }.toMutableSet()
+                mutableGraph._ins[m] =
+                    ins[n].orEmpty().mapNotNull { transformedNodes[it] }.toMutableSet()
+            }
+            mutableGraph._sinkNodes += sinkNodes.mapNotNull { transformedNodes[it] }
+            mutableGraph._sourceNodes += sourceNodes.mapNotNull { transformedNodes[it] }
+            return mutableGraph
+        }
+
+        fun <N, W> Graph<N, W>.filterNodes(
+            predicate: (N) -> Boolean
+        ): Graph<N, W> =
+            toMutableGraph().apply {
+                nodes
+                    .filterNot(predicate)
+                    .forEach(::removeNode)
+            }
+
+        fun <N, W> Graph<N, W>.filterEdges(
+            predicate: (edge: Pair<N, N>, weight: W) -> Boolean
+        ): Graph<N, W> =
+            toMutableGraph().apply {
+                edges
+                    .filterNot { (edge, weight) -> predicate(edge, weight) }
+                    .keys
+                    .forEach(::removeEdge)
+            }
 
     }
 
