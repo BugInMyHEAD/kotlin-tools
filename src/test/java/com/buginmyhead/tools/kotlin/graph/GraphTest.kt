@@ -4,6 +4,7 @@ import com.buginmyhead.tools.kotlin.graph.AcyclicGraph.Companion.toAcyclicGraph
 import com.buginmyhead.tools.kotlin.graph.AcyclicGraph.Companion.topologicalSort
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.bfs
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.nodes
+import com.buginmyhead.tools.kotlin.graph.ImmutableGraph.Companion.reversed
 import com.buginmyhead.tools.kotlin.graph.ImmutableGraph.Companion.toGraph
 import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.addEdge
 import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.filterEdges
@@ -194,6 +195,94 @@ internal class GraphTest : FreeSpec({
         val immutable = original.toGraph()
 
         immutable.toGraph() shouldBeSameInstanceAs immutable
+    }
+
+    "reversed returns a reversed graph" {
+        val original = MutableGraph<String, Int>()
+        original.addEdge("A" to "B", 13)
+        original.addEdge("B" to "C", 17)
+        val reversed = original.reversed()
+
+        reversed.nodes shouldBe original.nodes
+        reversed.edges shouldBe mapOf(
+            ("B" to "A") to 13,
+            ("C" to "B") to 17,
+        )
+        reversed.outs shouldBe mapOf(
+            "A" to emptySet(),
+            "B" to setOf("A"),
+            "C" to setOf("B"),
+        )
+        reversed.ins shouldBe mapOf(
+            "A" to setOf("B"),
+            "B" to setOf("C"),
+            "C" to emptySet(),
+        )
+        reversed.sourceNodes shouldBe setOf("C")
+        reversed.sinkNodes shouldBe setOf("A")
+    }
+
+    "reversed returns a reversed bidirectional graph" {
+        val original = MutableGraph<String, Int>()
+        original.addEdge("A" to "B", 13)
+        original.addEdge("B" to "A", 17)
+        original.addEdge("B" to "C", 19)
+        original.addEdge("C" to "B", 23)
+        val reversed = original.reversed()
+
+        reversed.nodes shouldBe original.nodes
+        reversed.edges shouldBe mapOf(
+            ("B" to "A") to 13,
+            ("A" to "B") to 17,
+            ("C" to "B") to 19,
+            ("B" to "C") to 23,
+        )
+        reversed.outs shouldBe mapOf(
+            "A" to setOf("B"),
+            "B" to setOf("A", "C"),
+            "C" to setOf("B"),
+        )
+        reversed.ins shouldBe mapOf(
+            "A" to setOf("B"),
+            "B" to setOf("A", "C"),
+            "C" to setOf("B"),
+        )
+        reversed.sourceNodes shouldBe emptySet()
+        reversed.sinkNodes shouldBe emptySet()
+    }
+
+    "reversed graph is different from the original graph" {
+        val original = MutableGraph<String, Int>()
+        original.addEdge("A" to "B", 13)
+        original.addEdge("B" to "C", 17)
+        val reversed = original.reversed()
+
+        reversed shouldNotBe original
+        reversed.hashCode() shouldNotBe original.hashCode()
+    }
+
+    "reversed of reversed graph is the original graph" {
+        val original = MutableGraph<String, Int>()
+        original.addEdge("A" to "B", 13)
+        original.addEdge("B" to "C", 17)
+        val reversed = original.reversed()
+        val reversedOfReversed = reversed.reversed()
+
+        reversedOfReversed shouldBe original
+        reversedOfReversed.hashCode() shouldBe original.hashCode()
+    }
+
+    "reversed graph has consistent equals and hashCode" {
+        val original = MutableGraph<String, Int>()
+        original.addEdge("A" to "B", 13)
+        original.addEdge("B" to "C", 17)
+        val reversed = original.reversed()
+        val sameReversed = original.reversed()
+
+        reversed shouldBe reversed
+        reversed.hashCode() shouldBe reversed.hashCode()
+        reversed shouldBe sameReversed
+        reversed.hashCode() shouldBe sameReversed.hashCode()
     }
 
     "toMutableGraph copies the graph" {

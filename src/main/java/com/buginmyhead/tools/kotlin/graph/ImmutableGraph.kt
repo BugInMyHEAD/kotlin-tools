@@ -1,6 +1,7 @@
 package com.buginmyhead.tools.kotlin.graph
 
 import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.toMutableGraph
+import com.buginmyhead.tools.kotlin.swap
 
 /**
  * It is a simple wrapper over a [Graph] to mark it as immutable.
@@ -31,6 +32,26 @@ interface ImmutableGraph<N, W> : Graph<N, W> {
             nodeTransform: (N) -> M,
             weightTransform: (from: N, to: N, weight: W, tFrom: M, tTo: M) -> V
         ) = ImmutableGraph(toMutableGraph(nodeTransform, weightTransform))
+
+        fun <N, W> Graph<N, W>.reversed(): ImmutableGraph<N, W> =
+            object : ImmutableGraph<N, W> {
+
+                override val edges: Map<Pair<N, N>, W> =
+                    this@reversed.edges.mapKeys { it.key.swap() }
+
+                override val outs: Map<N, Set<N>> = this@reversed.ins
+
+                override val ins: Map<N, Set<N>> = this@reversed.outs
+
+                override val sourceNodes: Set<N> = this@reversed.sinkNodes
+
+                override val sinkNodes: Set<N> = this@reversed.sourceNodes
+
+                override fun equals(other: Any?): Boolean = Graph.areEqual(this, other)
+
+                override fun hashCode(): Int = Graph.hash(this)
+
+            }
 
     }
 
