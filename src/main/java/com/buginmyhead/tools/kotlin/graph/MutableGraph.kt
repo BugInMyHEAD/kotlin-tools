@@ -1,7 +1,6 @@
 package com.buginmyhead.tools.kotlin.graph
 
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.nodes
-import java.util.Objects
 
 class MutableGraph<N, W> : Graph<N, W> {
 
@@ -83,16 +82,9 @@ class MutableGraph<N, W> : Graph<N, W> {
 
     override fun toString(): String = "MutableGraph(ins=$ins, outs=$outs)"
 
-    override fun equals(other: Any?): Boolean =
-        this === other
-                || (
-                other is Graph<*, *>
-                        && this.edges == other.edges
-                        && this.sourceNodes == other.sourceNodes
-                        && this.sinkNodes == other.sinkNodes
-                )
+    override fun equals(other: Any?): Boolean = Graph.areEqual(this, other)
 
-    override fun hashCode(): Int = Objects.hash(edges, sourceNodes, sinkNodes)
+    override fun hashCode(): Int = Graph.hash(this)
 
     companion object {
 

@@ -1,6 +1,7 @@
 package com.buginmyhead.tools.kotlin.graph
 
 import java.io.Serializable
+import java.util.Objects
 
 /**
  * Represents a directed graph structure.
@@ -80,6 +81,18 @@ interface Graph<N, W> : Serializable {
         val <N> Graph<N, *>.nodes: Set<N> get() = outs.keys
 
         fun Graph<*, *>.isEmpty(): Boolean = nodes.isEmpty()
+
+        fun areEqual(self: Graph<*, *>, other: Any?): Boolean =
+            self === other
+                    || (
+                    other is Graph<*, *>
+                            && self.edges == other.edges
+                            && self.sourceNodes == other.sourceNodes
+                            && self.sinkNodes == other.sinkNodes
+                    )
+
+        fun hash(graph: Graph<*, *>): Int =
+            Objects.hash(graph.edges, graph.sourceNodes, graph.sinkNodes)
 
         fun <N> Graph<N, *>.bfs(
             direction: Direction,

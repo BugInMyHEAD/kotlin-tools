@@ -11,7 +11,6 @@ import com.buginmyhead.tools.kotlin.graph.Tree.Companion.leaves
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.root
 import java.util.NavigableMap
 import java.util.NavigableSet
-import java.util.Objects
 
 /**
  * [Graph.Direction.Forward] means from [root] to [leaves].
@@ -108,16 +107,9 @@ private class IndexedTree<N, W> private constructor(
 
     private val last: N get() = index.nodeToLast.getValue(root)
 
-    override fun equals(other: Any?): Boolean =
-        this === other
-                || (
-                other is Graph<*, *>
-                        && this.edges == other.edges
-                        && this.sourceNodes == other.sourceNodes
-                        && this.sinkNodes == other.sinkNodes
-                )
+    override fun equals(other: Any?): Boolean = Graph.areEqual(this, other)
 
-    override fun hashCode(): Int = Objects.hash(edges, sourceNodes, sinkNodes)
+    override fun hashCode(): Int = Graph.hash(this)
 
     /** Creates a subtree rooted at [node] in O(1) by narrowing the index range. */
     fun subtreeAt(node: N) = IndexedTree(index, node)
