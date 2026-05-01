@@ -3,6 +3,7 @@ package com.buginmyhead.tools.kotlin.graph
 import com.buginmyhead.tools.kotlin.graph.AcyclicGraph.Companion.toAcyclicGraph
 import com.buginmyhead.tools.kotlin.graph.AcyclicGraph.Companion.topologicalSort
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.bfs
+import com.buginmyhead.tools.kotlin.graph.Graph.Companion.nodes
 import com.buginmyhead.tools.kotlin.graph.ImmutableGraph.Companion.toGraph
 import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.addEdge
 import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.toMutableGraph

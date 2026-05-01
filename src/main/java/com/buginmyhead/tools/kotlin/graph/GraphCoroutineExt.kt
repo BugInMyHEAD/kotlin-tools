@@ -1,6 +1,7 @@
 package com.buginmyhead.tools.kotlin.graph
 
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.isEmpty
+import com.buginmyhead.tools.kotlin.graph.Graph.Companion.nodes
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow

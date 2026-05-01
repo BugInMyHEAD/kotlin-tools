@@ -1,5 +1,6 @@
 package com.buginmyhead.tools.kotlin.statemachine
 
+import com.buginmyhead.tools.kotlin.graph.Graph.Companion.nodes
 import com.buginmyhead.tools.kotlin.graph.MutableGraph
 import com.buginmyhead.tools.kotlin.graph.Tree
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.ancestorsFrom

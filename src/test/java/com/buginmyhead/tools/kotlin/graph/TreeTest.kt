@@ -1,5 +1,6 @@
 package com.buginmyhead.tools.kotlin.graph
 
+import com.buginmyhead.tools.kotlin.graph.Graph.Companion.nodes
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.ancestorsFrom
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.leaves
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.root

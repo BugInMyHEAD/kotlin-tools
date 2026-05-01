@@ -1,5 +1,6 @@
 package com.buginmyhead.tools.kotlin.graph
 
+import com.buginmyhead.tools.kotlin.graph.Graph.Companion.nodes
 import java.util.Objects
 
 class MutableGraph<N, W> : Graph<N, W> {
@@ -12,8 +13,6 @@ class MutableGraph<N, W> : Graph<N, W> {
 
     private val _ins = mutableMapOf<N, MutableSet<N>>()
     override val ins: Map<N, Set<N>> get() = _ins
-
-    override val nodes: Set<N> get() = _outs.keys
 
     private val _sourceNodes = mutableSetOf<N>()
     override val sourceNodes: Set<N> get() = _sourceNodes

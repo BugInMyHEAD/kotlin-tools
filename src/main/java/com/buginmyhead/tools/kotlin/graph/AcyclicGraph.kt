@@ -1,6 +1,7 @@
 package com.buginmyhead.tools.kotlin.graph
 
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.isEmpty
+import com.buginmyhead.tools.kotlin.graph.Graph.Companion.nodes
 import com.buginmyhead.tools.kotlin.graph.ImmutableGraph.Companion.toGraph
 
 /**

@@ -6,6 +6,7 @@ import com.buginmyhead.tools.kotlin.UnsafeMergeMap
 import com.buginmyhead.tools.kotlin.dfsPost
 import com.buginmyhead.tools.kotlin.graph.AcyclicGraph.Companion.toAcyclicGraph
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.bfs
+import com.buginmyhead.tools.kotlin.graph.Graph.Companion.nodes
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.leaves
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.root
 import java.util.NavigableMap
@@ -99,8 +100,6 @@ private class IndexedTree<N, W> private constructor(
             mapOf(root to emptySet()),
             index.ins.subMap(root, false, last, true),
         )
-
-    override val nodes: Set<N> = outs.keys
 
     override val sinkNodes: Set<N> = run {
         val firstSink = index.nodeToFirstSink.getValue(root)

@@ -29,9 +29,6 @@ interface Graph<N, W> : Serializable {
      */
     val ins: Map<N, Set<N>>
 
-    /** A [Set] of all nodes in the graph. */
-    val nodes: Set<N>
-
     /** A [Set] of all nodes that do not have incoming neighbors. */
     val sourceNodes: Set<N>
 
@@ -78,6 +75,9 @@ interface Graph<N, W> : Serializable {
     }
 
     companion object {
+
+        /** A [Set] of all nodes in the graph. */
+        val <N> Graph<N, *>.nodes: Set<N> get() = outs.keys
 
         fun Graph<*, *>.isEmpty(): Boolean = nodes.isEmpty()
 
