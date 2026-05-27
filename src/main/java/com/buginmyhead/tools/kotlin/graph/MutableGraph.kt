@@ -1,5 +1,6 @@
 package com.buginmyhead.tools.kotlin.graph
 
+import com.buginmyhead.tools.kotlin.graph.Graph.Companion.bfs
 import com.buginmyhead.tools.kotlin.graph.Graph.Companion.nodes
 
 class MutableGraph<N, W> : Graph<N, W> {
@@ -163,6 +164,14 @@ class MutableGraph<N, W> : Graph<N, W> {
                     .keys
                     .forEach(::removeEdge)
             }
+
+        fun <N, W> Graph<N, W>.selectReachable(
+            direction: Graph.Direction,
+            startNodes: Iterable<N>
+        ): Graph<N, W> {
+            val reachableNodes = bfs(direction, startNodes).toSet()
+            return filterNodes { it in reachableNodes }
+        }
 
     }
 

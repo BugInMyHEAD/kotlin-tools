@@ -9,6 +9,7 @@ import com.buginmyhead.tools.kotlin.graph.ImmutableGraph.Companion.toGraph
 import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.addEdge
 import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.filterEdges
 import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.filterNodes
+import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.selectReachable
 import com.buginmyhead.tools.kotlin.graph.MutableGraph.Companion.toMutableGraph
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
@@ -208,18 +209,18 @@ internal class GraphTest : FreeSpec({
             ("B" to "A") to 13,
             ("C" to "B") to 17,
         )
-        reversed.outs shouldBe mapOf(
-            "A" to emptySet(),
-            "B" to setOf("A"),
-            "C" to setOf("B"),
-        )
         reversed.ins shouldBe mapOf(
             "A" to setOf("B"),
             "B" to setOf("C"),
             "C" to emptySet(),
         )
-        reversed.sourceNodes shouldBe setOf("C")
+        reversed.outs shouldBe mapOf(
+            "A" to emptySet(),
+            "B" to setOf("A"),
+            "C" to setOf("B"),
+        )
         reversed.sinkNodes shouldBe setOf("A")
+        reversed.sourceNodes shouldBe setOf("C")
     }
 
     "reversed returns a reversed bidirectional graph" {
@@ -237,12 +238,12 @@ internal class GraphTest : FreeSpec({
             ("C" to "B") to 19,
             ("B" to "C") to 23,
         )
-        reversed.outs shouldBe mapOf(
+        reversed.ins shouldBe mapOf(
             "A" to setOf("B"),
             "B" to setOf("A", "C"),
             "C" to setOf("B"),
         )
-        reversed.ins shouldBe mapOf(
+        reversed.outs shouldBe mapOf(
             "A" to setOf("B"),
             "B" to setOf("A", "C"),
             "C" to setOf("B"),
@@ -620,5 +621,36 @@ internal class GraphTest : FreeSpec({
 
         val result = acyclicGraph.topologicalSort(Graph.Direction.Backward).toList()
         result shouldBe listOf("D", "A", "C", "B")
+    }
+
+    "selectReachable forward visits all reachable nodes" {
+        val graph = MutableGraph<String, Unit>()
+        graph.addEdge("A" to "B")
+        graph.addEdge("B" to "C")
+        graph.addEdge("C" to "D")
+        graph.addEdge("E" to "F")
+
+        val result = graph.selectReachable(Graph.Direction.Forward, setOf("A"))
+
+        result.nodes shouldBe setOf("A", "B", "C", "D")
+        result.edges shouldBe mapOf(
+            ("A" to "B") to Unit,
+            ("B" to "C") to Unit,
+            ("C" to "D") to Unit,
+        )
+        result.ins shouldBe mapOf(
+            "A" to emptySet(),
+            "B" to setOf("A"),
+            "C" to setOf("B"),
+            "D" to setOf("C"),
+        )
+        result.outs shouldBe mapOf(
+            "A" to setOf("B"),
+            "B" to setOf("C"),
+            "C" to setOf("D"),
+            "D" to emptySet(),
+        )
+        result.sinkNodes shouldBe setOf("D")
+        result.sourceNodes shouldBe setOf("A")
     }
 })
