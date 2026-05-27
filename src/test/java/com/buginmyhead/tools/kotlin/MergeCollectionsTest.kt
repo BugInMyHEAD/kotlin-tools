@@ -3,49 +3,49 @@ package com.buginmyhead.tools.kotlin
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 
-internal class UnsafeMergeCollectionsTest : FreeSpec({
+internal class MergeCollectionsTest : FreeSpec({
 
-    "UnsafeMergeCollection" - {
+    "MergeCollection" - {
 
         "size returns sum of all collections" {
-            UnsafeMergeCollection(listOf(13, 17), listOf(19)).size shouldBe 3
+            MergeCollection(listOf(13, 17), listOf(19)).size shouldBe 3
         }
 
         "size of empty collections returns 0" {
-            UnsafeMergeCollection(emptyList<Int>(), emptyList()).size shouldBe 0
+            MergeCollection(emptyList<Int>(), emptyList()).size shouldBe 0
         }
 
         "isEmpty returns true when all collections are empty" {
-            UnsafeMergeCollection(emptyList<Int>(), emptyList()).isEmpty() shouldBe true
+            MergeCollection(emptyList<Int>(), emptyList()).isEmpty() shouldBe true
         }
 
         "isEmpty returns false when any collection is non-empty" {
-            UnsafeMergeCollection(emptyList(), listOf(13)).isEmpty() shouldBe false
+            MergeCollection(emptyList(), listOf(13)).isEmpty() shouldBe false
         }
 
         "contains returns true when element exists in any collection" {
-            UnsafeMergeCollection(listOf(13), listOf(17)).contains(17) shouldBe true
+            MergeCollection(listOf(13), listOf(17)).contains(17) shouldBe true
         }
 
         "contains returns false when element is absent" {
-            UnsafeMergeCollection(listOf(13), listOf(17)).contains(19) shouldBe false
+            MergeCollection(listOf(13), listOf(17)).contains(19) shouldBe false
         }
 
         "containsAll returns true when all elements are found" {
-            UnsafeMergeCollection(listOf(13, 17), listOf(19, 23)).containsAll(listOf(13, 23)) shouldBe true
+            MergeCollection(listOf(13, 17), listOf(19, 23)).containsAll(listOf(13, 23)) shouldBe true
         }
 
         "containsAll returns false when some elements are missing" {
-            UnsafeMergeCollection(listOf(13), listOf(17)).containsAll(listOf(13, 19)) shouldBe false
+            MergeCollection(listOf(13), listOf(17)).containsAll(listOf(13, 19)) shouldBe false
         }
 
         "iterator yields elements from all collections in order" {
-            UnsafeMergeCollection(listOf(13, 17), listOf(19), listOf(23, 29))
+            MergeCollection(listOf(13, 17), listOf(19), listOf(23, 29))
                 .iterator().asSequence().toList() shouldBe listOf(13, 17, 19, 23, 29)
         }
 
         "iterator of empty collections yields nothing" {
-            UnsafeMergeCollection(emptyList<Int>(), emptyList())
+            MergeCollection(emptyList<Int>(), emptyList())
                 .iterator().asSequence().toList() shouldBe emptyList()
         }
 

@@ -3,7 +3,7 @@ package com.buginmyhead.tools.kotlin
 /**
  * @param original the original [Map]s to back this [UnsafeMergeMap].
  *  The caller must guarantee that
- *  the keys of all maps in [original] are disjoint,
+ *  the keys of all [Map]s in [original] are disjoint,
  *  otherwise the behavior of this class is undefined.
  */
 class UnsafeMergeMap<K, V>(
@@ -17,7 +17,7 @@ class UnsafeMergeMap<K, V>(
         UnsafeMergeSet(*original.map(Map<K, V>::keys).toTypedArray())
 
     override val values: Collection<V> =
-        UnsafeMergeCollection(*original.map(Map<K, V>::values).toTypedArray())
+        MergeCollection(*original.map(Map<K, V>::values).toTypedArray())
 
     override val entries: Set<Map.Entry<K, V>> =
         UnsafeMergeSet(*original.map(Map<K, V>::entries).toTypedArray())
@@ -35,20 +35,17 @@ class UnsafeMergeMap<K, V>(
 /**
  * @param original the original [Set]s to back this [UnsafeMergeSet].
  *  The caller must guarantee that
- *  the keys of all maps in [original] are disjoint,
+ *  the keys of all [Set]s in [original] are disjoint,
  *  otherwise the behavior of this class is undefined.
  */
 class UnsafeMergeSet<T>(
     vararg original: Set<T>
-) : Set<T>, Collection<T> by UnsafeMergeCollection(*original)
+) : Set<T>, Collection<T> by MergeCollection(*original)
 
 /**
- * @param original the original [Collection]s to back this [UnsafeMergeCollection].
- *  The caller must guarantee that
- *  the keys of all maps in [original] are disjoint,
- *  otherwise the behavior of this class is undefined.
+ * @param original the original [Collection]s to back this [MergeCollection].
  */
-class UnsafeMergeCollection<T>(
+class MergeCollection<T>(
     private vararg val original: Collection<T>
 ) : Collection<T> {
 
