@@ -1,6 +1,35 @@
 package com.buginmyhead.tools.kotlin
 
 /**
+ * @param original the original [Collection]s to back this [MergeCollection].
+ */
+class MergeCollection<T>(
+    private vararg val original: Collection<T>
+) : Collection<T> {
+
+    override val size: Int get() = original.sumOf(Collection<T>::size)
+
+    override fun isEmpty(): Boolean = original.all(Collection<T>::isEmpty)
+
+    override fun contains(element: T): Boolean = original.any { element in it }
+
+    override fun containsAll(elements: Collection<T>): Boolean = elements.all(::contains)
+
+    override fun iterator() : Iterator<T> = original.asSequence().flatten().iterator()
+
+}
+
+/**
+ * @param original the original [Set]s to back this [UnsafeMergeSet].
+ *  The caller must guarantee that
+ *  the keys of all [Set]s in [original] are disjoint,
+ *  otherwise the behavior of this class is undefined.
+ */
+class UnsafeMergeSet<T>(
+    vararg original: Set<T>
+) : Set<T>, Collection<T> by MergeCollection(*original)
+
+/**
  * @param original the original [Map]s to back this [UnsafeMergeMap].
  *  The caller must guarantee that
  *  the keys of all [Map]s in [original] are disjoint,
@@ -29,34 +58,5 @@ class UnsafeMergeMap<K, V>(
     override fun containsValue(value: V): Boolean = original.any { value in it.values }
 
     override fun get(key: K): V? = original.firstNotNullOfOrNull { it[key] }
-
-}
-
-/**
- * @param original the original [Set]s to back this [UnsafeMergeSet].
- *  The caller must guarantee that
- *  the keys of all [Set]s in [original] are disjoint,
- *  otherwise the behavior of this class is undefined.
- */
-class UnsafeMergeSet<T>(
-    vararg original: Set<T>
-) : Set<T>, Collection<T> by MergeCollection(*original)
-
-/**
- * @param original the original [Collection]s to back this [MergeCollection].
- */
-class MergeCollection<T>(
-    private vararg val original: Collection<T>
-) : Collection<T> {
-
-    override val size: Int get() = original.sumOf(Collection<T>::size)
-
-    override fun isEmpty(): Boolean = original.all(Collection<T>::isEmpty)
-
-    override fun contains(element: T): Boolean = original.any { element in it }
-
-    override fun containsAll(elements: Collection<T>): Boolean = elements.all(::contains)
-
-    override fun iterator() : Iterator<T> = original.asSequence().flatten().iterator()
 
 }
