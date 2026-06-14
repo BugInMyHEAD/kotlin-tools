@@ -101,8 +101,8 @@ internal class StateMachineTest : FreeSpec({
         val machine = StateMachine(a, transitionFunction)
 
         machine.pushEvent(b, 17)
-        machine.pollEffect(transitionFunction) shouldBe 17
-        machine.pollEffect(transitionFunction) shouldBe null
+        machine.pollGlobalEffect() shouldBe 17
+        machine.pollGlobalEffect() shouldBe null
         machine.pollEffect(b) shouldBe 17
         machine.pollEffect(b) shouldBe null
         machine.pollEffect(a) shouldBe 17

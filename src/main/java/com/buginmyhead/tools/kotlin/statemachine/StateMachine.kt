@@ -61,9 +61,9 @@ import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
  *  To avoid the `kotlin-reflect` dependency,
  *  provide an explicit lambda that returns the nested states manually.
  */
-class StateMachine<S : TypeSafeBroker.Key<F>, F : Any>(
+class StateMachine<S : TypeSafeBroker.Key<F>, F : Any, G : Any>(
     initialState: S,
-    private val transitionFunction: TransitionFunction<S, *>,
+    private val transitionFunction: TransitionFunction<S, G>,
     private val nestedStatesAt: (state: TypeSafeBroker.Key<*>) -> Iterable<TypeSafeBroker.Key<*>> =
         { it.fieldPropertyValues() + it.collectionPropertyValues() },
 ) {
@@ -112,6 +112,8 @@ class StateMachine<S : TypeSafeBroker.Key<F>, F : Any>(
         stateToEffect += transition.stateToEffect
     }
 
+    fun pollGlobalEffect(): G? = stateToEffect.poll(transitionFunction)
+
     /**
      * Removes and returns the effect associated with the [receiver] state,
      *  or `null` if no effect exists for it.
@@ -137,7 +139,7 @@ class StateMachine<S : TypeSafeBroker.Key<F>, F : Any>(
      * @throws IllegalArgumentException if [state] is not in the current [stateTree].
      */
     class Context<S : TypeSafeBroker.Key<F>, F : Any, T : TypeSafeBroker.Key<G>, G : Any>(
-        private val stateMachine: StateMachine<S, F>,
+        private val stateMachine: StateMachine<S, F, *>,
         val state: T,
     ) {
 
