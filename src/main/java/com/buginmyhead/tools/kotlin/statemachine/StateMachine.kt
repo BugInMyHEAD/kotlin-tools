@@ -8,9 +8,38 @@ import com.buginmyhead.tools.kotlin.graph.Tree.Companion.root
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
 
 /**
- * A framework-agnostic state transition engine.
+ * A platform-agnostic state machine framework with the following features:
+ * - Hierarchical state and event hoisting
+ * - Global and local side effect delivery
+ * - Unidirectional data flow
  *
- * The caller is responsible for:
+ * #### Core concepts
+ * ##### Hierarchical state and event hoisting
+ * - As a tree data structure has only one root and subtrees recursively on each node,
+ *   a root state has substates recursively. See [stateTree].
+ * - An event is hoisted.
+ *   In other words, it is delivered from any substate to the root state in hierarchical order.
+ *   See [pushEvent] passes the hierarchical substate chain to [TransitionFunction.onEvent].
+ * ##### Side effect delivery
+ * - Each transition can produce side effects.
+ * - On each effect is consumed, it is removed from the internal broker. See [pollEffect].
+ * ###### Global side effect
+ * - Mapped by the [TransitionFunction] itself as a [TypeSafeBroker.Key].
+ * - Independent of any state.
+ * - Only one is created on each transition.
+ * - It is designed for one-time events that are not tied to a specific state,
+ *   such as showing a toast/snackbar, navigating to another screen, or logging an analytics event.
+ * ###### Local side effect
+ * - Mapped by each substate via [stateToEffect].
+ * - It is designed for state-specific side effects,
+ *   such as showing a tooltip for a specific button, or triggering a local animation.
+ *
+ * #### Out-of-scope features of this framework
+ * - Asynchronous event handling: The [transitionFunction] is designed to be synchronous.
+ *   For asynchronous operations, consider using a separate coroutine scope or thread,
+ *   and pushing events upon completion.
+ * - Effect queuing: The current design allows only one effect per state before it is polled.
+ *   For multiple effects, consider using a queue or list as the effect type.
  * - **State observation**: Wrapping [state] with a reactive primitive
  *   (e.g., `StateFlow`, `LiveData`, Compose `State`) after each [pushEvent].
  * - **Thread safety**: Confining all [pushEvent] and [pollEffect] calls
@@ -19,6 +48,8 @@ import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
  *   (e.g., `SavedStateHandle`) and restoring it via [initialState].
  *
  * @param S The type of the root state.
+ * @param F The type of the 'local' effect.
+ * @param G The type of the 'global' effect.
  * @param initialState The initial state of the state machine.
  *  Can be a restored state from a persistence mechanism.
  * @param transitionFunction A pure function to determine the next state and effects
