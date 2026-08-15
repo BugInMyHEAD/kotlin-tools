@@ -47,7 +47,7 @@ import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
  * - **State persistence**: Saving [state] to a persistence mechanism
  *   (e.g., `SavedStateHandle`) and restoring it via [initialState].
  *
- * @param S The type of the root state.
+ * @param R The type of the root state.
  * @param F The type of the 'local' effect.
  * @param G The type of the 'global' effect.
  * @param initialState The initial state of the state machine.
@@ -61,9 +61,9 @@ import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
  *  To avoid the `kotlin-reflect` dependency,
  *  provide an explicit lambda that returns the nested states manually.
  */
-class StateMachine<S : TypeSafeBroker.Key<F>, F : Any, G : Any>(
-    initialState: S,
-    private val transitionFunction: TransitionFunction<S, G>,
+class StateMachine<R : TypeSafeBroker.Key<F>, F : Any, G : Any>(
+    initialState: R,
+    private val transitionFunction: TransitionFunction<R, G>,
     private val nestedStatesAt: (state: TypeSafeBroker.Key<*>) -> Iterable<TypeSafeBroker.Key<*>> =
         { it.fieldPropertyValues() + it.collectionPropertyValues() },
 ) {
@@ -74,8 +74,8 @@ class StateMachine<S : TypeSafeBroker.Key<F>, F : Any, G : Any>(
     private lateinit var stateTree: Tree<TypeSafeBroker.Key<*>, Unit>
 
     @Suppress("UNCHECKED_CAST")
-    var state: S
-        get() = stateTree.root as S
+    var state: R
+        get() = stateTree.root as R
         private set(value) {
             stateTree =
                 MutableGraph
@@ -141,9 +141,9 @@ class StateMachine<S : TypeSafeBroker.Key<F>, F : Any, G : Any>(
      *
      * @throws IllegalArgumentException if [state] is not in the current [stateTree].
      */
-    data class Context<S : TypeSafeBroker.Key<F>, F : Any, T : TypeSafeBroker.Key<G>, G : Any>(
-        private val stateMachine: StateMachine<S, F, *>,
-        val state: T
+    data class Context<S : TypeSafeBroker.Key<G>, G : Any>(
+        private val stateMachine: StateMachine<*, *, *>,
+        val state: S
     ) {
 
         init {
@@ -161,7 +161,7 @@ class StateMachine<S : TypeSafeBroker.Key<F>, F : Any, G : Any>(
          * Creates a new [Context] with the given nested [state],
          *  reusing the same [pushEvent] and [pollEffect] delegates.
          */
-        fun <U : TypeSafeBroker.Key<H>, H : Any> with(state: U) = Context(stateMachine, state)
+        fun <T : TypeSafeBroker.Key<H>, H : Any> with(state: T) = Context(stateMachine, state)
 
     }
 

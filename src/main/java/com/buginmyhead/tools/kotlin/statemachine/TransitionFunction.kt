@@ -4,10 +4,10 @@ package com.buginmyhead.tools.kotlin.statemachine
  * A function that defines how the state machine transitions from one state to another
  *  in response to an event.
  *
- * @param S The type of the root state.
+ * @param R The type of the root state.
  * @param F The type of the 'global' effect, which is not mapped by a certain state.
  */
-fun interface TransitionFunction<S : TypeSafeBroker.Key<*>, F : Any> : TypeSafeBroker.Key<F> {
+fun interface TransitionFunction<R : TypeSafeBroker.Key<*>, F : Any> : TypeSafeBroker.Key<F> {
 
     /**
      * Implementation is highly recommended to be pure.
@@ -15,34 +15,34 @@ fun interface TransitionFunction<S : TypeSafeBroker.Key<*>, F : Any> : TypeSafeB
      * @param states The list of states from the sender to the root state. It guarantees that
      *  the first element is the sender state and the last element is the [root] state.
      */
-    fun onEvent(states: List<TypeSafeBroker.Key<*>>, root: S, event: Any): Transition<S, F>
+    fun onEvent(states: List<TypeSafeBroker.Key<*>>, root: R, event: Any): Transition<R, F>
 
     /**
      * The default implementation of [TransitionFunction]
      *  that creates a [Scope] and passes it to [Scope.onEvent].
      *
-     * @param S The type of the root state.
+     * @param R The type of the root state.
      * @param F The type of the 'global' effect, which is not mapped by a certain state.
      */
-    fun interface WithScope<S : TypeSafeBroker.Key<*>, F : Any> : TransitionFunction<S, F> {
+    fun interface WithScope<R : TypeSafeBroker.Key<*>, F : Any> : TransitionFunction<R, F> {
 
         /**
          * @param F The type of the 'global' effect, which is not mapped by a certain state.
          *
          * @see TransitionFunction.onEvent
          */
-        fun Scope<S, F>.onEvent(
+        fun Scope<R, F>.onEvent(
             states: List<TypeSafeBroker.Key<*>>,
-            root: S,
+            root: R,
             event: Any
-        ): Transition<S, F>
+        ): Transition<R, F>
 
         override fun onEvent(
             states: List<TypeSafeBroker.Key<*>>,
-            root: S,
+            root: R,
             event: Any
-        ): Transition<S, F> {
-            val scope = object : Scope<S, F> {
+        ): Transition<R, F> {
+            val scope = object : Scope<R, F> {
                 override val stateToEffect = TypeSafeBroker()
             }
             return scope.onEvent(states, root, event)
@@ -51,12 +51,12 @@ fun interface TransitionFunction<S : TypeSafeBroker.Key<*>, F : Any> : TypeSafeB
         /**
          * @param F The type of the 'global' effect, which is not mapped by a certain state.
          */
-        interface Scope<S : TypeSafeBroker.Key<*>, F : Any> {
+        interface Scope<R : TypeSafeBroker.Key<*>, F : Any> {
 
             val stateToEffect: TypeSafeBroker
 
             fun transit(
-                state: S,
+                state: R,
                 globalEffect: F
             ) = Transition(
                 state,

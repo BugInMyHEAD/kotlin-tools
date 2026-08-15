@@ -175,8 +175,8 @@ internal class StateMachineTest : FreeSpec({
         val ctxB = ctxA.with(b)
 
         ctxB.state shouldBe b
-        ctxB.pushEvent(17)
-        ctxB.pollEffect() shouldBe 17
+        ctxB.pushEvent(13)
+        ctxB.pollEffect() shouldBe 13
 
         ctxA shouldNotBe ctxB
     }
