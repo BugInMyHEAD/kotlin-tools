@@ -87,6 +87,8 @@ class StateMachine<S : TypeSafeBroker.Key<F>, F : Any, G : Any>(
         state = initialState
     }
 
+    private var globalEffect: G? = null
+
     private var stateToEffect = TypeSafeBroker()
 
     /**
@@ -109,10 +111,11 @@ class StateMachine<S : TypeSafeBroker.Key<F>, F : Any, G : Any>(
         val transition =
             transitionFunction.onEvent(stateTree.ancestorsFrom(sender).toList(), state, event)
         state = transition.state
+        globalEffect = transition.globalEffect
         stateToEffect += transition.stateToEffect
     }
 
-    fun pollGlobalEffect(): G? = stateToEffect.poll(transitionFunction)
+    fun pollGlobalEffect(): G? = globalEffect.also { globalEffect = null }
 
     /**
      * Removes and returns the effect associated with the [receiver] state,

@@ -15,7 +15,7 @@ fun interface TransitionFunction<S : TypeSafeBroker.Key<*>, F : Any> : TypeSafeB
      * @param states The list of states from the sender to the root state. It guarantees that
      *  the first element is the sender state and the last element is the [root] state.
      */
-    fun onEvent(states: List<TypeSafeBroker.Key<*>>, root: S, event: Any): Transition<S>
+    fun onEvent(states: List<TypeSafeBroker.Key<*>>, root: S, event: Any): Transition<S, F>
 
     /**
      * The default implementation of [TransitionFunction]
@@ -31,30 +31,40 @@ fun interface TransitionFunction<S : TypeSafeBroker.Key<*>, F : Any> : TypeSafeB
          *
          * @see TransitionFunction.onEvent
          */
-        fun Scope<F>.onEvent(states: List<TypeSafeBroker.Key<*>>, root: S, event: Any): S
+        fun Scope<S, F>.onEvent(
+            states: List<TypeSafeBroker.Key<*>>,
+            root: S,
+            event: Any
+        ): Transition<S, F>
 
-        override fun onEvent(states: List<TypeSafeBroker.Key<*>>, root: S, event: Any): Transition<S> {
-            val scope = object : Scope<F> {
-
+        override fun onEvent(
+            states: List<TypeSafeBroker.Key<*>>,
+            root: S,
+            event: Any
+        ): Transition<S, F> {
+            val scope = object : Scope<S, F> {
                 override val stateToEffect = TypeSafeBroker()
-
-                override var effect: F? = null
-
             }
-            val nextState = scope.onEvent(states, root, event)
-            scope.effect?.also { scope.stateToEffect[this] = it }
-            return Transition(nextState, scope.stateToEffect)
+            return scope.onEvent(states, root, event)
         }
 
-    }
+        /**
+         * @param F The type of the 'global' effect, which is not mapped by a certain state.
+         */
+        interface Scope<S : TypeSafeBroker.Key<*>, F : Any> {
 
-    /**
-     * @param F The type of the 'global' effect, which is not mapped by a certain state.
-     */
-    interface Scope<F : Any> {
+            val stateToEffect: TypeSafeBroker
 
-        val stateToEffect: TypeSafeBroker
-        var effect: F?
+            fun transit(
+                state: S,
+                globalEffect: F
+            ) = Transition(
+                state,
+                globalEffect,
+                stateToEffect
+            )
+
+        }
 
     }
 

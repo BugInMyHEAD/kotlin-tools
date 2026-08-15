@@ -10,7 +10,7 @@ internal class StateMachineTest : FreeSpec({
         val a = State()
         val b = State()
         val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
-            b
+            transit(b, Unit)
         }
         val machine = StateMachine(a, transitionFunction)
 
@@ -23,7 +23,7 @@ internal class StateMachineTest : FreeSpec({
         val b = State()
         val a = State() // a is root and does not contain b
         val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
-            root
+            transit(root, Unit)
         }
         val machine = StateMachine(a, transitionFunction)
 
@@ -40,7 +40,7 @@ internal class StateMachineTest : FreeSpec({
         val a = State(child = b)
         val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
             statesCaptured = states
-            root
+            transit(root, Unit)
         }
         val machine = StateMachine(a, transitionFunction)
 
@@ -57,7 +57,7 @@ internal class StateMachineTest : FreeSpec({
         val a = State(children = listOf(b))
         val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
             statesCaptured = states
-            root
+            transit(root, Unit)
         }
         val machine = StateMachine(a, transitionFunction)
 
@@ -74,7 +74,7 @@ internal class StateMachineTest : FreeSpec({
         val a = State(child = b)
         val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
             statesCaptured = states
-            root
+            transit(root, Unit)
         }
         val machine = StateMachine(a, transitionFunction)
 
@@ -95,25 +95,24 @@ internal class StateMachineTest : FreeSpec({
             states.forEach { state ->
                 stateToEffect[state as State] = event as Int
             }
-            effect = event as Int
-            root
+            transit(root, event as Int)
         }
         val machine = StateMachine(a, transitionFunction)
 
-        machine.pushEvent(b, 17)
-        machine.pollGlobalEffect() shouldBe 17
+        machine.pushEvent(b, 13)
+        machine.pollGlobalEffect() shouldBe 13
         machine.pollGlobalEffect() shouldBe null
-        machine.pollEffect(b) shouldBe 17
+        machine.pollEffect(b) shouldBe 13
         machine.pollEffect(b) shouldBe null
-        machine.pollEffect(a) shouldBe 17
+        machine.pollEffect(a) shouldBe 13
         machine.pollEffect(a) shouldBe null
 
-        machine.pushEvent(a, 19)
-        machine.pollEffect(transitionFunction) shouldBe 19
-        machine.pollEffect(transitionFunction) shouldBe null
+        machine.pushEvent(a, 17)
+        machine.pollGlobalEffect() shouldBe 17
+        machine.pollGlobalEffect() shouldBe null
         machine.pollEffect(b) shouldBe null
         machine.pollEffect(b) shouldBe null
-        machine.pollEffect(a) shouldBe 19
+        machine.pollEffect(a) shouldBe 17
         machine.pollEffect(a) shouldBe null
     }
 
@@ -122,7 +121,7 @@ internal class StateMachineTest : FreeSpec({
         val a = State(child = b)
         val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
              stateToEffect[states.first() as State] = event as Int
-             root
+             transit(root, Unit)
         }
         val machine = StateMachine(a, transitionFunction)
         val context = machine.obtainContext()
@@ -136,7 +135,10 @@ internal class StateMachineTest : FreeSpec({
     "Context pushEvent delegates to outer StateMachine pushEvent" {
         val b = State()
         val a = State(child = b)
-        val transitionFunction = TransitionFunction.WithScope<State, Int> { _, _, _ -> b }
+        val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
+            stateToEffect[states.first() as State] = event as Int
+            transit(b, Unit)
+        }
         val machine = StateMachine(a, transitionFunction)
 
         val ctx = machine.obtainContext()
@@ -148,9 +150,9 @@ internal class StateMachineTest : FreeSpec({
 
     "Context pollEffect delegates to outer StateMachine pollEffect" {
         val state = State()
-        val transitionFunction = TransitionFunction.WithScope<State, Int> { states, root, event ->
+        val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
             stateToEffect[states.first() as State] = event as Int
-            root
+            transit(root, Unit)
         }
         val machine = StateMachine(state, transitionFunction)
 
@@ -163,9 +165,9 @@ internal class StateMachineTest : FreeSpec({
     "Context with creates new context with provided state and reuses delegates" {
         val b = State()
         val a = State(child = b)
-        val transitionFunction = TransitionFunction.WithScope<State, Int> { states, root, event ->
+        val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
             stateToEffect[states.first() as State] = event as Int
-            root
+            transit(root, Unit)
         }
         val machine = StateMachine(a, transitionFunction)
 
@@ -182,7 +184,7 @@ internal class StateMachineTest : FreeSpec({
     "Context with throws if state is not in stateTree" {
         val a = State()
         val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
-            root
+            transit(root, Unit)
         }
         val machine = StateMachine(a, transitionFunction)
 
@@ -193,7 +195,9 @@ internal class StateMachineTest : FreeSpec({
 
     "Context equals and hashCode consider state" {
         val state = State()
-        val transitionFunction = TransitionFunction.WithScope<State, Int> { _, root, _ -> root }
+        val transitionFunction = TransitionFunction.WithScope<State, Unit> { states, root, event ->
+            transit(root, Unit)
+        }
         val machine = StateMachine(state, transitionFunction)
 
         val context = machine.obtainContext()
