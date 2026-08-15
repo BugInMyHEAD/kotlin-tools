@@ -24,9 +24,8 @@ import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
  * - Each transition can produce side effects.
  * - On each effect is consumed, it is removed from the internal broker. See [pollEffect].
  * ###### Global side effect
- * - Mapped by the [TransitionFunction] itself as a [TypeSafeBroker.Key].
- * - Independent of any state.
  * - Only one is created on each transition.
+ * - Independent of any state.
  * - It is designed for one-time events that are not tied to a specific state,
  *   such as showing a toast/snackbar, navigating to another screen, or logging an analytics event.
  * ###### Local side effect
@@ -38,7 +37,7 @@ import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
  * - Asynchronous event handling: The [transitionFunction] is designed to be synchronous.
  *   For asynchronous operations, consider using a separate coroutine scope or thread,
  *   and pushing events upon completion.
- * - Effect queuing: The current design allows only one effect per state before it is polled.
+ * - Effect queueing: The current design allows only one effect per state before it is polled.
  *   For multiple effects, consider using a queue or list as the effect type.
  * - **State observation**: Wrapping [state] with a reactive primitive
  *   (e.g., `StateFlow`, `LiveData`, Compose `State`) after each [pushEvent].
