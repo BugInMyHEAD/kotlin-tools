@@ -114,10 +114,14 @@ class StateMachine<R : TypeSafeBroker.Key<F>, F : Any, G : Any>(
         stateToEffect += transition.stateToEffect
     }
 
-    fun pollGlobalEffect(): G? = globalEffect.also { globalEffect = null }
+    /**
+     * Removes and returns the global side effect or `null`.
+     */
+    fun pollGlobalEffect(): G? =
+        globalEffect.also { globalEffect = null }
 
     /**
-     * Removes and returns the effect associated with the [receiver] state,
+     * Removes and returns the local side effect associated with the [receiver] state,
      *  or `null` if no effect exists for it.
      */
     fun <T : TypeSafeBroker.Key<G>, G : Any> pollEffect(receiver: T): G? =
