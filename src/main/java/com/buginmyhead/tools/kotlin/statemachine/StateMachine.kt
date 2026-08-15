@@ -141,9 +141,9 @@ class StateMachine<S : TypeSafeBroker.Key<F>, F : Any, G : Any>(
      *
      * @throws IllegalArgumentException if [state] is not in the current [stateTree].
      */
-    class Context<S : TypeSafeBroker.Key<F>, F : Any, T : TypeSafeBroker.Key<G>, G : Any>(
+    data class Context<S : TypeSafeBroker.Key<F>, F : Any, T : TypeSafeBroker.Key<G>, G : Any>(
         private val stateMachine: StateMachine<S, F, *>,
-        val state: T,
+        val state: T
     ) {
 
         init {
@@ -161,17 +161,7 @@ class StateMachine<S : TypeSafeBroker.Key<F>, F : Any, G : Any>(
          * Creates a new [Context] with the given nested [state],
          *  reusing the same [pushEvent] and [pollEffect] delegates.
          */
-        fun <U : TypeSafeBroker.Key<H>, H : Any> with(state: U) =
-            Context(stateMachine, state)
-
-        override fun equals(other: Any?): Boolean =
-            this === other || (
-                    other is Context<*, *, *, *>
-                            && stateMachine === other.stateMachine
-                            && state == other.state
-                    )
-
-        override fun hashCode(): Int = state.hashCode()
+        fun <U : TypeSafeBroker.Key<H>, H : Any> with(state: U) = Context(stateMachine, state)
 
     }
 
