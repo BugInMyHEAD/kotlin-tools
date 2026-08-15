@@ -47,8 +47,8 @@ import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
  *   (e.g., `SavedStateHandle`) and restoring it via [initialState].
  *
  * @param R The type of the root state.
- * @param F The type of the 'local' effect.
- * @param G The type of the 'global' effect.
+ * @param K The type of the local side effect mapped by [R].
+ * @param G The type of the global side effect.
  * @param initialState The initial state of the state machine.
  *  Can be a restored state from a persistence mechanism.
  * @param transitionFunction A pure function to determine the next state and effects
@@ -60,7 +60,7 @@ import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
  *  To avoid the `kotlin-reflect` dependency,
  *  provide an explicit lambda that returns the nested states manually.
  */
-class StateMachine<R : TypeSafeBroker.Key<F>, F : Any, G : Any>(
+class StateMachine<R : TypeSafeBroker.Key<K>, K : Any, G : Any>(
     initialState: R,
     private val transitionFunction: TransitionFunction<R, G>,
     private val nestedStatesAt: (state: TypeSafeBroker.Key<*>) -> Iterable<TypeSafeBroker.Key<*>> =
@@ -124,7 +124,7 @@ class StateMachine<R : TypeSafeBroker.Key<F>, F : Any, G : Any>(
      * Removes and returns the local side effect associated with the [receiver] state,
      *  or `null` if no effect exists for it.
      */
-    fun <T : TypeSafeBroker.Key<G>, G : Any> pollEffect(receiver: T): G? =
+    fun <S : TypeSafeBroker.Key<L>, L : Any> pollEffect(receiver: S): L? =
         stateToEffect.poll(receiver)
 
     /**
@@ -144,7 +144,7 @@ class StateMachine<R : TypeSafeBroker.Key<F>, F : Any, G : Any>(
      *
      * @throws IllegalArgumentException if [state] is not in the current [stateTree].
      */
-    data class Context<S : TypeSafeBroker.Key<G>, G : Any>(
+    data class Context<S : TypeSafeBroker.Key<L>, L : Any>(
         private val stateMachine: StateMachine<*, *, *>,
         val state: S
     ) {
@@ -158,13 +158,13 @@ class StateMachine<R : TypeSafeBroker.Key<F>, F : Any, G : Any>(
         fun pushEvent(event: Any) = stateMachine.pushEvent(state, event)
 
         @Suppress("UNCHECKED_CAST")
-        fun pollEffect(): G? = stateMachine.pollEffect(state)
+        fun pollEffect(): L? = stateMachine.pollEffect(state)
 
         /**
          * Creates a new [Context] with the given nested [state],
          *  reusing the same [pushEvent] and [pollEffect] delegates.
          */
-        fun <T : TypeSafeBroker.Key<H>, H : Any> with(state: T) = Context(stateMachine, state)
+        fun <T : TypeSafeBroker.Key<M>, M : Any> with(state: T) = Context(stateMachine, state)
 
     }
 
