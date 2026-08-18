@@ -7,5 +7,9 @@ package com.buginmyhead.tools.kotlin
  * is never invoked at runtime because the Kotlin compiler inlines them at call sites.
  */
 @Retention(AnnotationRetention.BINARY)
-@Target(AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.FUNCTION)
+@Target(
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.PROPERTY_GETTER,
+    AnnotationTarget.PROPERTY_SETTER,
+)
 internal annotation class IgnoreTestCoverage

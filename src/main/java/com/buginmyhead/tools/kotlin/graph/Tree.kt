@@ -34,10 +34,10 @@ interface Tree<N, W> : AcyclicGraph<N, W> {
                     throw NotATreeException(cause)
                 }
 
-        inline val <N> Tree<N, *>.root: N get() = sourceNodes.single()
+        val <N> Tree<N, *>.root: N inline get() = sourceNodes.single()
 
         @get:IgnoreTestCoverage
-        inline val <N> Tree<N, *>.leaves: Set<N> get() = sinkNodes
+        val <N> Tree<N, *>.leaves: Set<N> inline get() = sinkNodes
 
         /**
          * Guarantees that there are [node] at the first and [root] at the last.
