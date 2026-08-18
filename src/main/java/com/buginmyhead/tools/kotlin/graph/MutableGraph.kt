@@ -5,20 +5,20 @@ import com.buginmyhead.tools.kotlin.graph.Graph.Companion.nodes
 
 class MutableGraph<N, W> : Graph<N, W> {
 
-    private val _edges = mutableMapOf<Pair<N, N>, W>()
-    override val edges: Map<Pair<N, N>, W> get() = _edges
+    override val edges: Map<Pair<N, N>, W>
+        field = mutableMapOf<Pair<N, N>, W>()
 
-    private val _outs = mutableMapOf<N, MutableSet<N>>()
-    override val outs: Map<N, Set<N>> get() = _outs
+    override val outs: Map<N, Set<N>>
+        field = mutableMapOf<N, MutableSet<N>>()
 
-    private val _ins = mutableMapOf<N, MutableSet<N>>()
-    override val ins: Map<N, Set<N>> get() = _ins
+    override val ins: Map<N, Set<N>>
+        field = mutableMapOf<N, MutableSet<N>>()
 
-    private val _sourceNodes = mutableSetOf<N>()
-    override val sourceNodes: Set<N> get() = _sourceNodes
+    override val sourceNodes: Set<N>
+        field = mutableSetOf<N>()
 
-    private val _sinkNodes = mutableSetOf<N>()
-    override val sinkNodes: Set<N> get() = _sinkNodes
+    override val sinkNodes: Set<N>
+        field = mutableSetOf<N>()
 
     /**
      * Adds an edge to the graph.
@@ -27,13 +27,13 @@ class MutableGraph<N, W> : Graph<N, W> {
      */
     fun addEdge(edge: Pair<N, N>, weight: W) {
         val (from, to) = edge
-        _edges[edge] = weight
+        edges[edge] = weight
         addNode(from)
         addNode(to)
-        _outs[from]?.add(to)
-        _ins[to]?.add(from)
-        _sinkNodes -= from
-        _sourceNodes -= to
+        outs[from]?.add(to)
+        ins[to]?.add(from)
+        sinkNodes -= from
+        sourceNodes -= to
     }
 
     /**
@@ -42,14 +42,14 @@ class MutableGraph<N, W> : Graph<N, W> {
      */
     fun removeEdge(edge: Pair<N, N>) {
         val (from, to) = edge
-        _edges -= edge
-        _outs[from]?.remove(to)
-        _ins[to]?.remove(from)
-        if (_outs[from].isNullOrEmpty()) {
-            _sinkNodes += from
+        edges -= edge
+        outs[from]?.remove(to)
+        ins[to]?.remove(from)
+        if (outs[from].isNullOrEmpty()) {
+            sinkNodes += from
         }
-        if (_ins[to].isNullOrEmpty()) {
-            _sourceNodes += to
+        if (ins[to].isNullOrEmpty()) {
+            sourceNodes += to
         }
     }
 
@@ -58,12 +58,12 @@ class MutableGraph<N, W> : Graph<N, W> {
      * If the [node] already exists in the graph, it will be ignored.
      */
     fun addNode(node: N) {
-        _outs.getOrPut(node) {
-            _sinkNodes += node
+        outs.getOrPut(node) {
+            sinkNodes += node
             mutableSetOf()
         }
-        _ins.getOrPut(node) {
-            _sourceNodes += node
+        ins.getOrPut(node) {
+            sourceNodes += node
             mutableSetOf()
         }
     }
@@ -73,12 +73,12 @@ class MutableGraph<N, W> : Graph<N, W> {
      * If the [node] does not exist in the graph, it will be ignored.
      */
     fun removeNode(node: N) {
-        _outs[node].orEmpty().map { node to it }.forEach(::removeEdge)
-        _ins[node].orEmpty().map { it to node }.forEach(::removeEdge)
-        _outs.remove(node)
-        _ins.remove(node)
-        _sinkNodes -= node
-        _sourceNodes -= node
+        outs[node].orEmpty().map { node to it }.forEach(::removeEdge)
+        ins[node].orEmpty().map { it to node }.forEach(::removeEdge)
+        outs.remove(node)
+        ins.remove(node)
+        sinkNodes -= node
+        sourceNodes -= node
     }
 
     override fun toString(): String = "MutableGraph(ins=$ins, outs=$outs)"
@@ -132,17 +132,17 @@ class MutableGraph<N, W> : Graph<N, W> {
                 val (from, to) = edge
                 val transformedFrom = transformedNodes.getValue(from)
                 val transformedTo = transformedNodes.getValue(to)
-                mutableGraph._edges[transformedFrom to transformedTo] =
+                mutableGraph.edges[transformedFrom to transformedTo] =
                     weightTransform(from, to, weight, transformedFrom, transformedTo)
             }
             for ((n, m) in transformedNodes) {
-                mutableGraph._outs[m] =
+                mutableGraph.outs[m] =
                     outs[n].orEmpty().mapNotNull { transformedNodes[it] }.toMutableSet()
-                mutableGraph._ins[m] =
+                mutableGraph.ins[m] =
                     ins[n].orEmpty().mapNotNull { transformedNodes[it] }.toMutableSet()
             }
-            mutableGraph._sinkNodes += sinkNodes.mapNotNull { transformedNodes[it] }
-            mutableGraph._sourceNodes += sourceNodes.mapNotNull { transformedNodes[it] }
+            mutableGraph.sinkNodes += sinkNodes.mapNotNull { transformedNodes[it] }
+            mutableGraph.sourceNodes += sourceNodes.mapNotNull { transformedNodes[it] }
             return mutableGraph
         }
 
