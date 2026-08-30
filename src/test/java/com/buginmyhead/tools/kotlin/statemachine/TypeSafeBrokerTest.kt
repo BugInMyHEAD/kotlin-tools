@@ -1,5 +1,6 @@
 package com.buginmyhead.tools.kotlin.statemachine
 
+import com.buginmyhead.tools.kotlin.statemachine.TypeSafeBroker.Companion.plusAssign
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
@@ -28,7 +29,8 @@ internal class TypeSafeBrokerTest : FreeSpec({
         var setKeyCaptured: Any? = null
         var setValueCaptured: Any? = null
         var pollKeyCaptured: Any? = null
-        var plusAssignOtherCaptured: Any? = null
+        var mergeOtherCaptured: Any? = null
+        var mergeConflictResolverCaptured: Any? = null
 
         val pollGenericResult = Any()
         val broker = SynchronizedTypeSafeBroker(object : TypeSafeBroker {
@@ -43,23 +45,29 @@ internal class TypeSafeBrokerTest : FreeSpec({
                 return pollGenericResult as V
             }
 
-            override fun plusAssign(other: TypeSafeBroker) {
-                plusAssignOtherCaptured = other
+            override fun merge(
+                other: TypeSafeBroker,
+                conflictResolver: (key: TypeSafeBroker.Key<*>, oldValue: Any, newValue: Any) -> Any
+            ) {
+                mergeOtherCaptured = other
+                mergeConflictResolverCaptured = conflictResolver
             }
         })
-        val setKey = object : TypeSafeBroker.Key<Int> {}
-        val setValue = 13
+        val setKey = object : TypeSafeBroker.Key<String> {}
+        val setValue = "13"
         val pollKey = object : TypeSafeBroker.Key<Any> {}
         val other = TypeSafeBroker()
+        val conflictResolver = { key: TypeSafeBroker.Key<*>, oldValue: Any, newValue: Any -> newValue }
 
         broker[setKey] = setValue
         broker.poll(pollKey)
-        broker += other
+        broker.merge(other, conflictResolver)
 
         setKeyCaptured shouldBeSameInstanceAs setKey
-        setValueCaptured shouldBe setValue
+        setValueCaptured shouldBeSameInstanceAs setValue
         pollKeyCaptured shouldBeSameInstanceAs pollKey
-        plusAssignOtherCaptured shouldBeSameInstanceAs other
+        mergeOtherCaptured shouldBeSameInstanceAs other
+        mergeConflictResolverCaptured shouldBeSameInstanceAs conflictResolver
     }
 
     "TypeSafeBrokerOnWeakIdentityHashMap poll removes an effect for the identical key" {
@@ -91,7 +99,24 @@ internal class TypeSafeBrokerTest : FreeSpec({
         broker.store shouldBe emptyMap()
     }
 
-    "TypeSafeBrokerOnWeakIdentityHashMap plusAssign merges effects" {
+    "TypeSafeBrokerOnWeakIdentityHashMap merge resolves conflicting effects" {
+        val broker1 = TypeSafeBrokerOnWeakIdentityHashMap()
+        val broker2 = TypeSafeBrokerOnWeakIdentityHashMap()
+        val state = State("A")
+        broker1[state] = 13
+        broker2[state] = 17
+
+        broker1.merge(broker2) { key, oldValue, newValue ->
+            key shouldBeSameInstanceAs state
+            oldValue shouldBe 13
+            newValue shouldBe 17
+            19
+        }
+
+        broker1.poll(state) shouldBe 19
+    }
+
+    "TypeSafeBrokerOnWeakIdentityHashMap plusAssign replaces with right-side effects" {
         val broker1 = TypeSafeBrokerOnWeakIdentityHashMap()
         val broker2 = TypeSafeBrokerOnWeakIdentityHashMap()
         val stateA = State("A")
@@ -103,8 +128,15 @@ internal class TypeSafeBrokerTest : FreeSpec({
 
         broker1.poll(stateA) shouldBe 13
         broker1.poll(stateB) shouldBe 17
-        broker2.poll(stateA) shouldBe null
-        broker2.poll(stateB) shouldBe null
+    }
+
+    "TypeSafeBrokerOnWeakIdentityHashMap merge throws if other is not TypeSafeBrokerOnWeakIdentityHashMap" {
+        val broker1 = TypeSafeBrokerOnWeakIdentityHashMap()
+        val broker2 = DummyTypeSafeBroker
+
+        shouldThrow<IllegalArgumentException> {
+            broker1 += broker2
+        }
     }
 
     "TypeSafeBrokerOnWeakIdentityHashMap plusAssign throws if other is not TypeSafeBrokerOnWeakIdentityHashMap" {
@@ -125,7 +157,10 @@ internal class TypeSafeBrokerTest : FreeSpec({
 
         override fun <V : Any> poll(key: TypeSafeBroker.Key<V>): V? = null
 
-        override fun plusAssign(other: TypeSafeBroker) = Unit
+        override fun merge(
+            other: TypeSafeBroker,
+            conflictResolver: (key: TypeSafeBroker.Key<*>, oldValue: Any, newValue: Any) -> Any
+        ) = Unit
 
     }
 

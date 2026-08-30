@@ -29,12 +29,15 @@ interface TypeSafeBroker {
     fun <V : Any> poll(key: Key<V>): V?
 
     /**
-     * Moves all associations from [other] into this broker and clears [other].
+     * Adds all associations from [other] into this broker.
      *
      * If this broker already contains an association for a key present in [other],
-     *  the existing value is overwritten by the one from [other].
+     *  the existing value is overwritten by [conflictResolver] result.
      */
-    operator fun plusAssign(other: TypeSafeBroker)
+    fun merge(
+        other: TypeSafeBroker,
+        conflictResolver: (key: Key<*>, oldValue: Any, newValue: Any) -> Any = { _, _, newValue -> newValue }
+    )
 
     /**
      * A key used to associate values in the [TypeSafeBroker].
@@ -61,6 +64,14 @@ interface TypeSafeBroker {
             if (synchronization) SynchronizedTypeSafeBroker(TypeSafeBrokerOnWeakIdentityHashMap())
             else TypeSafeBrokerOnWeakIdentityHashMap()
 
+        /**
+         * Adds all associations from [other] into this broker.
+         *
+         * If this broker already contains an association for a key present in [other],
+         *  the existing value is overwritten by the one from [other].
+         */
+        operator fun TypeSafeBroker.plusAssign(other: TypeSafeBroker) = merge(other)
+
     }
 
 }
@@ -78,8 +89,11 @@ internal class SynchronizedTypeSafeBroker(
         delegate.poll(key)
 
     @Synchronized
-    override operator fun plusAssign(other: TypeSafeBroker) =
-        delegate.plusAssign(other)
+    override fun merge(
+        other: TypeSafeBroker,
+        conflictResolver: (key: TypeSafeBroker.Key<*>, oldValue: Any, newValue: Any) -> Any
+    ) =
+        delegate.merge(other, conflictResolver)
 
 }
 
@@ -95,13 +109,19 @@ internal class TypeSafeBrokerOnWeakIdentityHashMap : TypeSafeBroker {
     override fun <V : Any> poll(key: TypeSafeBroker.Key<V>): V? =
         store.remove(key) as V?
 
-    override operator fun plusAssign(other: TypeSafeBroker) {
+    override fun merge(
+        other: TypeSafeBroker,
+        conflictResolver: (key: TypeSafeBroker.Key<*>, oldValue: Any, newValue: Any) -> Any
+    ) {
         require(other is TypeSafeBrokerOnWeakIdentityHashMap) {
             "Unsupported TypeSafeBroker implementation: ${other::class}"
         }
 
-        store.putAll(other.store)
-        other.store.clear()
+        for ((key, value) in other.store) {
+            store.merge(key, value) { oldValue, newValue ->
+                conflictResolver(key as TypeSafeBroker.Key<*>, oldValue, newValue)
+            }
+        }
     }
 
 }

@@ -6,6 +6,7 @@ import com.buginmyhead.tools.kotlin.graph.Tree
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.ancestorsFrom
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.root
 import com.buginmyhead.tools.kotlin.graph.Tree.Companion.toTree
+import com.buginmyhead.tools.kotlin.statemachine.TypeSafeBroker.Companion.plusAssign
 
 /**
  * A platform-agnostic state machine framework with the following features:
