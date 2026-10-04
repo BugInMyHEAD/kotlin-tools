@@ -12,8 +12,8 @@ fun interface TransitionFunction<R : TypeSafeBroker.Key<*>, G : Any> {
     /**
      * Implementation is highly recommended to be pure.
      *
-     * @param states The list of states from the sender to the root state. It guarantees that
-     *  the first element is the sender state and the last element is the [root] state.
+     * @param states The list of states from the [event] sender state to the root state. It guarantees that
+     *  the first element is the [event] sender state and the last element is the [root] state.
      */
     fun onEvent(states: List<TypeSafeBroker.Key<*>>, root: R, event: Any): Transition<R, G>
 
@@ -27,8 +27,6 @@ fun interface TransitionFunction<R : TypeSafeBroker.Key<*>, G : Any> {
     fun interface WithScope<R : TypeSafeBroker.Key<*>, G : Any> : TransitionFunction<R, G> {
 
         /**
-         * @param G The type of the global side effect.
-         *
          * @see TransitionFunction.onEvent
          */
         fun Scope<R, G>.onEvent(
@@ -49,17 +47,18 @@ fun interface TransitionFunction<R : TypeSafeBroker.Key<*>, G : Any> {
         }
 
         /**
-         * @param G The type of the 'global' effect, which is not mapped by a certain state.
+         * @param R The type of the root state.
+         * @param G The type of the global side effect.
          */
         interface Scope<R : TypeSafeBroker.Key<*>, G : Any> {
 
             val stateToEffect: TypeSafeBroker
 
             fun transit(
-                state: R,
+                root: R,
                 globalEffect: G
             ) = Transition(
-                state,
+                root,
                 globalEffect,
                 stateToEffect
             )
